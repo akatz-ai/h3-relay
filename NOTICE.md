@@ -2,6 +2,9 @@
 
 H3 Relay is licensed under GNU GPL version 3.
 
+H3 Relay original code is copyright (C) 2026 Sendy Software LLC and
+contributors. Vendored portions retain the following copyrights and licenses.
+
 It contains attributed implementation snapshots from:
 
 - ComfyUI's MiniMax H3 packed-layout and guide engine, GPL-3.0, adapted as a
