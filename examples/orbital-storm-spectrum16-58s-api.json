@@ -1,0 +1,76 @@
+{
+  "1": {
+    "class_type": "MiniMaxH3SteerSequenceStart",
+    "inputs": {
+      "run_name": "overridden_by_runner",
+      "global_prompt": "Original live-action cinematic science-fiction drama aboard Asteria, a high-altitude storm observatory suspended above the fictional gas giant Nysa. The same transparent command dome, amber navigation consoles, brushed titanium ribs, distant lightning, rotating blue-violet cloud bands, and restrained teal-and-gold color grade remain consistent throughout. Dr. Mara Voss (S1) remains the same composed woman in her early forties with a dark wavy bob, bronze complexion, charcoal flight suit, teal shoulder stripe, and low clear contralto voice. Systems engineer Keon Rell (S2) remains the same lean man in his late twenties with short tightly curled hair, warm brown skin, rust-orange utility jacket over a navy pressure suit, and quick bright tenor voice. Preserve their exact original faces, clothing, voices, relative heights, observatory geometry, console layout, storm direction, and lighting across the complete sequence. Each speaker remains visibly on screen with an unobstructed face whenever speaking; the listener keeps closed lips. Actions unfold in chronological cause-and-effect order, camera cuts occur only at stated times, and dialogue never overlaps.",
+      "width": 832,
+      "height": 480,
+      "enhancement_prompt": "Preserve the exact original Mara Voss and Keon Rell identities, faces, hair, flight suits, mouth movement, command-dome geometry, console layout, cloud motion, lightning direction, camera timing, and dialogue synchronization from the supplied video. Restore stable facial detail, clean suit seams, coherent hands, crisp transparent-dome edges, readable expressions, and consistent metallic texture while retaining subtle 35mm science-fiction film grain. Preserve incoming temporal context exactly and introduce no additional people, logos, text, props, camera cuts, reframing, dialogue, or gestures.",
+      "output_crf": 18,
+      "sampler": "euler",
+      "scheduler": "beta57",
+      "spectrum_enabled": true
+    }
+  },
+  "10": {
+    "class_type": "MiniMaxH3SteerableSegment",
+    "inputs": {
+      "sequence": ["1", 0],
+      "prompt": "integrated_multimodal_description: [Shot 1] An original live-action cinematic medium-wide two-shot opens inside Asteria's transparent command dome. Mara Voss (S1) stands at the central amber console on screen right while Keon Rell (S2) studies a storm map on screen left. Both faces are clearly visible. A distant lightning arc illuminates the rotating blue-violet clouds beneath the station. Mara steadies one hand on the console and says in a low controlled voice: <d>[English] The lower tether is drifting. Lock the observatory to my vector.</d> Keon listens with closed lips and rapidly moves both hands across the controls. [Shot 2] At 00:07.000, the camera cuts to Keon's unobstructed medium close-up. His brow tightens as warning lights reflect across his eyes. Keon says without looking away from the console: <d>[English] Vector locked, but the storm is climbing faster than our forecast.</d> Mara remains silent in the background.\n\noverall_soundscape: A steady ventilation hum, quiet console tones, distant structural creaks, and muffled thunder outside the dome. Dialogue is close and separated with no overlapping voices.\n\nnon_diegetic_music: A restrained original low electronic pulse begins beneath the room tone.",
+      "shot_name": "shot_01_vector_lock",
+      "seed": 424242,
+      "raw_frames": 362,
+      "h3_steps": 16,
+      "output_crf": 18,
+      "ref_image_size": "match"
+    }
+  },
+  "11": {
+    "class_type": "MiniMaxH3SteerableSegment",
+    "inputs": {
+      "sequence": ["10", 0],
+      "prompt": "integrated_multimodal_description: [Shot 1] Continue directly from the incoming visual and audio history with identical character identities, wardrobe, storm direction, lighting, console state, and room tone. Mara turns from the central console and strides with Keon into a narrow titanium access corridor. The camera tracks backward at walking speed while both faces remain visible. Mara says with deliberate urgency: <d>[English] The forecast is obsolete. We deploy the sensor sail and read the storm directly.</d> Keon listens with closed lips. [Shot 2] At 00:07.500, the camera cuts to Keon walking beside her in medium close-up. He glances through a round window at lightning below and says: <d>[English] In that wind, the sail will pull hard enough to turn the whole station.</d> Mara remains silent and keeps moving toward the deployment bay.\n\noverall_soundscape: The command-dome hum continues seamlessly into the corridor with rhythmic footsteps, soft fabric movement, pressure-door motors, and distant thunder.\n\nnon_diegetic_music: The same original low electronic pulse gains a quiet ticking rhythm.",
+      "shot_name": "shot_02_access_corridor",
+      "seed": 424242,
+      "raw_frames": 362,
+      "h3_steps": 16,
+      "output_crf": 18,
+      "ref_image_size": "match"
+    }
+  },
+  "12": {
+    "class_type": "MiniMaxH3SteerableSegment",
+    "inputs": {
+      "sequence": ["11", 0],
+      "prompt": "integrated_multimodal_description: [Shot 1] Continue without a temporal reset inside the same observatory. A medium-wide shot reveals the open sensor-sail bay behind a transparent pressure shield. Mara and Keon stand at the deployment rail while a folded silver sail rests between them. Mara clips a safety tether to the rail and says: <d>[English] Then we let it turn us. The station can become part of the instrument.</d> Keon listens with closed lips, then secures the opposite latch. [Shot 2] At 00:08.000, the camera cuts to Keon's clear medium close-up as the bay doors begin to separate behind the shield. His eyes widen at the violent clouds outside. Keon says with a brief incredulous smile: <d>[English] That is either brilliant or the shortest experiment in Asteria's history.</d> Mara remains silent beside him.\n\noverall_soundscape: Servo motors engage, metal latches click, the ventilation tone deepens, and the storm becomes a low continuous roar through the pressure shield.\n\nnon_diegetic_music: The original pulse expands into a restrained rising synth chord.",
+      "shot_name": "shot_03_sensor_sail",
+      "seed": 424242,
+      "raw_frames": 362,
+      "h3_steps": 16,
+      "output_crf": 18,
+      "ref_image_size": "match"
+    }
+  },
+  "13": {
+    "class_type": "MiniMaxH3SteerableSegment",
+    "inputs": {
+      "sequence": ["12", 0],
+      "prompt": "integrated_multimodal_description: [Shot 1] Continue from the exact incoming bay view, preserving faces, clothing, storm motion, lighting, sail position, and sound. The silver sensor sail unfolds beyond the pressure shield and catches the rising current. The observatory tilts gently while both characters brace against the rail. No one speaks during the opening reaction. [Shot 2] At 00:04.000, the camera cuts to Mara in medium close-up as clean data curves illuminate her face. Mara says with quiet satisfaction: <d>[English] There it is. The storm has a second eye beneath the cloud deck.</d> Keon listens with closed lips. [Shot 3] At 00:09.000, the camera cuts to Keon beside the glowing telemetry display. His shoulders relax and he says: <d>[English] Then we finally know where it is going.</d> Mara remains silent. [Shot 4] At 00:12.000, the camera returns to a medium two-shot. The station settles into a stable arc, the sail glows silver against the storm, and Mara and Keon exchange a relieved look without further dialogue. Hold on the original characters and observatory without a fade.\n\noverall_soundscape: The sail fabric vibrates, tether hardware strains, warning tones resolve into a calm confirmation chime, and the storm roar steadies beneath separated dialogue.\n\nnon_diegetic_music: The original synth chord resolves into a quiet warm harmonic bed.",
+      "shot_name": "shot_04_second_eye",
+      "seed": 424242,
+      "raw_frames": 362,
+      "h3_steps": 16,
+      "output_crf": 18,
+      "ref_image_size": "match"
+    }
+  },
+  "20": {
+    "class_type": "MiniMaxH3SteerAssemble",
+    "inputs": {
+      "sequence": ["13", 0],
+      "filename": "orbital_storm_spectrum16_58s",
+      "audio_bitrate": 256
+    }
+  }
+}

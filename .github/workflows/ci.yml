@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Python workflow tests
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - name: JavaScript syntax
+        run: |
+          node --check web/staged_assemble.js
+          node --check scripts/build_example_workflow.mjs
+          node --check scripts/upgrade_interpolation_chunks.mjs
+      - name: Registry security policy
+        run: |
+          if grep -R -n -E '(^|[^A-Za-z0-9_])(eval|exec)[[:space:]]*\(' \
+            --include='*.py' --include='*.js' .; then
+            echo 'Registry-prohibited dynamic execution found.' >&2
+            exit 1
+          fi

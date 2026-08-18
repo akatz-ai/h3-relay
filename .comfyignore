@@ -1,0 +1,19 @@
+# Development and internal validation material is not part of the runtime pack.
+benchmark/
+tests/
+scripts/
+examples/
+VALIDATION.md
+LTX_UPSCALING.md
+
+# Local/editor state.
+.github/
+.gitignore
+__pycache__/
+*.py[cod]
+
+# Spectrum research/evaluation utilities are not registered or imported by
+# H3 Relay; only the inference wrapper is shipped.
+h3_relay/vendor/spectrum/objective_media.py
+h3_relay/vendor/spectrum/objective_media_bounded.py
+h3_relay/vendor/spectrum/objective_media_nodes.py

@@ -1,0 +1,2781 @@
+{
+  "id": "39f3a4d0-0dc1-41b6-bca9-f96bd197a7f3",
+  "revision": 0,
+  "last_node_id": 78,
+  "last_link_id": 38,
+  "version": 0.4,
+  "config": {},
+  "nodes": [
+    {
+      "id": 3,
+      "type": "H3RelayH3HybridModelLoader",
+      "pos": [
+        -1480,
+        -1120
+      ],
+      "size": [
+        620,
+        420
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "base_model",
+          "type": "COMBO",
+          "widget": {
+            "name": "base_model"
+          },
+          "link": null
+        },
+        {
+          "name": "overlay_model",
+          "type": "COMBO",
+          "widget": {
+            "name": "overlay_model"
+          },
+          "link": null
+        },
+        {
+          "name": "overlay_preset",
+          "type": "COMBO",
+          "widget": {
+            "name": "overlay_preset"
+          },
+          "link": null
+        },
+        {
+          "name": "manual_cache_revision",
+          "type": "STRING",
+          "widget": {
+            "name": "manual_cache_revision"
+          },
+          "link": null
+        },
+        {
+          "name": "block_range_start",
+          "type": "INT",
+          "widget": {
+            "name": "block_range_start"
+          },
+          "link": null
+        },
+        {
+          "name": "block_range_end",
+          "type": "INT",
+          "widget": {
+            "name": "block_range_end"
+          },
+          "link": null
+        },
+        {
+          "name": "final_adaln_from_overlay",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "final_adaln_from_overlay"
+          },
+          "link": null
+        },
+        {
+          "name": "custom_overlays",
+          "type": "STRING",
+          "widget": {
+            "name": "custom_overlays"
+          },
+          "link": null
+        },
+        {
+          "name": "custom_base",
+          "type": "STRING",
+          "widget": {
+            "name": "custom_base"
+          },
+          "link": null
+        },
+        {
+          "name": "weight_dtype",
+          "type": "COMBO",
+          "widget": {
+            "name": "weight_dtype"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "h3_model",
+          "type": "H3_RELAY_MODEL",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayH3HybridModelLoader"
+      },
+      "widgets_values": [
+        "minimax_h3_fl2va_int8_convrot.safetensors",
+        "minimax_h3_ref2va_int8_convrot.safetensors",
+        "block_range_adaln",
+        "v1",
+        25,
+        49,
+        false,
+        "",
+        "",
+        "default"
+      ],
+      "title": "H3 HYBRID · FL2VA BASE + REF2VA OVERLAY"
+    },
+    {
+      "id": 4,
+      "type": "H3RelayAttention",
+      "pos": [
+        -780,
+        -1040
+      ],
+      "size": [
+        420,
+        180
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "H3_RELAY_MODEL",
+          "link": 1
+        },
+        {
+          "name": "attention",
+          "type": "COMBO",
+          "widget": {
+            "name": "attention"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "H3_RELAY_MODEL",
+          "links": [
+            4,
+            11,
+            20,
+            29
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayAttention"
+      },
+      "widgets_values": [
+        "comfy kitchen attention"
+      ],
+      "title": "H3 ATTENTION · COMFY KITCHEN"
+    },
+    {
+      "id": 5,
+      "type": "H3RelayLTXModelLoader",
+      "pos": [
+        -1480,
+        1080
+      ],
+      "size": [
+        620,
+        520
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "model_name"
+          },
+          "link": null
+        },
+        {
+          "name": "vae_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "vae_name"
+          },
+          "link": null
+        },
+        {
+          "name": "latent_2x_model_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "latent_2x_model_name"
+          },
+          "link": null
+        },
+        {
+          "name": "text_encoder_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "text_encoder_name"
+          },
+          "link": null
+        },
+        {
+          "name": "distilled_lora",
+          "type": "COMBO",
+          "widget": {
+            "name": "distilled_lora"
+          },
+          "link": null
+        },
+        {
+          "name": "distilled_strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "distilled_strength"
+          },
+          "link": null
+        },
+        {
+          "name": "pixel_upscale_ic_lora",
+          "type": "COMBO",
+          "widget": {
+            "name": "pixel_upscale_ic_lora"
+          },
+          "link": null
+        },
+        {
+          "name": "pixel_upscale_ic_strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "pixel_upscale_ic_strength"
+          },
+          "link": null
+        },
+        {
+          "name": "weight_dtype",
+          "type": "COMBO",
+          "widget": {
+            "name": "weight_dtype"
+          },
+          "link": null
+        },
+        {
+          "name": "manual_cache_revision",
+          "type": "STRING",
+          "widget": {
+            "name": "manual_cache_revision"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "ltx_model",
+          "type": "H3_RELAY_MODEL",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayLTXModelLoader"
+      },
+      "widgets_values": [
+        "ltx-2.5-22b-dev-transformer-comfy-int8-convrot.safetensors",
+        "ltx-2.5-video-vae-bf16.safetensors",
+        "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors",
+        "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
+        "ltx-2.5-22b-distilled-lora-450-bf16.safetensors",
+        1,
+        "ltx-2.5-22b-ic-lora-pixel-spatial-upscaler-x2-1.0.safetensors",
+        1,
+        "default",
+        "v1"
+      ],
+      "title": "LTX 2.5 · MODEL / VAE / LATENT 2× / GEMMA4 / 2 LORAS"
+    },
+    {
+      "id": 6,
+      "type": "H3RelayAttention",
+      "pos": [
+        -780,
+        1190
+      ],
+      "size": [
+        420,
+        180
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "H3_RELAY_MODEL",
+          "link": 2
+        },
+        {
+          "name": "attention",
+          "type": "COMBO",
+          "widget": {
+            "name": "attention"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "H3_RELAY_MODEL",
+          "links": [
+            6,
+            14,
+            23,
+            32
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayAttention"
+      },
+      "widgets_values": [
+        "pytorch attention"
+      ],
+      "title": "LTX ATTENTION · PYTORCH (SWAP OR BYPASS TO TEST)"
+    },
+    {
+      "id": 7,
+      "type": "H3RelayInterpolationModelLoader",
+      "pos": [
+        2190,
+        1420
+      ],
+      "size": [
+        540,
+        120
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "model_name"
+          },
+          "link": null
+        },
+        {
+          "name": "manual_cache_revision",
+          "type": "STRING",
+          "widget": {
+            "name": "manual_cache_revision"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "interpolation",
+          "type": "H3_RELAY_INTERPOLATION",
+          "links": [
+            9,
+            18,
+            27,
+            36
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayInterpolationModelLoader"
+      },
+      "widgets_values": [
+        "rife_v4.26_heavy.safetensors",
+        "v1"
+      ],
+      "title": "INTERPOLATION MODEL · CORE LOADER WRAPPER"
+    },
+    {
+      "id": 1,
+      "type": "H3RelaySequenceStart",
+      "pos": [
+        -1480,
+        -350
+      ],
+      "size": [
+        620,
+        650
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "run_name",
+          "type": "STRING",
+          "widget": {
+            "name": "run_name"
+          },
+          "link": null
+        },
+        {
+          "name": "global_prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "global_prompt"
+          },
+          "link": null
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": null
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": null
+        },
+        {
+          "name": "h3_overlap_frames",
+          "type": "COMBO",
+          "widget": {
+            "name": "h3_overlap_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "sampler",
+          "type": "COMBO",
+          "widget": {
+            "name": "sampler"
+          },
+          "link": null
+        },
+        {
+          "name": "scheduler",
+          "type": "COMBO",
+          "widget": {
+            "name": "scheduler"
+          },
+          "link": null
+        },
+        {
+          "name": "spectrum_enabled",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "spectrum_enabled"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "links": [
+            3
+          ]
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelaySequenceStart"
+      },
+      "widgets_values": [
+        "orbital_storm_h3_relay_spectrum16",
+        "Original live-action cinematic science-fiction drama aboard Asteria, a high-altitude storm observatory suspended above the fictional gas giant Nysa. The same transparent command dome, amber navigation consoles, brushed titanium ribs, distant lightning, rotating blue-violet cloud bands, and restrained teal-and-gold color grade remain consistent throughout. Dr. Mara Voss (S1) remains the same composed woman in her early forties with a dark wavy bob, bronze complexion, charcoal flight suit, teal shoulder stripe, and low clear contralto voice. Systems engineer Keon Rell (S2) remains the same lean man in his late twenties with short tightly curled hair, warm brown skin, rust-orange utility jacket over a navy pressure suit, and quick bright tenor voice. Preserve their exact original faces, clothing, voices, relative heights, observatory geometry, console layout, storm direction, and lighting across the complete sequence. Each speaker remains visibly on screen with an unobstructed face whenever speaking; the listener keeps closed lips. Actions unfold in chronological cause-and-effect order, camera cuts occur only at stated times, and dialogue never overlaps.",
+        832,
+        480,
+        18,
+        "euler",
+        "beta57",
+        true
+      ],
+      "title": "H3 RELAY · GLOBAL RAW H3 SEQUENCE"
+    },
+    {
+      "id": 2,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -1480,
+        440
+      ],
+      "size": [
+        620,
+        520
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value",
+          "type": "STRING",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            8,
+            16,
+            25,
+            34
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "Preserve the exact original Mara Voss and Keon Rell identities, faces, hair, flight suits, mouth movement, command-dome geometry, console layout, cloud motion, lightning direction, camera timing, and dialogue synchronization from the supplied video. Restore stable facial detail, clean suit seams, coherent hands, crisp transparent-dome edges, readable expressions, and consistent metallic texture while retaining subtle 35mm science-fiction film grain. Preserve incoming temporal context exactly and introduce no additional people, logos, text, props, camera cuts, reframing, dialogue, or gestures."
+      ],
+      "title": "GLOBAL LTX ENHANCEMENT PROMPT"
+    },
+    {
+      "id": 10,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -700,
+        -760
+      ],
+      "size": [
+        600,
+        320
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value",
+          "type": "STRING",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "integrated_multimodal_description: [Shot 1] An original live-action cinematic medium-wide two-shot opens inside Asteria's transparent command dome. Mara Voss (S1) stands at the central amber console on screen right while Keon Rell (S2) studies a storm map on screen left. Both faces are clearly visible. A distant lightning arc illuminates the rotating blue-violet clouds beneath the station. Mara steadies one hand on the console and says in a low controlled voice: <d>[English] The lower tether is drifting. Lock the observatory to my vector.</d> Keon listens with closed lips and rapidly moves both hands across the controls. [Shot 2] At 00:07.000, the camera cuts to Keon's unobstructed medium close-up. His brow tightens as warning lights reflect across his eyes. Keon says without looking away from the console: <d>[English] Vector locked, but the storm is climbing faster than our forecast.</d> Mara remains silent in the background.\n\noverall_soundscape: A steady ventilation hum, quiet console tones, distant structural creaks, and muffled thunder outside the dome. Dialogue is close and separated with no overlapping voices.\n\nnon_diegetic_music: A restrained original low electronic pulse begins beneath the room tone."
+      ],
+      "title": "SHOT 1 PROMPT"
+    },
+    {
+      "id": 11,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        40,
+        -760
+      ],
+      "size": [
+        600,
+        320
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value",
+          "type": "STRING",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "integrated_multimodal_description: [Shot 1] Continue directly from the incoming visual and audio history with identical character identities, wardrobe, storm direction, lighting, console state, and room tone. Mara turns from the central console and strides with Keon into a narrow titanium access corridor. The camera tracks backward at walking speed while both faces remain visible. Mara says with deliberate urgency: <d>[English] The forecast is obsolete. We deploy the sensor sail and read the storm directly.</d> Keon listens with closed lips. [Shot 2] At 00:07.500, the camera cuts to Keon walking beside her in medium close-up. He glances through a round window at lightning below and says: <d>[English] In that wind, the sail will pull hard enough to turn the whole station.</d> Mara remains silent and keeps moving toward the deployment bay.\n\noverall_soundscape: The command-dome hum continues seamlessly into the corridor with rhythmic footsteps, soft fabric movement, pressure-door motors, and distant thunder.\n\nnon_diegetic_music: The same original low electronic pulse gains a quiet ticking rhythm."
+      ],
+      "title": "SHOT 2 PROMPT"
+    },
+    {
+      "id": 12,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        780,
+        -760
+      ],
+      "size": [
+        600,
+        320
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value",
+          "type": "STRING",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            21
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "integrated_multimodal_description: [Shot 1] Continue without a temporal reset inside the same observatory. A medium-wide shot reveals the open sensor-sail bay behind a transparent pressure shield. Mara and Keon stand at the deployment rail while a folded silver sail rests between them. Mara clips a safety tether to the rail and says: <d>[English] Then we let it turn us. The station can become part of the instrument.</d> Keon listens with closed lips, then secures the opposite latch. [Shot 2] At 00:08.000, the camera cuts to Keon's clear medium close-up as the bay doors begin to separate behind the shield. His eyes widen at the violent clouds outside. Keon says with a brief incredulous smile: <d>[English] That is either brilliant or the shortest experiment in Asteria's history.</d> Mara remains silent beside him.\n\noverall_soundscape: Servo motors engage, metal latches click, the ventilation tone deepens, and the storm becomes a low continuous roar through the pressure shield.\n\nnon_diegetic_music: The original pulse expands into a restrained rising synth chord."
+      ],
+      "title": "SHOT 3 PROMPT"
+    },
+    {
+      "id": 13,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        1520,
+        -760
+      ],
+      "size": [
+        600,
+        320
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value",
+          "type": "STRING",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            30
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "integrated_multimodal_description: [Shot 1] Continue from the exact incoming bay view, preserving faces, clothing, storm motion, lighting, sail position, and sound. The silver sensor sail unfolds beyond the pressure shield and catches the rising current. The observatory tilts gently while both characters brace against the rail. No one speaks during the opening reaction. [Shot 2] At 00:04.000, the camera cuts to Mara in medium close-up as clean data curves illuminate her face. Mara says with quiet satisfaction: <d>[English] There it is. The storm has a second eye beneath the cloud deck.</d> Keon listens with closed lips. [Shot 3] At 00:09.000, the camera cuts to Keon beside the glowing telemetry display. His shoulders relax and he says: <d>[English] Then we finally know where it is going.</d> Mara remains silent. [Shot 4] At 00:12.000, the camera returns to a medium two-shot. The station settles into a stable arc, the sail glows silver against the storm, and Mara and Keon exchange a relieved look without further dialogue. Hold on the original characters and observatory without a fade.\n\noverall_soundscape: The sail fabric vibrates, tether hardware strains, warning tones resolve into a calm confirmation chime, and the storm roar steadies beneath separated dialogue.\n\nnon_diegetic_music: The original synth chord resolves into a quiet warm harmonic bed."
+      ],
+      "title": "SHOT 4 PROMPT"
+    },
+    {
+      "id": 20,
+      "type": "H3RelayGenerateShot",
+      "pos": [
+        -700,
+        -350
+      ],
+      "size": [
+        580,
+        690
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "h3_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 4
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 3
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": 5
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "name": "duration_seconds",
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_seconds"
+          },
+          "link": null
+        },
+        {
+          "name": "h3_steps",
+          "type": "INT",
+          "widget": {
+            "name": "h3_steps"
+          },
+          "link": null
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "widget": {
+            "name": "output_crf"
+          },
+          "link": null
+        },
+        {
+          "name": "ref_image_size",
+          "type": "COMBO",
+          "widget": {
+            "name": "ref_image_size"
+          },
+          "link": null
+        },
+        {
+          "name": "shot_id",
+          "type": "STRING",
+          "widget": {
+            "name": "shot_id"
+          },
+          "link": null
+        },
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_2",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_3",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_video",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_video_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "links": [
+            7,
+            13
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayGenerateShot"
+      },
+      "widgets_values": [
+        424242,
+        "fixed",
+        15,
+        16,
+        18,
+        "match",
+        ""
+      ],
+      "title": "SHOT 1 · GENERATE / REVIEW / REROLL RAW H3"
+    },
+    {
+      "id": 21,
+      "type": "H3RelayGenerateShot",
+      "pos": [
+        40,
+        -350
+      ],
+      "size": [
+        580,
+        690
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "h3_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 11
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 13
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": 12
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "name": "duration_seconds",
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_seconds"
+          },
+          "link": null
+        },
+        {
+          "name": "h3_steps",
+          "type": "INT",
+          "widget": {
+            "name": "h3_steps"
+          },
+          "link": null
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "widget": {
+            "name": "output_crf"
+          },
+          "link": null
+        },
+        {
+          "name": "ref_image_size",
+          "type": "COMBO",
+          "widget": {
+            "name": "ref_image_size"
+          },
+          "link": null
+        },
+        {
+          "name": "shot_id",
+          "type": "STRING",
+          "widget": {
+            "name": "shot_id"
+          },
+          "link": null
+        },
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_2",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_3",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_video",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_video_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "links": [
+            15,
+            22
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayGenerateShot"
+      },
+      "widgets_values": [
+        424242,
+        "fixed",
+        15,
+        16,
+        18,
+        "match",
+        ""
+      ],
+      "title": "SHOT 2 · CONTINUE RAW H3 FROM SHOT 1"
+    },
+    {
+      "id": 22,
+      "type": "H3RelayGenerateShot",
+      "pos": [
+        780,
+        -350
+      ],
+      "size": [
+        580,
+        690
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "h3_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 20
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 22
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": 21
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "name": "duration_seconds",
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_seconds"
+          },
+          "link": null
+        },
+        {
+          "name": "h3_steps",
+          "type": "INT",
+          "widget": {
+            "name": "h3_steps"
+          },
+          "link": null
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "widget": {
+            "name": "output_crf"
+          },
+          "link": null
+        },
+        {
+          "name": "ref_image_size",
+          "type": "COMBO",
+          "widget": {
+            "name": "ref_image_size"
+          },
+          "link": null
+        },
+        {
+          "name": "shot_id",
+          "type": "STRING",
+          "widget": {
+            "name": "shot_id"
+          },
+          "link": null
+        },
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_2",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_3",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_video",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_video_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "links": [
+            24,
+            31
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayGenerateShot"
+      },
+      "widgets_values": [
+        424242,
+        "fixed",
+        15,
+        16,
+        18,
+        "match",
+        ""
+      ],
+      "title": "SHOT 3 · CONTINUE RAW H3 FROM SHOT 2"
+    },
+    {
+      "id": 23,
+      "type": "H3RelayGenerateShot",
+      "pos": [
+        1520,
+        -350
+      ],
+      "size": [
+        580,
+        690
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "h3_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 29
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 31
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": 30
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "name": "duration_seconds",
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration_seconds"
+          },
+          "link": null
+        },
+        {
+          "name": "h3_steps",
+          "type": "INT",
+          "widget": {
+            "name": "h3_steps"
+          },
+          "link": null
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "widget": {
+            "name": "output_crf"
+          },
+          "link": null
+        },
+        {
+          "name": "ref_image_size",
+          "type": "COMBO",
+          "widget": {
+            "name": "ref_image_size"
+          },
+          "link": null
+        },
+        {
+          "name": "shot_id",
+          "type": "STRING",
+          "widget": {
+            "name": "shot_id"
+          },
+          "link": null
+        },
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_2",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_3",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_video",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_video_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "links": [
+            33
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayGenerateShot"
+      },
+      "widgets_values": [
+        424242,
+        "fixed",
+        15,
+        16,
+        18,
+        "match",
+        ""
+      ],
+      "title": "SHOT 4 · CONTINUE RAW H3 FROM SHOT 3"
+    },
+    {
+      "id": 30,
+      "type": "H3RelayEnhanceShot",
+      "pos": [
+        -700,
+        440
+      ],
+      "size": [
+        530,
+        300
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "ltx_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 6
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 7
+        },
+        {
+          "name": "enhancement_prompt",
+          "type": "STRING",
+          "link": 8
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "widget": {
+            "name": "output_crf"
+          },
+          "link": null
+        },
+        {
+          "name": "context_window_frames",
+          "type": "INT",
+          "widget": {
+            "name": "context_window_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "context_overlap_frames",
+          "type": "INT",
+          "widget": {
+            "name": "context_overlap_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "vae_temporal_tile_frames",
+          "type": "INT",
+          "widget": {
+            "name": "vae_temporal_tile_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "vae_temporal_overlap_frames",
+          "type": "INT",
+          "widget": {
+            "name": "vae_temporal_overlap_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "previous_enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "links": [
+            10
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayEnhanceShot"
+      },
+      "widgets_values": [
+        18,
+        193,
+        64,
+        128,
+        16
+      ],
+      "title": "SHOT 1 · OPTIONAL LTX 2× ENHANCE"
+    },
+    {
+      "id": 31,
+      "type": "H3RelayEnhanceShot",
+      "pos": [
+        40,
+        440
+      ],
+      "size": [
+        530,
+        300
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "ltx_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 14
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 15
+        },
+        {
+          "name": "enhancement_prompt",
+          "type": "STRING",
+          "link": 16
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "widget": {
+            "name": "output_crf"
+          },
+          "link": null
+        },
+        {
+          "name": "context_window_frames",
+          "type": "INT",
+          "widget": {
+            "name": "context_window_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "context_overlap_frames",
+          "type": "INT",
+          "widget": {
+            "name": "context_overlap_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "vae_temporal_tile_frames",
+          "type": "INT",
+          "widget": {
+            "name": "vae_temporal_tile_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "vae_temporal_overlap_frames",
+          "type": "INT",
+          "widget": {
+            "name": "vae_temporal_overlap_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "previous_enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": 17,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "links": [
+            19
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayEnhanceShot"
+      },
+      "widgets_values": [
+        18,
+        193,
+        64,
+        128,
+        16
+      ],
+      "title": "SHOT 2 · OPTIONAL LTX 2× ENHANCE"
+    },
+    {
+      "id": 32,
+      "type": "H3RelayEnhanceShot",
+      "pos": [
+        780,
+        440
+      ],
+      "size": [
+        530,
+        300
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "ltx_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 23
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 24
+        },
+        {
+          "name": "enhancement_prompt",
+          "type": "STRING",
+          "link": 25
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "widget": {
+            "name": "output_crf"
+          },
+          "link": null
+        },
+        {
+          "name": "context_window_frames",
+          "type": "INT",
+          "widget": {
+            "name": "context_window_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "context_overlap_frames",
+          "type": "INT",
+          "widget": {
+            "name": "context_overlap_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "vae_temporal_tile_frames",
+          "type": "INT",
+          "widget": {
+            "name": "vae_temporal_tile_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "vae_temporal_overlap_frames",
+          "type": "INT",
+          "widget": {
+            "name": "vae_temporal_overlap_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "previous_enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": 26,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "links": [
+            28
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayEnhanceShot"
+      },
+      "widgets_values": [
+        18,
+        193,
+        64,
+        128,
+        16
+      ],
+      "title": "SHOT 3 · OPTIONAL LTX 2× ENHANCE"
+    },
+    {
+      "id": 33,
+      "type": "H3RelayEnhanceShot",
+      "pos": [
+        1520,
+        440
+      ],
+      "size": [
+        530,
+        300
+      ],
+      "flags": {},
+      "order": 33,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "ltx_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 32
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 33
+        },
+        {
+          "name": "enhancement_prompt",
+          "type": "STRING",
+          "link": 34
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "widget": {
+            "name": "output_crf"
+          },
+          "link": null
+        },
+        {
+          "name": "context_window_frames",
+          "type": "INT",
+          "widget": {
+            "name": "context_window_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "context_overlap_frames",
+          "type": "INT",
+          "widget": {
+            "name": "context_overlap_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "vae_temporal_tile_frames",
+          "type": "INT",
+          "widget": {
+            "name": "vae_temporal_tile_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "vae_temporal_overlap_frames",
+          "type": "INT",
+          "widget": {
+            "name": "vae_temporal_overlap_frames"
+          },
+          "link": null
+        },
+        {
+          "name": "previous_enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": 35,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "links": [
+            37
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayEnhanceShot"
+      },
+      "widgets_values": [
+        18,
+        193,
+        64,
+        128,
+        16
+      ],
+      "title": "SHOT 4 · OPTIONAL LTX 2× ENHANCE"
+    },
+    {
+      "id": 40,
+      "type": "H3RelayInterpolateShot",
+      "pos": [
+        -700,
+        830
+      ],
+      "size": [
+        530,
+        250
+      ],
+      "flags": {},
+      "order": 40,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "interpolation",
+          "type": "H3_RELAY_INTERPOLATION",
+          "link": 9
+        },
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": 10
+        },
+        {
+          "name": "multiplier",
+          "type": "INT",
+          "widget": {
+            "name": "multiplier"
+          },
+          "link": null
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "widget": {
+            "name": "output_crf"
+          },
+          "link": null
+        },
+        {
+          "name": "chunk_frames",
+          "type": "INT",
+          "widget": {
+            "name": "chunk_frames"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "links": [
+            17
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayInterpolateShot"
+      },
+      "widgets_values": [
+        2,
+        18,
+        48
+      ],
+      "title": "SHOT 1 · OPTIONAL INTERPOLATE TO 48 FPS"
+    },
+    {
+      "id": 41,
+      "type": "H3RelayInterpolateShot",
+      "pos": [
+        40,
+        830
+      ],
+      "size": [
+        530,
+        250
+      ],
+      "flags": {},
+      "order": 41,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "interpolation",
+          "type": "H3_RELAY_INTERPOLATION",
+          "link": 18
+        },
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": 19
+        },
+        {
+          "name": "multiplier",
+          "type": "INT",
+          "widget": {
+            "name": "multiplier"
+          },
+          "link": null
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "widget": {
+            "name": "output_crf"
+          },
+          "link": null
+        },
+        {
+          "name": "chunk_frames",
+          "type": "INT",
+          "widget": {
+            "name": "chunk_frames"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "links": [
+            26
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayInterpolateShot"
+      },
+      "widgets_values": [
+        2,
+        18,
+        48
+      ],
+      "title": "SHOT 2 · OPTIONAL INTERPOLATE TO 48 FPS"
+    },
+    {
+      "id": 42,
+      "type": "H3RelayInterpolateShot",
+      "pos": [
+        780,
+        830
+      ],
+      "size": [
+        530,
+        250
+      ],
+      "flags": {},
+      "order": 42,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "interpolation",
+          "type": "H3_RELAY_INTERPOLATION",
+          "link": 27
+        },
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": 28
+        },
+        {
+          "name": "multiplier",
+          "type": "INT",
+          "widget": {
+            "name": "multiplier"
+          },
+          "link": null
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "widget": {
+            "name": "output_crf"
+          },
+          "link": null
+        },
+        {
+          "name": "chunk_frames",
+          "type": "INT",
+          "widget": {
+            "name": "chunk_frames"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "links": [
+            35
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayInterpolateShot"
+      },
+      "widgets_values": [
+        2,
+        18,
+        48
+      ],
+      "title": "SHOT 3 · OPTIONAL INTERPOLATE TO 48 FPS"
+    },
+    {
+      "id": 43,
+      "type": "H3RelayInterpolateShot",
+      "pos": [
+        1520,
+        830
+      ],
+      "size": [
+        530,
+        250
+      ],
+      "flags": {},
+      "order": 43,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "interpolation",
+          "type": "H3_RELAY_INTERPOLATION",
+          "link": 36
+        },
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": 37
+        },
+        {
+          "name": "multiplier",
+          "type": "INT",
+          "widget": {
+            "name": "multiplier"
+          },
+          "link": null
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "widget": {
+            "name": "output_crf"
+          },
+          "link": null
+        },
+        {
+          "name": "chunk_frames",
+          "type": "INT",
+          "widget": {
+            "name": "chunk_frames"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "links": [
+            38
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayInterpolateShot"
+      },
+      "widgets_values": [
+        2,
+        18,
+        48
+      ],
+      "title": "SHOT 4 · OPTIONAL INTERPOLATE TO 48 FPS"
+    },
+    {
+      "id": 50,
+      "type": "H3RelayAssemble",
+      "pos": [
+        2240,
+        830
+      ],
+      "size": [
+        540,
+        300
+      ],
+      "flags": {},
+      "order": 50,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": 38
+        },
+        {
+          "name": "output_stage",
+          "type": "COMBO",
+          "widget": {
+            "name": "output_stage"
+          },
+          "link": null
+        },
+        {
+          "name": "filename",
+          "type": "STRING",
+          "widget": {
+            "name": "filename"
+          },
+          "link": null
+        },
+        {
+          "name": "audio_bitrate",
+          "type": "INT",
+          "widget": {
+            "name": "audio_bitrate"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayAssemble"
+      },
+      "widgets_values": [
+        "interpolated",
+        "orbital_storm_h3_relay_spectrum16",
+        256
+      ],
+      "title": "ASSEMBLE FOUR ACCEPTED 2× / 48 FPS SHOTS"
+    },
+    {
+      "id": 60,
+      "type": "MarkdownNote",
+      "pos": [
+        -2080,
+        1840
+      ],
+      "size": [
+        500,
+        620
+      ],
+      "color": "#222",
+      "bgcolor": "#000",
+      "flags": {},
+      "order": 60,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## H3 Relay\n\nH3 Relay is a staged MiniMax H3 long-form video workflow for generating, reviewing, continuing, enhancing, interpolating, and assembling shots without repeating accepted work. Native H3 video and stereo audio remain the source of continuity; LTX 2.5 and RIFE are optional finishing stages.\n\n## Project links\n\n- [MiniMax H3](https://www.minimax.io/blog/minimax-h3)\n- [🤗 Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3)\n- [LTX 2.5](https://huggingface.co/Lightricks/LTX-2.5)\n\n## About this workflow\n\n**Generation stages**\n\n1. Generate and review each native 832x480/24fps H3 shot with synchronized audio.\n2. Continue the next shot from the accepted H3 video/audio checkpoint using configurable sliding history (18 frames by default).\n3. Optionally run the learned LTX latent 2x expansion and pixel-spatial IC-LoRA refinement.\n4. Optionally run RIFE to convert 24fps LTX output to 48fps.\n5. Assemble the selected finishing stage with one final AAC encode.\n\n**Key inputs**\n\n- **global_prompt**: series-wide style, character, environment, voice, and continuity rules\n- **prompt**: shot-specific action, camera, timing, dialogue, SFX, and music direction\n- **duration_seconds**: rounded upward to H3's valid 5+17k frame grid\n- **h3_overlap_frames**: sequence-wide H3 visual/audio history; choose 18, 35, 52, or 69 frames\n- **output_crf**: per-stage H.264 cache/assembly quality; it is not a model parameter\n- **sequence**: native H3 continuation state passed between accepted shots\n- **enhanced**: LTX/interpolation state; bypass Interpolate nodes for 24fps assembly\n\n**Sampling controls**\n\n- **sampler**: every native option exposed by ComfyUI KSamplerSelect\n- **scheduler**: beta57 plus every native option exposed by ComfyUI BasicScheduler\n- **spectrum_enabled**: independently enables or disables Spectrum forecasting; unsupported samplers still run with Spectrum bypassed\n- **default**: Euler + beta57 + Spectrum enabled\n\nSampler and scheduler can be mixed freely. For example, Euler or res_multistep with the simple scheduler runs without changing any model inputs.\n\nH3, LTX, and interpolation videos are managed cache artifacts, not published outputs. Connect a native Save Video node to publish an individual stage, or run Assemble to publish the final movie. Cache Manager can inspect usage and prune superseded rerolls.\n\nUnchanged H3, LTX, interpolation, and assembly stages are restored from durable disk caches across queues and restarts."
+      ],
+      "title": "Note: H3 Relay"
+    },
+    {
+      "id": 61,
+      "type": "MarkdownNote",
+      "pos": [
+        -2650,
+        1840
+      ],
+      "size": [
+        540,
+        1040
+      ],
+      "color": "#222",
+      "bgcolor": "#000",
+      "flags": {},
+      "order": 61,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Model Links\n\n**vae**\n\n- [minimax_h3_video_vae_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors)\n- [minimax_h3_audio_vae_fp32.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors)\n- [ltx-2.5-video-vae-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-video-vae-bf16.safetensors)\n\n**diffusion_models**\n\n- [minimax_h3_fl2va_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_int8_convrot.safetensors)\n- [minimax_h3_ref2va_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_ref2va_int8_convrot.safetensors)\n- [ltx-2.5-22b-dev-transformer-comfy-int8-convrot.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/diffusion_models/ltx-2.5-22b-dev-transformer-comfy-int8-convrot.safetensors)\n\n**text_encoders**\n\n- [qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors)\n- [gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/text_encoders/gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors)\n\n**latent_upscale_models**\n\n- [ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors)\n\n**loras**\n\n- [ltx-2.5-22b-distilled-lora-450-bf16.safetensors](https://huggingface.co/Lightricks/LTX-2.5/resolve/main/loras/ltx-2.5-22b-distilled-lora-450-bf16.safetensors)\n- [ltx-2.5-22b-ic-lora-pixel-spatial-upscaler-x2-1.0.safetensors](https://huggingface.co/Lightricks/LTX-2.5-22b-IC-LoRA-Pixel-Spatial-Upscaler/resolve/main/ltx-2.5-22b-ic-lora-pixel-spatial-upscaler-x2-1.0.safetensors)\n\n**frame_interpolation**\n\n- [rife_v4.26_heavy.safetensors](https://huggingface.co/Comfy-Org/frame_interpolation/resolve/main/frame_interpolation/rife_v4.26_heavy.safetensors)\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 vae/\n│   │   ├── minimax_h3_video_vae_fp16.safetensors\n│   │   ├── minimax_h3_audio_vae_fp32.safetensors\n│   │   └── ltx-2.5-video-vae-bf16.safetensors\n│   ├── 📂 diffusion_models/\n│   │   ├── minimax_h3_fl2va_int8_convrot.safetensors\n│   │   ├── minimax_h3_ref2va_int8_convrot.safetensors\n│   │   └── ltx-2.5-22b-dev-transformer-comfy-int8-convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   ├── qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n│   │   └── gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors\n│   ├── 📂 latent_upscale_models/\n│   │   └── ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors\n│   ├── 📂 loras/\n│   │   ├── ltx-2.5-22b-distilled-lora-450-bf16.safetensors\n│   │   └── ltx-2.5-22b-ic-lora-pixel-spatial-upscaler-x2-1.0.safetensors\n│   └── 📂 frame_interpolation/\n│       └── rife_v4.26_heavy.safetensors\n```\n\nApproximate storage for this profile: **129 GiB**.\n\nH3 Relay's GPL-3.0 code license does not grant rights to these separately licensed model weights. Review and accept every upstream model license and obtain any required authorization before downloading or use.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)"
+      ],
+      "title": "Note: Model Links"
+    },
+    {
+      "id": 77,
+      "type": "MarkdownNote",
+      "pos": [
+        -1540,
+        1840
+      ],
+      "size": [
+        300,
+        520
+      ],
+      "color": "#222",
+      "bgcolor": "#000",
+      "flags": {},
+      "order": 77,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "| megapixels | Aspect | Output (multiple=32) |\n|---|---|---|\n| 0.2 | 16:9 | 608 x 352 |\n| 0.3 | 16:9 | 736 x 416 |\n| 0.4 | 16:9 | 864 x 480 |\n| 0.5 | 16:9 | 960 x 544 |\n| 0.6 | 16:9 | 1056 x 608 |\n| 0.7 | 16:9 | 1152 x 640 |\n| 0.8 | 16:9 | 1216 x 672 |\n| 0.9 | 16:9 | 1280 x 736 |\n| 0.98 | 16:9 | 1344 x 768 |\n| 1.0 | 16:9 | 1376 x 768 |\n| 1.2 | 16:9 | 1504 x 832 |\n| 1.5 | 16:9 | 1664 x 928 |\n| 1.8 | 16:9 | 1824 x 1024 |\n| 2.0 | 16:9 | 1920 x 1088 |"
+      ],
+      "title": "Note: Size Settings Reference"
+    },
+    {
+      "id": 78,
+      "type": "H3RelayCacheManager",
+      "pos": [
+        -1540,
+        2420
+      ],
+      "size": [
+        420,
+        170
+      ],
+      "flags": {},
+      "order": 78,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "action",
+          "type": "COMBO",
+          "widget": {
+            "name": "action"
+          },
+          "link": null
+        },
+        {
+          "name": "keep_revisions_per_shot",
+          "type": "INT",
+          "widget": {
+            "name": "keep_revisions_per_shot"
+          },
+          "link": null
+        },
+        {
+          "name": "budget_gb",
+          "type": "FLOAT",
+          "widget": {
+            "name": "budget_gb"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "cache_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3RelayCacheManager"
+      },
+      "widgets_values": [
+        "inspect",
+        2,
+        100
+      ],
+      "title": "H3 RELAY · CACHE MANAGER"
+    }
+  ],
+  "links": [
+    [
+      1,
+      3,
+      0,
+      4,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      2,
+      5,
+      0,
+      6,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      3,
+      1,
+      0,
+      20,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      4,
+      4,
+      0,
+      20,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      5,
+      10,
+      0,
+      20,
+      2,
+      "STRING"
+    ],
+    [
+      6,
+      6,
+      0,
+      30,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      7,
+      20,
+      0,
+      30,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      8,
+      2,
+      0,
+      30,
+      2,
+      "STRING"
+    ],
+    [
+      9,
+      7,
+      0,
+      40,
+      0,
+      "H3_RELAY_INTERPOLATION"
+    ],
+    [
+      10,
+      30,
+      0,
+      40,
+      1,
+      "H3_RELAY_ENHANCED"
+    ],
+    [
+      11,
+      4,
+      0,
+      21,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      12,
+      11,
+      0,
+      21,
+      2,
+      "STRING"
+    ],
+    [
+      13,
+      20,
+      0,
+      21,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      14,
+      6,
+      0,
+      31,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      15,
+      21,
+      0,
+      31,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      16,
+      2,
+      0,
+      31,
+      2,
+      "STRING"
+    ],
+    [
+      17,
+      40,
+      0,
+      31,
+      8,
+      "H3_RELAY_ENHANCED"
+    ],
+    [
+      18,
+      7,
+      0,
+      41,
+      0,
+      "H3_RELAY_INTERPOLATION"
+    ],
+    [
+      19,
+      31,
+      0,
+      41,
+      1,
+      "H3_RELAY_ENHANCED"
+    ],
+    [
+      20,
+      4,
+      0,
+      22,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      21,
+      12,
+      0,
+      22,
+      2,
+      "STRING"
+    ],
+    [
+      22,
+      21,
+      0,
+      22,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      23,
+      6,
+      0,
+      32,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      24,
+      22,
+      0,
+      32,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      25,
+      2,
+      0,
+      32,
+      2,
+      "STRING"
+    ],
+    [
+      26,
+      41,
+      0,
+      32,
+      8,
+      "H3_RELAY_ENHANCED"
+    ],
+    [
+      27,
+      7,
+      0,
+      42,
+      0,
+      "H3_RELAY_INTERPOLATION"
+    ],
+    [
+      28,
+      32,
+      0,
+      42,
+      1,
+      "H3_RELAY_ENHANCED"
+    ],
+    [
+      29,
+      4,
+      0,
+      23,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      30,
+      13,
+      0,
+      23,
+      2,
+      "STRING"
+    ],
+    [
+      31,
+      22,
+      0,
+      23,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      32,
+      6,
+      0,
+      33,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      33,
+      23,
+      0,
+      33,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      34,
+      2,
+      0,
+      33,
+      2,
+      "STRING"
+    ],
+    [
+      35,
+      42,
+      0,
+      33,
+      8,
+      "H3_RELAY_ENHANCED"
+    ],
+    [
+      36,
+      7,
+      0,
+      43,
+      0,
+      "H3_RELAY_INTERPOLATION"
+    ],
+    [
+      37,
+      33,
+      0,
+      43,
+      1,
+      "H3_RELAY_ENHANCED"
+    ],
+    [
+      38,
+      43,
+      0,
+      50,
+      0,
+      "H3_RELAY_ENHANCED"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "H3 MODEL + GLOBAL SETTINGS",
+      "bounding": [
+        -1530,
+        -1170,
+        1230,
+        2150
+      ],
+      "color": "#315b7d",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "RAW H3 · REVIEW BEFORE FINISHING",
+      "bounding": [
+        -750,
+        -820,
+        2860,
+        1120
+      ],
+      "color": "#78503b",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "LTX MODEL STACK",
+      "bounding": [
+        -1530,
+        1030,
+        1230,
+        620
+      ],
+      "color": "#51366f",
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "OPTIONAL LTX 2× ENHANCEMENT SEQUENCE",
+      "bounding": [
+        -750,
+        390,
+        2860,
+        380
+      ],
+      "color": "#6d4ca3",
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "OPTIONAL CORE INTERPOLATION SEQUENCE",
+      "bounding": [
+        -750,
+        780,
+        2860,
+        410
+      ],
+      "color": "#376d63",
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "FINAL ASSEMBLY",
+      "bounding": [
+        2190,
+        780,
+        640,
+        800
+      ],
+      "color": "#2f6b3f",
+      "flags": {}
+    }
+  ],
+  "definitions": {
+    "subgraphs": []
+  },
+  "extra": {
+    "frontendVersion": "1.49.6",
+    "ds": {
+      "scale": 0.38,
+      "offset": [
+        1570,
+        670
+      ]
+    },
+    "h3_relay": {
+      "version": 4,
+      "source_runtime_seconds": 1566.69,
+      "h3_context_frames": 18,
+      "ltx_context_frames": 17,
+      "ltx_context_steps": 3,
+      "interpolation_multiplier": 2,
+      "assembly": "frame_exact_direct_join"
+    }
+  }
+}

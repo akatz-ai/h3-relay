@@ -1,0 +1,22 @@
+[project]
+name = "h3-relay"
+version = "1.0.0"
+description = "Steerable, resumable long-form MiniMax H3 video for ComfyUI"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+dependencies = []
+classifiers = [
+    "Operating System :: POSIX :: Linux",
+    "Environment :: GPU :: NVIDIA CUDA",
+]
+
+[project.urls]
+Repository = "https://github.com/akatz-ai/h3-relay"
+Documentation = "https://github.com/akatz-ai/h3-relay#readme"
+"Bug Tracker" = "https://github.com/akatz-ai/h3-relay/issues"
+
+[tool.comfy]
+PublisherId = "akatz"
+DisplayName = "H3 Relay"
+requires-comfyui = ">=0.32.0"
