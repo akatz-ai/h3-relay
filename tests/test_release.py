@@ -8,10 +8,16 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 class ReleaseMetadataTest(unittest.TestCase):
+    def test_generate_shot_seed_declares_frontend_control(self):
+        source = (ROOT / "h3_relay" / "nodes.py").read_text(encoding="utf-8")
+        class_source = source.split("class H3RelayGenerateShot", 1)[1]
+        class_source = class_source.split("class H3Relay", 1)[0]
+        self.assertIn('"control_after_generate": True', class_source)
+
     def test_registry_identity(self):
         metadata = tomllib.loads((ROOT / "pyproject.toml").read_text())
         self.assertEqual(metadata["project"]["name"], "h3-relay")
-        self.assertEqual(metadata["project"]["version"], "1.0.1")
+        self.assertEqual(metadata["project"]["version"], "1.0.2")
         self.assertEqual(metadata["tool"]["comfy"]["PublisherId"], "akatz")
         self.assertEqual(
             metadata["tool"]["comfy"]["Icon"],

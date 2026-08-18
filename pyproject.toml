@@ -1,6 +1,6 @@
 [project]
 name = "h3-relay"
-version = "1.0.1"
+version = "1.0.2"
 description = "Steerable, resumable long-form MiniMax H3 video for ComfyUI"
 readme = "README.md"
 requires-python = ">=3.10"

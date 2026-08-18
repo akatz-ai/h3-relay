@@ -12,7 +12,8 @@ class ExampleWorkflowTest(unittest.TestCase):
         self.workflow = json.loads(WORKFLOW.read_text(encoding="utf-8"))
 
     def test_direct_nodes_replace_subgraphs(self):
-        self.assertEqual(self.workflow["definitions"]["subgraphs"], [])
+        self.assertEqual(
+            self.workflow.get("definitions", {}).get("subgraphs", []), [])
         types = [node["type"] for node in self.workflow["nodes"]]
         self.assertEqual(types.count("H3RelaySequenceStart"), 1)
         self.assertEqual(types.count("H3RelayGenerateShot"), 4)
@@ -82,15 +83,28 @@ class ExampleWorkflowTest(unittest.TestCase):
                 True,
             ],
         )
-        for node_id in range(20, 24):
-            widgets = nodes[node_id]["widgets_values"]
+        generators = sorted(
+            (node for node in self.workflow["nodes"]
+             if node["type"] == "H3RelayGenerateShot"),
+            key=lambda node: node["title"],
+        )
+        self.assertEqual(len(generators), 4)
+        for node in generators:
+            widgets = node["widgets_values"]
             self.assertEqual(
-                widgets, [424242, "fixed", 15.0, 16, 18, "match", ""]
+                widgets, [424243, "fixed", 15.0, 16, 18, "match", ""]
             )
-            names = [item["name"] for item in nodes[node_id]["inputs"]]
+            names = [item["name"] for item in node["inputs"]]
             self.assertIn("output_crf", names)
             self.assertIn("shot_id", names)
             self.assertNotIn("shot_name", names)
+        ltx_attention = next(
+            node for node in self.workflow["nodes"]
+            if node.get("title") ==
+            "LTX ATTENTION · PYTORCH (SWAP OR BYPASS TO TEST)"
+        )
+        self.assertEqual(
+            ltx_attention["widgets_values"], ["comfy kitchen attention"])
         for node_id in range(40, 44):
             self.assertEqual(
                 nodes[node_id]["widgets_values"],

@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.2
+
+- Declare Generate Shot's seed control explicitly so ComfyUI restores the
+  seed, `control_after_generate`, duration, steps, CRF, and reference sizing
+  without positional shifts or `NaN` values.
+- Synchronize the public Orbital Storm example with the current browser-saved
+  workflow, including seed `424243`, Comfy Kitchen LTX attention, named widget
+  state, and current H3 Relay project links.
+- Add a schema-aware workflow clone/retheme utility that preserves settings by
+  widget name, canonicalizes browser-reordered inputs, connects reference
+  assets by socket name, and validates link integrity.
+- Extend saved-workflow benchmark parsing and regression coverage for named
+  widget values, image loaders, frontend-reordered nodes, and rethemed prompts.
+
 ## 1.0.1
 
 - Add the shared `akatz` Registry icon used by DepthFlow and DepthCrafter so

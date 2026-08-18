@@ -206,6 +206,34 @@ Regenerate the checked-in workflow after changing its builder or source spec:
 node scripts/build_example_workflow.mjs
 ```
 
+### Clone and retheme an existing workflow
+
+Use `scripts/clone_retheme_workflow.mjs` when a new story should retain the
+runtime settings and layout of an existing saved workflow. The script rebuilds
+nodes from the current canonical template, restores settings by widget name,
+and writes both ComfyUI's positional and named widget state. This is important
+for frontend-only values such as a seed's `control_after_generate` mode and for
+saved workflows whose optional-input order predates the current node schema.
+
+Reference images in the retheme spec are connected by input name after the
+canonical socket layout is built, rather than by a hard-coded slot number.
+The source workflow is always read-only and the output is refused when it
+already exists unless `--force` is passed explicitly.
+
+```bash
+node scripts/clone_retheme_workflow.mjs \
+  --source /path/to/saved-workflow.json \
+  --template example_workflows/H3-Relay-Orbital-Storm-Spectrum16-58s.json \
+  --spec scripts/fixtures/combustible-lesson-spectrum16-58s.json \
+  --output /path/to/new-workflow.json
+```
+
+The `h3_relay_retheme_v1` spec contains `run_name`, `output_filename`,
+`global_prompt`, `enhancement_prompt`, exactly four `shot_prompts`, and any
+reference-loader definitions. Each reference definition names its target input
+(`reference_image_1`, `reference_image_2`, or `reference_image_3`) and may set
+its loader position and size.
+
 ## Tests
 
 Pure workflow tests:

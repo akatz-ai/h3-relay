@@ -1242,7 +1242,12 @@ class H3RelayGenerateShot(context.MiniMaxH3SteerableSegment):
                     "forceInput": True,
                     "tooltip": "Shot-specific direction. Connect a multiline prompt/text node.",
                 }),
-                "seed": ("INT", {"default": 424242, "min": 0, "max": context.MAX_SEED}),
+                "seed": ("INT", {
+                    "default": 424242,
+                    "min": 0,
+                    "max": context.MAX_SEED,
+                    "control_after_generate": True,
+                }),
                 "duration_seconds": ("FLOAT", {
                     "default": 5.0,
                     "min": 1.0,

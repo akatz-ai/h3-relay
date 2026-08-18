@@ -309,7 +309,7 @@ const nodes = [
     ],
     outputs: [output("model", "H3_RELAY_MODEL")],
     properties: nodeProperties("H3RelayAttention"),
-    widgets_values: ["pytorch attention"],
+    widgets_values: ["comfy kitchen attention"],
     title: "LTX ATTENTION · PYTORCH (SWAP OR BYPASS TO TEST)",
   },
   {
@@ -408,6 +408,7 @@ H3 Relay is a staged MiniMax H3 long-form video workflow for generating, reviewi
 
 ## Project links
 
+- [H3 Relay](https://github.com/akatz-ai/h3-relay)
 - [MiniMax H3](https://www.minimax.io/blog/minimax-h3)
 - [🤗 Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3)
 - [LTX 2.5](https://huggingface.co/Lightricks/LTX-2.5)
@@ -515,9 +516,7 @@ H3 Relay's GPL-3.0 code license does not grant rights to these separately licens
 
 Note: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models.
 
-- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)
-- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)
-- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)`,
+Add issues here: [https://github.com/akatz-ai/h3-relay/issues](https://github.com/akatz-ai/h3-relay/issues)`,
     [-2650, 1840],
     [540, 1040],
   ),

@@ -20,11 +20,19 @@ import time
 import uuid
 from typing import Any
 
-import aiohttp
-import psutil
+try:
+    import aiohttp
+except ModuleNotFoundError:  # Parser-only tests do not need runtime monitoring.
+    aiohttp = None
+
+try:
+    import psutil
+except ModuleNotFoundError:  # Parser-only tests do not need runtime monitoring.
+    psutil = None
 
 
 WIDGET_INPUTS = {
+    "LoadImage": ("image",),
     "PrimitiveStringMultiline": ("value",),
     "H3RelayH3HybridModelLoader": (
         "base_model", "overlay_model", "overlay_preset",
@@ -137,13 +145,22 @@ def api_prompt_from_workflow(
             raise ValueError("No benchmark widget mapping for %s (node %s)" % (
                 node_type, node_id))
         values = list(node.get("widgets_values") or [])
+        named_values = node.get("widgets_values_named") or {}
         if node_type == "H3RelayInterpolateShot" and len(values) == 2:
             values.append(48)
-        if len(values) < len(widget_names):
+        offset = (
+            1 if not named_values
+            and len(values) == len(widget_names) + 1
+            and values[0] == ""
+            else 0)
+        if len(values) - offset < len(widget_names):
             raise ValueError(
                 "%s node %s has %d widgets; expected %d" %
                 (node_type, node_id, len(values), len(widget_names)))
-        widget_values = dict(zip(widget_names, values))
+        widget_values = {
+            name: named_values.get(name, values[index + offset])
+            for index, name in enumerate(widget_names)
+        }
         inputs: dict[str, Any] = {}
         for item in node.get("inputs") or []:
             name = str(item["name"])
@@ -262,6 +279,9 @@ def final_output_path(comfy_root: pathlib.Path, run_name: str) -> pathlib.Path |
 
 
 async def main() -> int:
+    if aiohttp is None or psutil is None:
+        raise RuntimeError(
+            "full benchmark execution requires the aiohttp and psutil packages")
     parser = argparse.ArgumentParser()
     parser.add_argument("--workflow", required=True, type=pathlib.Path)
     parser.add_argument("--expected-sha256", required=True)
