@@ -13,6 +13,8 @@
   assets by socket name, and validates link integrity.
 - Extend saved-workflow benchmark parsing and regression coverage for named
   widget values, image loaders, frontend-reordered nodes, and rethemed prompts.
+- Publish releases automatically when a `vX.Y.Z` tag matches the package
+  version, while retaining manual dispatch for recovery.
 
 ## 1.0.1
 

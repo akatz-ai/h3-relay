@@ -8,6 +8,15 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 class ReleaseMetadataTest(unittest.TestCase):
+    def test_registry_publish_runs_from_matching_version_tags(self):
+        workflow = (
+            ROOT / ".github" / "workflows" / "publish_action.yml"
+        ).read_text(encoding="utf-8")
+        self.assertIn('      - "v*.*.*"', workflow)
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("Verify tag matches package version", workflow)
+        self.assertIn('test "v${package_version}" = "${GITHUB_REF_NAME}"', workflow)
+
     def test_generate_shot_seed_declares_frontend_control(self):
         source = (ROOT / "h3_relay" / "nodes.py").read_text(encoding="utf-8")
         class_source = source.split("class H3RelayGenerateShot", 1)[1]
