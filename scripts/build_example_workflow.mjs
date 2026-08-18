@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 
-import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const SPEC = path.join(
   ROOT,
-  "examples/orbital-storm-spectrum16-58s-api.json",
+  "scripts/fixtures/orbital-storm-spectrum16-58s.json",
 );
 const OUTPUT = path.join(
   ROOT,
@@ -596,7 +595,7 @@ for (let index = 0; index < 4; index += 1) {
 connect(43, 0, 50, 0, "H3_RELAY_ENHANCED");
 
 const workflow = {
-  id: crypto.randomUUID(),
+  id: "39f3a4d0-0dc1-41b6-bca9-f96bd197a7f3",
   revision: 0,
   last_node_id: 78,
   last_link_id: nextLink - 1,

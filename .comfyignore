@@ -2,7 +2,6 @@
 benchmark/
 tests/
 scripts/
-examples/
 VALIDATION.md
 LTX_UPSCALING.md
 
