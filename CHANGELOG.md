@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+
+- Add the shared `akatz` Registry icon used by DepthFlow and DepthCrafter so
+  H3 Relay displays consistently in Comfy Registry and Extension Manager.
+
 ## 1.0.0
 
 - First public Comfy Registry release under publisher `akatz`.

@@ -1,6 +1,6 @@
 [project]
 name = "h3-relay"
-version = "1.0.0"
+version = "1.0.1"
 description = "Steerable, resumable long-form MiniMax H3 video for ComfyUI"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -19,4 +19,5 @@ Documentation = "https://github.com/akatz-ai/h3-relay#readme"
 [tool.comfy]
 PublisherId = "akatz"
 DisplayName = "H3 Relay"
+Icon = "https://i.imgur.com/aiqQI7U.png"
 requires-comfyui = ">=0.32.0"
