@@ -1,0 +1,41 @@
+# Staging area
+staging/
+
+# Staging metadata
+metadata/
+
+# logs
+logs/
+
+# Local safety backups
+backups/
+
+# Dependency probe virtualenvs
+.venv-probe-*/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Temporary files
+*.tmp
+*.bak
+.comfygit-tmp/
+
+# Runtime marker (created after successful environment initialization)
+.complete
+
+# PyTorch backend configuration (machine-specific)
+.pytorch-backend
+
+# Local overlays and activation (machine-specific)
+overlays/.*
+.overlay-config.toml
+
+# Lock file (machine-specific due to PyTorch platform variants)
+uv.lock
+
+# Generated ComfyUI metadata (recreated from the selected ComfyUI version)
+comfyui_builtins.json
+comfyui_folder_paths.json
+comfyui_model_loaders.json

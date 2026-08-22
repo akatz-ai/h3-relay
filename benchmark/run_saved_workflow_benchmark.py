@@ -186,7 +186,30 @@ def api_prompt_from_workflow(
     return prompt
 
 
-def service_details() -> tuple[int, pathlib.Path | None]:
+def cgroup_memory_for_pid(
+    pid: int,
+    proc_root: pathlib.Path = pathlib.Path("/proc"),
+    cgroup_root: pathlib.Path = pathlib.Path("/sys/fs/cgroup"),
+) -> pathlib.Path | None:
+    """Return the cgroup-v2 memory counter for a process when available."""
+    try:
+        entries = (proc_root / str(pid) / "cgroup").read_text().splitlines()
+    except OSError:
+        return None
+
+    for entry in entries:
+        fields = entry.split(":", 2)
+        if len(fields) != 3 or fields[0] != "0" or fields[1] != "":
+            continue
+        memory_file = cgroup_root / fields[2].lstrip("/") / "memory.current"
+        return memory_file if memory_file.exists() else None
+    return None
+
+
+def service_details(service_pid: int | None = None) -> tuple[int, pathlib.Path | None]:
+    if service_pid is not None:
+        return service_pid, cgroup_memory_for_pid(service_pid)
+
     pid = int(run_text([
         "systemctl", "--user", "show", "comfyui-h3.service",
         "-p", "MainPID", "--value",
@@ -288,6 +311,14 @@ async def main() -> int:
     parser.add_argument("--endpoint", default="http://100.71.50.55:8189")
     parser.add_argument("--comfy-root", required=True, type=pathlib.Path)
     parser.add_argument("--results-root", required=True, type=pathlib.Path)
+    parser.add_argument(
+        "--service-pid",
+        type=int,
+        help=(
+            "PID of the ComfyUI process to monitor. When omitted, use the "
+            "legacy comfyui-h3.service systemd unit."
+        ),
+    )
     parser.add_argument("--prepare-only", action="store_true")
     args = parser.parse_args()
 
@@ -330,7 +361,7 @@ async def main() -> int:
     if final_hash != source_hash:
         raise SystemExit("Saved workflow changed during prompt preparation; refusing to queue.")
 
-    service_pid, cgroup_memory = service_details()
+    service_pid, cgroup_memory = service_details(args.service_pid)
     cache_root = args.comfy_root / "user" / "__h3_relay_cache"
     cache_before = directory_size(cache_root)
     disk_before = shutil.disk_usage(args.comfy_root)
@@ -459,6 +490,7 @@ async def main() -> int:
 
     gpu_values = [float(item["gpu_memory_used_mib"]) for item in samples]
     ram_values = [float(item["system_memory_used_bytes"]) for item in samples]
+    rss_values = [float(item["service_rss_bytes"]) for item in samples]
     service_values = [float(item["service_cgroup_bytes"]) for item in samples]
     swap_values = [float(item["swap_used_bytes"]) for item in samples]
     report = {
@@ -480,6 +512,12 @@ async def main() -> int:
             "p95_gib": gib(percentile(ram_values, 0.95)),
         },
         "service_memory": {
+            "source": "process_tree_rss",
+            "baseline_gib": gib(rss_values[0]),
+            "peak_gib": gib(max(rss_values)),
+            "p95_gib": gib(percentile(rss_values, 0.95)),
+        },
+        "service_cgroup_memory": {
             "baseline_gib": gib(service_values[0]),
             "peak_gib": gib(max(service_values)),
             "p95_gib": gib(percentile(service_values, 0.95)),
@@ -504,7 +542,8 @@ async def main() -> int:
 - Benchmark namespace: `{run_name}`
 - GPU VRAM: baseline **{gpu_base:.0f} MiB**, peak **{gpu_peak:.0f} MiB**, p95 **{gpu_p95:.0f} MiB**
 - System RAM used: baseline **{ram_base:.1f} GiB**, peak **{ram_peak:.1f} GiB**, p95 **{ram_p95:.1f} GiB**
-- ComfyUI service memory: baseline **{svc_base:.1f} GiB**, peak **{svc_peak:.1f} GiB**, p95 **{svc_p95:.1f} GiB**
+- ComfyUI process-tree RSS: baseline **{svc_base:.1f} GiB**, peak **{svc_peak:.1f} GiB**, p95 **{svc_p95:.1f} GiB**
+- ComfyUI cgroup memory (diagnostic): baseline **{cg_base:.1f} GiB**, peak **{cg_peak:.1f} GiB**, p95 **{cg_p95:.1f} GiB**
 - Swap used: baseline **{swap_base:.1f} GiB**, peak **{swap_peak:.1f} GiB**
 - Managed-cache growth: **{cache_growth:.1f} GiB**
 - Final output: `{output}`
@@ -526,6 +565,9 @@ metrics and execution event timeline.
         svc_base=report["service_memory"]["baseline_gib"],
         svc_peak=report["service_memory"]["peak_gib"],
         svc_p95=report["service_memory"]["p95_gib"],
+        cg_base=report["service_cgroup_memory"]["baseline_gib"],
+        cg_peak=report["service_cgroup_memory"]["peak_gib"],
+        cg_p95=report["service_cgroup_memory"]["p95_gib"],
         swap_base=report["swap"]["baseline_gib"],
         swap_peak=report["swap"]["peak_gib"],
         cache_growth=report["cache_growth_gib"],

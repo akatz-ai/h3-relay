@@ -1,0 +1,20 @@
+# Package configuration for ComfyGit environment
+# This file is git-tracked and can be customized per environment
+
+# Package substitutions - when a node requests the key, install the value instead
+
+[substitutions]
+opencv-python = "opencv-contrib-python-headless"
+opencv-contrib-python = "opencv-contrib-python-headless"
+opencv-python-headless = "opencv-contrib-python-headless"
+
+# Packages to exclude - these will NEVER be installed
+# Use with substitutions to prevent conflicting packages
+
+[exclude]
+packages = ["opencv-python", "opencv-contrib-python", "opencv-python-headless"]
+
+# Packages protected during dependency probing
+
+[probe]
+protected = ["torch", "torchvision", "torchaudio", "torchsde", "uv"]
