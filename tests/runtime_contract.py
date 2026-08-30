@@ -18,9 +18,31 @@ from h3_relay import cache as relay_cache
 from h3_relay.vendor.context_loop.sliding_context import (
     require_sliding_history_support,
 )
+from h3_relay.vendor.context_loop import patch_layout
 
 
 def main():
+    def stock_layout_init(*args, **kwargs):
+        return args, kwargs
+
+    def current_sol_wrapper():
+        original_init = stock_layout_init
+
+        def __init__(*args, **kwargs):
+            return original_init(*args, **kwargs)
+
+        return __init__
+
+    for module_name in (
+        "custom_nodes.sol_attn_minimax_v5",
+        "/tmp/ComfyUI/custom_nodes/sol_attn_minimax_v5",
+    ):
+        sol_wrapper = current_sol_wrapper()
+        sol_wrapper.__module__ = module_name
+        assert patch_layout._solattn_wrapped_init(sol_wrapper) is stock_layout_init
+        replacement = lambda *args, **kwargs: None
+        assert patch_layout._replace_solattn_wrapped_init(sol_wrapper, replacement)
+        assert patch_layout._solattn_wrapped_init(sol_wrapper) is replacement
     require_sliding_history_support()
     from comfy.ldm.minimax.model import PackedLayout
     assert PackedLayout.supports_history_keyframes is True
@@ -32,6 +54,15 @@ def main():
     ]
     assert nodes._validate_ltx_tiling(193, 64, 128, 16) == (193, 64, 128, 16)
     import torch
+    generator_schema = nodes.H3RelayGenerateShot.GET_SCHEMA()
+    generator_inputs = {item.id: item for item in generator_schema.inputs}
+    for name in ("reference_image_1", "reference_image_2", "reference_image_3"):
+        assert name in generator_inputs
+    additional_images = generator_inputs["additional_reference_images"]
+    assert additional_images.template.names == list(
+        nodes.ADDITIONAL_REFERENCE_IMAGE_NAMES
+    )
+    assert additional_images.template.min == 0
     with tempfile.TemporaryDirectory() as chunk_directory:
         chunk_video = os.path.join(chunk_directory, "chunk-contract.mp4")
         frames = torch.linspace(
@@ -57,6 +88,15 @@ def main():
     assert custom["cache_tag"] != changed["cache_tag"]
     assert "H3RelayLTXModelAdapter" in nodes.NODE_CLASS_MAPPINGS
     assert "H3RelayCacheManager" in nodes.NODE_CLASS_MAPPINGS
+    assert "H3RelayFastH3VSAModelLoader" in nodes.NODE_CLASS_MAPPINGS
+    assert "H3RelayAssembleRaw" in nodes.NODE_CLASS_MAPPINGS
+    fast_bundle = nodes.H3RelayModelBundlePack().pack(
+        "h3",
+        object(),
+        "contract-fast-h3-vsa",
+        h3_profile=nodes.FAST_H3_VSA_PROFILE,
+    )[0]
+    assert fast_bundle["h3_profile"] == nodes.FAST_H3_VSA_PROFILE
     cache_result = nodes.H3RelayCacheManager().manage(
         "inspect", 2, 100.0
     )
@@ -142,6 +182,71 @@ def main():
             item["class_type"] == "H3RelayInternalSpectrum"
             for item in profile_graph["expand"].values()
         )
+    fast_sequence, _ = nodes.H3RelaySequenceStart().start(
+        "fast_h3_vsa_contract",
+        "FastH3 continuity contract.",
+        832,
+        480,
+        18,
+        "euler",
+        "beta57",
+        True,
+    )
+    fast_graph = nodes.H3RelayGenerateShot.generate_shot(
+        {
+            "format": nodes.MODEL_BUNDLE_FORMAT,
+            "kind": "h3",
+            "model": object(),
+            "cache_tag": "test-fast-h3-vsa-model",
+            "h3_profile": nodes.FAST_H3_VSA_PROFILE,
+        },
+        fast_sequence,
+        "FastH3 profile contract.",
+        42,
+        1.0,
+        16,
+        18,
+        "match",
+        "",
+    )
+    fast_nodes = list(fast_graph["expand"].values())
+    fast_classes = {item["class_type"] for item in fast_nodes}
+    assert "SolAttnMiniMax" in fast_classes
+    assert "H3RelayInternalSpectrum" not in fast_classes
+    assert "LoraLoaderModelOnly" not in fast_classes
+    fast_vsa = next(
+        item for item in fast_nodes if item["class_type"] == "SolAttnMiniMax"
+    )
+    assert fast_vsa["inputs"]["selection"] == "VSA (FastVideo)"
+    assert fast_vsa["inputs"]["selection.vsa_keep_percent"] == 10.0
+    assert fast_vsa["inputs"]["start_percent"] == 0.0
+    assert fast_vsa["inputs"]["end_percent"] == 1.0
+    assert fast_vsa["inputs"]["min_tokens"] == 0
+    fast_shift = next(
+        item for item in fast_nodes
+        if item["class_type"] == "MiniMaxH3SigmaShift"
+    )
+    assert fast_shift["inputs"]["shift_video"] == 12.0
+    assert fast_shift["inputs"]["shift_audio"] == 3.0
+    fast_sampler = next(
+        item for item in fast_nodes if item["class_type"] == "KSamplerSelect"
+    )
+    fast_scheduler = next(
+        item for item in fast_nodes if item["class_type"] == "BasicScheduler"
+    )
+    assert fast_sampler["inputs"]["sampler_name"] == "euler"
+    assert fast_scheduler["inputs"]["scheduler"] == "simple"
+    assert fast_scheduler["inputs"]["steps"] == 4
+    fast_accept = next(
+        item for item in fast_nodes
+        if item["class_type"] == "H3RelayInternalAcceptRaw"
+    )
+    accepted_sequence = fast_accept["inputs"]["sequence"]
+    assert accepted_sequence["h3_model_profile"] == nodes.FAST_H3_VSA_PROFILE
+    assert accepted_sequence["h3_sampling_profile"] == nodes.FAST_H3_VSA_PROFILE
+    assert accepted_sequence["h3_sampler"] == "euler"
+    assert accepted_sequence["h3_scheduler"] == "simple"
+    assert accepted_sequence["h3_spectrum_enabled"] is False
     sequence, _ = nodes.H3RelaySequenceStart().start(
         "h3_relay_contract",
         "Continuity contract.",
@@ -158,6 +263,63 @@ def main():
     assert sequence["h3_context_frames"] == 18
     assert sequence["h3_sampling_profile"] == "native_spectrum_euler_beta57"
     assert "native_spectrum_euler_beta57" in sequence["generation_fingerprint"]
+    reference_images = [
+        torch.full((1, 2, 2, 3), float(index), dtype=torch.float32)
+        for index in range(1, 10)
+    ]
+    legacy_reference_sequence, _ = nodes.H3RelaySequenceStart().start(
+        "reference_contract", "", 832, 480, 18, "euler", "beta57", True,
+    )
+    _, reference_shot = nodes.context._steer_state(
+        legacy_reference_sequence, "", "reference contract", 42, 39, 2,
+    )
+    assert nodes.context._steer_cache_key(
+        legacy_reference_sequence,
+        reference_shot,
+        "match",
+        reference_image_1=reference_images[0],
+        reference_image_2=reference_images[1],
+        reference_image_3=reference_images[2],
+    ) == "28da0d8771fe4dbcd6e9459ead0e85c81fec825d1b02eebce211904fb4888914"
+    try:
+        nodes._reference_image_slots(
+            additional_reference_images={"reference_image_4": reference_images[3]}
+        )
+    except ValueError as exc:
+        assert "1 through 3" in str(exc)
+    else:
+        raise AssertionError("Additional references must follow images 1 through 3")
+    reference_graph = nodes.H3RelayGenerateShot.generate_shot(
+        {
+            "format": nodes.MODEL_BUNDLE_FORMAT,
+            "kind": "h3",
+            "model": object(),
+            "cache_tag": "test-h3-reference-model",
+        },
+        sequence,
+        "Reference image contract.",
+        42,
+        1.0,
+        2,
+        18,
+        "match",
+        "",
+        reference_image_1=reference_images[0],
+        reference_image_2=reference_images[1],
+        reference_image_3=reference_images[2],
+        additional_reference_images={
+            "reference_image_%d" % index: reference_images[index - 1]
+            for index in range(4, 10)
+        },
+    )
+    reference_conditioning = next(
+        item for item in reference_graph["expand"].values()
+        if item["class_type"] == "MiniMaxH3ReferenceToVideo"
+    )
+    for index, image in enumerate(reference_images):
+        assert reference_conditioning["inputs"][
+            "ref_images.ref_image_%d" % index
+        ] is image
     _, automatic_shot = nodes.context._steer_state(
         sequence, "", "Automatic shot ID contract.", 1, 39, 2,
     )

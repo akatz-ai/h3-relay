@@ -31,6 +31,38 @@ hf download Comfy-Org/MiniMax-H3 \
 Qwen3-VL 32B is MiniMax H3's matching text encoder. It is not an alternative
 to the LTX encoder.
 
+## Experimental FastH3 VSA profile
+
+Canonical model card:
+<https://huggingface.co/FastVideo/FastVideo-FastH3-4-step-Preview-v1-VSA-DataFree>
+
+Kijai ComfyUI INT8 ConvRot repack:
+<https://huggingface.co/Kijai/MiniMax-H3-experimental>
+
+```bash
+hf download Kijai/MiniMax-H3-experimental \
+  minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors \
+  --local-dir models/diffusion_models
+```
+
+H3 Relay pins the experimental profile to the exact filename above. The
+measured checkpoint SHA-256 is
+`7221ae65d78780354d51e5048d29728d9f1f8fb9baf50b1dd3df85f5101413d3`.
+Verify the current upstream artifact before assuming that hash applies to a
+newer revision.
+
+At the time of the initial integration, native ComfyUI support is under
+<https://github.com/Comfy-Org/ComfyUI/pull/15958> and the required VSA kernel is
+under <https://github.com/Comfy-Org/comfy-kitchen/pull/117>. Install the
+temporary `SolAttnMiniMax` custom node attached to that comfy-kitchen pull
+request. **FastH3 VSA Profile** intentionally fails prompt validation when
+that node/runtime is absent instead of falling back to dense attention, because
+the checkpoint was distilled against VSA-H3 at 90 percent sparsity.
+
+FastVideo currently describes this preview as text-to-audio-video only.
+FL2VA, Ref2VA, and H3 Relay sliding continuation are experimental inherited
+behaviors rather than upstream-supported contracts.
+
 ## LTX 2.5
 
 Source: <https://huggingface.co/Lightricks/LTX-2.5>

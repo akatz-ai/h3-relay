@@ -9,6 +9,7 @@ The initial node set is:
 
 - **H3 Relay · H3 Hybrid Model Loader**
 - **H3 Relay · H3 Model Loader**
+- **H3 Relay · FastH3 VSA Profile**
 - **H3 Relay · LTX Upscale Model Loader**
 - **H3 Relay · Pack LTX Model**
 - **H3 Relay · Cache Manager**
@@ -18,6 +19,7 @@ The initial node set is:
 - **H3 Relay · Generate Shot**
 - **H3 Relay · LTX 2× Enhance**
 - **H3 Relay · Interpolate**
+- **H3 Relay · Assemble Raw Sequence**
 - **H3 Relay · Assemble**
 
 The pack is intentionally staged:
@@ -145,6 +147,36 @@ choices are 18, 35, 52, and 69 frames; 18 remains the default. Larger overlaps
 carry more matched visual/audio history into each continuation but reduce the
 new duration delivered by that generation window.
 
+## Experimental FastH3 VSA profile
+
+**FastH3 VSA Profile** loads Kijai's INT8 ConvRot repack of FastVideo's
+step-1300 four-forward VSA checkpoint into the same `h3_model` wire used by
+Generate Shot. The profile owns its inference contract: Generate Shot forces
+Euler, the simple scheduler, four transformer forwards, CFG 1 through
+`BasicGuider`, video/audio shifts 12/3, Spectrum off, and VSA with 10 percent
+video-cube keep over the complete denoising range. `h3_steps` and the Sequence
+Start sampler controls remain effective for standard H3 bundles but are
+overridden by this locked profile.
+
+The profile reuses H3 Relay's accepted raw checkpoint, visual/audio overlap,
+cache, reroll, and sequence assembly implementation. **Assemble Raw Sequence**
+publishes an accepted native H3 chain without requiring the LTX or RIFE stages.
+This allows a graph to chain any number of bounded FastH3 shots while carrying
+only the configured recent overlap rather than growing one unbounded model
+context.
+
+FastVideo documents the preview checkpoint as T2VA-only; reference and sliding
+continuation use are experimental. H3 Relay includes their media in the durable
+cache identity but cannot guarantee that a future FastH3 checkpoint preserves
+the inherited H3 reference behavior. Keep the standard FL2VA/Ref2VA profile as
+a fallback until a reference-distilled FastH3 release is available.
+
+The initial integration requires the ComfyUI FastVideo-VSA model support, a
+VSA-capable `comfy-kitchen` build, and the temporary `SolAttnMiniMax` patch node
+described in `MODELS.md`. Applying another H3 Relay LoRA or Attention Backend
+after the FastH3 profile is rejected because those controls would make the
+locked profile ambiguous.
+
 ## Installation
 
 In ComfyUI Manager, search for **H3 Relay**, install the node pack, and restart
@@ -162,6 +194,8 @@ FFmpeg is available on `PATH`, then restart ComfyUI again.
 
 - ComfyUI 0.32.0 or newer
 - MiniMax H3 FL2VA and Ref2VA model files
+- Optional experimental FastH3 VSA checkpoint and VSA runtime described in
+  `MODELS.md`
 - MiniMax H3 text encoder and video/audio VAEs
 - LTX 2.5 model, VAE, distilled LoRA, pixel-spatial upscaler and text encoder
 - A ComfyUI-compatible frame-interpolation checkpoint for interpolation

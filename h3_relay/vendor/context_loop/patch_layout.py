@@ -69,7 +69,11 @@ _applied = False
 # keeps the layout object alive so later in-place position fixes remain visible.
 # That makes it safe to compose with this patch in either load order. Keep this
 # recognition deliberately narrow: unknown wrappers still fail closed.
-SOLATTN_LAYOUT_MODULE_SUFFIX = "._morton_h3"
+SOLATTN_LAYOUT_MODULE_SUFFIXES = (
+    "._morton_h3",
+    ".sol_attn_minimax_v5",
+    "/sol_attn_minimax_v5",
+)
 
 
 REF_SEGMENT_KINDS = ("ref_img", "ref_audio")
@@ -481,7 +485,7 @@ def _solattn_wrapped_init(init):
     module.
     """
     if not getattr(init, "__module__", "").endswith(
-            SOLATTN_LAYOUT_MODULE_SUFFIX):
+            SOLATTN_LAYOUT_MODULE_SUFFIXES):
         return None
     closure = getattr(init, "__closure__", None) or ()
     freevars = getattr(getattr(init, "__code__", None), "co_freevars", ())
@@ -499,7 +503,7 @@ def _solattn_wrapped_init(init):
 def _replace_solattn_wrapped_init(init, replacement):
     """Replace only SolAttn's explicitly identified captured constructor."""
     if not getattr(init, "__module__", "").endswith(
-            SOLATTN_LAYOUT_MODULE_SUFFIX):
+            SOLATTN_LAYOUT_MODULE_SUFFIXES):
         return False
     closure = getattr(init, "__closure__", None) or ()
     freevars = getattr(getattr(init, "__code__", None), "co_freevars", ())

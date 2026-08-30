@@ -14,13 +14,9 @@ import folder_paths
 import comfy.ldm.modules.attention as attention_module
 import comfy.samplers as sampler_module
 
+from comfy_api.latest import InputImpl, io
 from comfy_execution.graph_utils import GraphBuilder
 from comfy_extras.nodes_frame_interpolation import FrameInterpolate
-
-try:
-    from comfy_api.latest import InputImpl
-except ImportError:
-    InputImpl = None
 
 from .vendor.context_loop import chain_nodes as context
 from .vendor.context_loop import nodes as context_nodes
@@ -47,6 +43,10 @@ H3_OVERLAY_MODEL = "minimax_h3_ref2va_int8_convrot.safetensors"
 H3_TEXT_ENCODER = "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors"
 H3_VIDEO_VAE = "minimax_h3_video_vae_fp16.safetensors"
 H3_AUDIO_VAE = "minimax_h3_audio_vae_fp32.safetensors"
+FAST_H3_VSA_MODEL = (
+    "minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors"
+)
+FAST_H3_VSA_PROFILE = "fast_h3_vsa"
 LTX_VAE = "ltx-2.5-video-vae-bf16.safetensors"
 LTX_UPSCALER = "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors"
 LTX_MODEL = "ltx-2.5-22b-dev-transformer-comfy-int8-convrot.safetensors"
@@ -59,6 +59,9 @@ H3_SAMPLERS = list(sampler_module.SAMPLER_NAMES)
 H3_SCHEDULERS = ["beta57"] + [
     name for name in sampler_module.SCHEDULER_NAMES if name != "beta57"
 ]
+ADDITIONAL_REFERENCE_IMAGE_NAMES = tuple(
+    "reference_image_%d" % index for index in range(4, 10)
+)
 
 
 def _manual_cache_revision_input():
@@ -164,10 +167,13 @@ def _interpolation_bundle(value: Any) -> dict[str, Any]:
     return value
 
 
-def _sequence_with_h3_model(sequence: Any, h3_model: Any) -> tuple[dict[str, Any], Any]:
+def _sequence_with_h3_model(
+    sequence: Any, h3_model: Any
+) -> tuple[dict[str, Any], dict[str, Any]]:
     bundle = _model_bundle(h3_model, "h3")
     sequence = context._steer_sequence(sequence)
     tag = str(bundle["cache_tag"])
+    profile = str(bundle.get("h3_profile") or "standard")
     current = sequence.get("model_cache_tag")
     if current is None:
         if sequence.get("segments"):
@@ -186,7 +192,43 @@ def _sequence_with_h3_model(sequence: Any, h3_model: Any) -> tuple[dict[str, Any
             "The connected H3 model/LoRA/attention chain changed. Re-run from "
             "Sequence Start so every continuation uses one model identity."
         )
-    return sequence, bundle["model"]
+    current_profile = sequence.get("h3_model_profile")
+    if current_profile is None:
+        sequence = dict(sequence)
+        sequence["h3_model_profile"] = profile
+    elif str(current_profile) != profile:
+        raise ValueError(
+            "The connected H3 model profile changed from %s to %s. Re-run "
+            "from Sequence Start so continuation settings remain consistent."
+            % (current_profile, profile)
+        )
+    return sequence, bundle
+
+
+def _reference_image_slots(
+    reference_image_1: Any = None,
+    reference_image_2: Any = None,
+    reference_image_3: Any = None,
+    additional_reference_images: Any = None,
+) -> list[Any]:
+    slots = [reference_image_1, reference_image_2, reference_image_3]
+    extras = additional_reference_images or {}
+    if not isinstance(extras, dict):
+        raise ValueError("H3 Relay additional reference images are invalid.")
+    unknown = sorted(set(extras) - set(ADDITIONAL_REFERENCE_IMAGE_NAMES))
+    if unknown:
+        raise ValueError(
+            "H3 Relay received unknown reference image inputs: %s."
+            % ", ".join(unknown)
+        )
+    if any(value is not None for value in extras.values()) and any(
+        value is None for value in slots
+    ):
+        raise ValueError(
+            "Connect reference images 1 through 3 before adding images 4 through 9."
+        )
+    slots.extend(extras.get(name) for name in ADDITIONAL_REFERENCE_IMAGE_NAMES)
+    return slots
 
 
 def _raw_revision(record: dict[str, Any]) -> str:
@@ -628,6 +670,7 @@ class H3RelayModelBundlePack:
                 "vae": ("VAE",),
                 "upscale_model": ("LATENT_UPSCALE_MODEL",),
                 "clip": ("CLIP",),
+                "h3_profile": ("STRING",),
             },
         }
 
@@ -636,7 +679,16 @@ class H3RelayModelBundlePack:
     FUNCTION = "pack"
     CATEGORY = CATEGORY + "/internal"
 
-    def pack(self, kind, model, cache_tag, vae=None, upscale_model=None, clip=None):
+    def pack(
+        self,
+        kind,
+        model,
+        cache_tag,
+        vae=None,
+        upscale_model=None,
+        clip=None,
+        h3_profile="standard",
+    ):
         return ({
             "format": MODEL_BUNDLE_FORMAT,
             "kind": str(kind),
@@ -645,6 +697,7 @@ class H3RelayModelBundlePack:
             "upscale_model": upscale_model,
             "clip": clip,
             "cache_tag": str(cache_tag),
+            "h3_profile": str(h3_profile or "standard"),
         },)
 
 
@@ -771,6 +824,64 @@ class H3RelayH3ModelLoader:
         pack.set_input("kind", "h3")
         pack.set_input("model", loader.out(0))
         pack.set_input("cache_tag", tag)
+        return {"result": (pack.out(0),), "expand": graph.finalize()}
+
+
+class H3RelayFastH3VSAModelLoader:
+    @classmethod
+    def INPUT_TYPES(cls):
+        installed = folder_paths.get_filename_list("diffusion_models")
+        choices = [name for name in installed if name == FAST_H3_VSA_MODEL]
+        if not choices:
+            choices = [FAST_H3_VSA_MODEL]
+        return {
+            "required": {
+                "model_name": (choices, {"default": FAST_H3_VSA_MODEL}),
+                "weight_dtype": (
+                    ["default", "fp8_e4m3fn", "fp8_e4m3fn_fast", "fp8_e5m2"],
+                    {"default": "default"},
+                ),
+                "manual_cache_revision": _manual_cache_revision_input(),
+            }
+        }
+
+    RETURN_TYPES = (MODEL_BUNDLE_TYPE,)
+    RETURN_NAMES = ("h3_model",)
+    FUNCTION = "load"
+    CATEGORY = CATEGORY + "/loaders"
+    DESCRIPTION = (
+        "Load the FastVideo FastH3 four-forward checkpoint as a locked H3 "
+        "Relay profile. Generate Shot forces Euler/simple, four steps, CFG 1, "
+        "12/3 modality shifts, and VSA at 10% keep. This experimental profile "
+        "requires ComfyUI FastVideo-VSA support, a VSA-capable comfy-kitchen "
+        "build, and the SolAttnMiniMax patch node."
+    )
+
+    def load(self, model_name, weight_dtype, manual_cache_revision):
+        if str(model_name) != FAST_H3_VSA_MODEL:
+            raise ValueError(
+                "FastH3 VSA Profile requires %s." % FAST_H3_VSA_MODEL
+            )
+        graph = GraphBuilder()
+        loader = graph.node("UNETLoader", "FastH3Model")
+        loader.set_input("unet_name", str(model_name))
+        loader.set_input("weight_dtype", str(weight_dtype))
+        tag = "h3-fast-vsa:%s" % context._fingerprint({
+            "model": str(model_name),
+            "weight_dtype": str(weight_dtype),
+            "manual": str(manual_cache_revision),
+            "profile": FAST_H3_VSA_PROFILE,
+            "steps": 4,
+            "sampler": "euler",
+            "scheduler": "simple",
+            "shift": [12.0, 3.0],
+            "vsa_keep_percent": 10.0,
+        })
+        pack = graph.node("H3RelayInternalModelBundlePack", "FastH3Bundle")
+        pack.set_input("kind", "h3")
+        pack.set_input("model", loader.out(0))
+        pack.set_input("cache_tag", tag)
+        pack.set_input("h3_profile", FAST_H3_VSA_PROFILE)
         return {"result": (pack.out(0),), "expand": graph.finalize()}
 
 
@@ -941,6 +1052,11 @@ class H3RelayModelLoRA:
 
     def apply(self, model, lora_name, strength):
         bundle = _model_bundle(model)
+        if str(bundle.get("h3_profile") or "standard") == FAST_H3_VSA_PROFILE:
+            raise ValueError(
+                "FastH3 VSA Profile owns its distilled checkpoint contract and "
+                "does not accept additional H3 Relay LoRAs."
+            )
         graph = GraphBuilder()
         lora = graph.node("LoraLoaderModelOnly", "RelayLoRA")
         lora.set_input("model", bundle["model"])
@@ -990,6 +1106,11 @@ class H3RelayAttention:
 
     def apply(self, model, attention):
         bundle = _model_bundle(model)
+        if str(bundle.get("h3_profile") or "standard") == FAST_H3_VSA_PROFILE:
+            raise ValueError(
+                "FastH3 VSA Profile installs its required VSA attention inside "
+                "Generate Shot; do not add an Attention Backend node."
+            )
         key = {
             "comfy kitchen attention": "comfy_kitchen_int8",
             "pytorch attention": "pytorch",
@@ -1231,64 +1352,144 @@ class H3RelaySequenceStart:
         )
 
 
-class H3RelayGenerateShot(context.MiniMaxH3SteerableSegment):
+class H3RelayGenerateShot(io.ComfyNode):
     @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "h3_model": (MODEL_BUNDLE_TYPE,),
-                "sequence": (context.STEER_SEQUENCE_TYPE,),
-                "prompt": ("STRING", {
-                    "forceInput": True,
-                    "tooltip": "Shot-specific direction. Connect a multiline prompt/text node.",
-                }),
-                "seed": ("INT", {
-                    "default": 424242,
-                    "min": 0,
-                    "max": context.MAX_SEED,
-                    "control_after_generate": True,
-                }),
-                "duration_seconds": ("FLOAT", {
-                    "default": 5.0,
-                    "min": 1.0,
-                    "max": 15.0,
-                    "step": 0.25,
-                    "tooltip": "Rounded upward to MiniMax H3's valid 5+17k frame grid.",
-                }),
-                "h3_steps": ("INT", {"default": 16, "min": 1, "max": 100}),
-                "output_crf": ("INT", {
-                    "default": 18,
-                    "min": 0,
-                    "max": 51,
-                    "tooltip": "H.264 quality for this shot's cached review/assembly segment. This is not an H3 model parameter.",
-                }),
-                "ref_image_size": (["match", "max"], {"default": "match"}),
-            },
-            "optional": {
-                "shot_id": ("STRING", {
-                    "default": "",
-                    "tooltip": (
+    def define_schema(cls):
+        additional_images = io.Autogrow.TemplateNames(
+            input=io.Image.Input("reference_image"),
+            names=list(ADDITIONAL_REFERENCE_IMAGE_NAMES),
+            min=0,
+        )
+        return io.Schema(
+            node_id="H3RelayGenerateShot",
+            display_name="H3 Relay · Generate Shot",
+            category=CATEGORY,
+            description="Generate and cache one native-resolution H3 shot with audio.",
+            is_output_node=True,
+            enable_expand=True,
+            inputs=[
+                io.Custom(MODEL_BUNDLE_TYPE).Input("h3_model"),
+                io.Custom(context.STEER_SEQUENCE_TYPE).Input("sequence"),
+                io.String.Input("prompt", force_input=True),
+                io.Int.Input(
+                    "seed",
+                    default=424242,
+                    min=0,
+                    max=context.MAX_SEED,
+                    control_after_generate=True,
+                ),
+                io.Float.Input(
+                    "duration_seconds",
+                    default=5.0,
+                    min=1.0,
+                    max=15.0,
+                    step=0.25,
+                    tooltip="Rounded upward to MiniMax H3's valid 5+17k frame grid.",
+                ),
+                io.Int.Input(
+                    "h3_steps",
+                    default=16,
+                    min=1,
+                    max=100,
+                    tooltip=(
+                        "Sampling steps for standard H3 profiles. FastH3 VSA "
+                        "Profile always uses its trained four-forward schedule."
+                    ),
+                ),
+                io.Int.Input(
+                    "output_crf",
+                    default=18,
+                    min=0,
+                    max=51,
+                    tooltip="H.264 quality for this shot's cached review/assembly segment. This is not an H3 model parameter.",
+                ),
+                io.Combo.Input(
+                    "ref_image_size", options=["match", "max"], default="match"
+                ),
+                io.String.Input(
+                    "shot_id",
+                    default="",
+                    optional=True,
+                    tooltip=(
                         "Optional stable sequence identifier. Leave blank to "
                         "assign shot_0001, shot_0002, and so on automatically."
                     ),
-                }),
-                "first_frame": ("IMAGE",),
-                "last_frame": ("IMAGE",),
-                "reference_image_1": ("IMAGE",),
-                "reference_image_2": ("IMAGE",),
-                "reference_image_3": ("IMAGE",),
-                "reference_video": ("IMAGE",),
-                "reference_video_audio": ("AUDIO",),
-                "reference_audio": ("AUDIO",),
-            },
-        }
+                ),
+                io.Image.Input("first_frame", optional=True),
+                io.Image.Input("last_frame", optional=True),
+                io.Image.Input("reference_image_1", optional=True),
+                io.Image.Input("reference_image_2", optional=True),
+                io.Image.Input("reference_image_3", optional=True),
+                io.Autogrow.Input(
+                    "additional_reference_images",
+                    template=additional_images,
+                    optional=True,
+                ),
+                io.Image.Input("reference_video", optional=True),
+                io.Audio.Input("reference_video_audio", optional=True),
+                io.Audio.Input("reference_audio", optional=True),
+            ],
+            outputs=[
+                io.Custom(context.STEER_SEQUENCE_TYPE).Output("sequence"),
+                io.Video.Output("video"),
+                io.String.Output("video_path"),
+                io.String.Output("status"),
+            ],
+        )
 
-    FUNCTION = "generate_shot"
-    CATEGORY = CATEGORY
-    DESCRIPTION = "Generate and cache one native-resolution H3 shot with audio."
+    @classmethod
+    def execute(
+        cls,
+        h3_model,
+        sequence,
+        prompt,
+        seed,
+        duration_seconds,
+        h3_steps,
+        output_crf,
+        ref_image_size="match",
+        shot_id="",
+        first_frame=None,
+        last_frame=None,
+        reference_image_1=None,
+        reference_image_2=None,
+        reference_image_3=None,
+        additional_reference_images=None,
+        reference_video=None,
+        reference_video_audio=None,
+        reference_audio=None,
+    ):
+        result = cls.generate_shot(
+            h3_model,
+            sequence,
+            prompt,
+            seed,
+            duration_seconds,
+            h3_steps,
+            output_crf,
+            ref_image_size,
+            shot_id,
+            first_frame,
+            last_frame,
+            reference_image_1,
+            reference_image_2,
+            reference_image_3,
+            reference_video,
+            reference_video_audio,
+            reference_audio,
+            additional_reference_images,
+        )
+        if isinstance(result, dict):
+            return io.NodeOutput(
+                *result.get("result", ()),
+                ui=result.get("ui"),
+                expand=result.get("expand"),
+            )
+        return io.NodeOutput(*result)
 
+    @classmethod
     def generate_shot(
-        self,
+        cls,
         h3_model,
         sequence,
         prompt,
@@ -1306,12 +1507,27 @@ class H3RelayGenerateShot(context.MiniMaxH3SteerableSegment):
         reference_video=None,
         reference_video_audio=None,
         reference_audio=None,
+        additional_reference_images=None,
     ):
-        sequence, model = _sequence_with_h3_model(sequence, h3_model)
+        reference_images = _reference_image_slots(
+            reference_image_1,
+            reference_image_2,
+            reference_image_3,
+            additional_reference_images,
+        )
+        sequence, bundle = _sequence_with_h3_model(sequence, h3_model)
+        profile = str(bundle.get("h3_profile") or "standard")
+        if profile == FAST_H3_VSA_PROFILE:
+            sequence = dict(sequence)
+            sequence["h3_sampling_profile"] = FAST_H3_VSA_PROFILE
+            sequence["h3_sampler"] = "euler"
+            sequence["h3_scheduler"] = "simple"
+            sequence["h3_spectrum_enabled"] = False
+            h3_steps = 4
         sequence = dict(sequence)
         sequence["relay_output_crf"] = int(output_crf)
         raw_frames = _duration_frames(duration_seconds)
-        result = super().generate(
+        result = context.MiniMaxH3SteerableSegment().generate(
             sequence,
             prompt,
             shot_id,
@@ -1321,13 +1537,14 @@ class H3RelayGenerateShot(context.MiniMaxH3SteerableSegment):
             ref_image_size,
             first_frame,
             last_frame,
-            reference_image_1,
-            reference_image_2,
-            reference_image_3,
+            reference_images[0],
+            reference_images[1],
+            reference_images[2],
             reference_video,
             reference_video_audio,
             reference_audio,
-            relay_model=model,
+            relay_model=bundle["model"],
+            reference_images_extra=reference_images[3:],
         )
         if isinstance(result, dict):
             return result
@@ -2279,6 +2496,52 @@ class H3RelayInterpolateShot:
         )
 
 
+class H3RelayAssembleRaw:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "sequence": (context.STEER_SEQUENCE_TYPE,),
+                "filename": (
+                    "STRING",
+                    {"default": "h3_relay_raw_%date:yyyy-MM-dd_HH-mm-ss%"},
+                ),
+                "audio_bitrate": (
+                    "INT",
+                    {"default": 256, "min": 64, "max": 512},
+                ),
+            }
+        }
+
+    RETURN_TYPES = ("VIDEO", "STRING", "STRING")
+    RETURN_NAMES = ("video", "video_path", "status")
+    FUNCTION = "assemble"
+    OUTPUT_NODE = True
+    CATEGORY = CATEGORY
+    DESCRIPTION = (
+        "Assemble accepted native H3 Relay shots directly, preserving their "
+        "generated audio and removing continuation overlap already trimmed by "
+        "Generate Shot. Use this for raw FastH3 or standard H3 sequences that "
+        "do not enter the LTX/interpolation finishing stream."
+    )
+
+    @classmethod
+    def IS_CHANGED(cls, *args, **kwargs):
+        return float("NaN")
+
+    def assemble(self, sequence, filename, audio_bitrate):
+        _require_video_api()
+        sequence = _raw_sequence(sequence)
+        result = context.MiniMaxH3SteerAssemble().assemble(
+            sequence, filename, int(audio_bitrate)
+        )
+        path, status = result["result"]
+        return {
+            "ui": result["ui"],
+            "result": (InputImpl.VideoFromFile(path), path, status),
+        }
+
+
 class H3RelayAssemble:
     @classmethod
     def INPUT_TYPES(cls):
@@ -2350,6 +2613,7 @@ class H3RelayAssemble:
 NODE_CLASS_MAPPINGS = {
     "H3RelayH3HybridModelLoader": H3RelayH3HybridModelLoader,
     "H3RelayH3ModelLoader": H3RelayH3ModelLoader,
+    "H3RelayFastH3VSAModelLoader": H3RelayFastH3VSAModelLoader,
     "H3RelayLTXModelLoader": H3RelayLTXModelLoader,
     "H3RelayLTXModelAdapter": H3RelayLTXModelAdapter,
     "H3RelayInterpolationModelLoader": H3RelayInterpolationModelLoader,
@@ -2360,6 +2624,7 @@ NODE_CLASS_MAPPINGS = {
     "H3RelayGenerateShot": H3RelayGenerateShot,
     "H3RelayEnhanceShot": H3RelayEnhanceShot,
     "H3RelayInterpolateShot": H3RelayInterpolateShot,
+    "H3RelayAssembleRaw": H3RelayAssembleRaw,
     "H3RelayAssemble": H3RelayAssemble,
     "H3RelayInternalHybridLoader": MiniMaxH3HybridLoader,
     "H3RelayInternalModelBundlePack": H3RelayModelBundlePack,
@@ -2386,6 +2651,7 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "H3RelayH3HybridModelLoader": "H3 Relay · H3 Hybrid Model Loader",
     "H3RelayH3ModelLoader": "H3 Relay · H3 Model Loader",
+    "H3RelayFastH3VSAModelLoader": "H3 Relay · FastH3 VSA Profile",
     "H3RelayLTXModelLoader": "H3 Relay · LTX Upscale Model Loader",
     "H3RelayLTXModelAdapter": "H3 Relay · Pack LTX Model",
     "H3RelayInterpolationModelLoader": "H3 Relay · Interpolation Model Loader",
@@ -2396,5 +2662,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "H3RelayGenerateShot": "H3 Relay · Generate Shot",
     "H3RelayEnhanceShot": "H3 Relay · LTX 2× Enhance",
     "H3RelayInterpolateShot": "H3 Relay · Interpolate",
+    "H3RelayAssembleRaw": "H3 Relay · Assemble Raw Sequence",
     "H3RelayAssemble": "H3 Relay · Assemble",
 }

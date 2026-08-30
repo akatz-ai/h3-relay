@@ -21,7 +21,46 @@ class ReleaseMetadataTest(unittest.TestCase):
         source = (ROOT / "h3_relay" / "nodes.py").read_text(encoding="utf-8")
         class_source = source.split("class H3RelayGenerateShot", 1)[1]
         class_source = class_source.split("class H3Relay", 1)[0]
-        self.assertIn('"control_after_generate": True', class_source)
+        self.assertIn("control_after_generate=True", class_source)
+
+    def test_generate_shot_uses_bounded_reference_image_autogrow(self):
+        source = (ROOT / "h3_relay" / "nodes.py").read_text(encoding="utf-8")
+        class_source = source.split("class H3RelayGenerateShot", 1)[1]
+        class_source = class_source.split("class H3Relay", 1)[0]
+        self.assertIn("io.Autogrow.TemplateNames", class_source)
+        self.assertIn('io.Image.Input("reference_image_1", optional=True)', class_source)
+        self.assertIn('io.Image.Input("reference_image_3", optional=True)', class_source)
+        self.assertIn('"additional_reference_images"', class_source)
+        self.assertIn('range(4, 10)', source)
+        vendor = (
+            ROOT / "h3_relay" / "vendor" / "context_loop" / "chain_nodes.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("supports at most 9 reference images", vendor)
+
+    def test_fast_h3_vsa_profile_is_explicit_and_locked(self):
+        source = (ROOT / "h3_relay" / "nodes.py").read_text(encoding="utf-8")
+        vendor = (
+            ROOT / "h3_relay" / "vendor" / "context_loop" / "chain_nodes.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("class H3RelayFastH3VSAModelLoader", source)
+        self.assertIn("H3RelayFastH3VSAModelLoader", source)
+        self.assertIn("H3RelayAssembleRaw", source)
+        self.assertIn('FAST_H3_VSA_PROFILE = "fast_h3_vsa"', source)
+        self.assertIn('graph.node("SolAttnMiniMax", "FastH3VSA")', vendor)
+        self.assertIn('vsa.set_input("selection.vsa_keep_percent", 10.0)', vendor)
+        self.assertIn(
+            "FastH3 VSA Profile requires its trained four-forward schedule",
+            vendor,
+        )
+        layout = (
+            ROOT
+            / "h3_relay"
+            / "vendor"
+            / "context_loop"
+            / "patch_layout.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn('".sol_attn_minimax_v5"', layout)
+        self.assertIn('"/sol_attn_minimax_v5"', layout)
 
     def test_registry_identity(self):
         metadata = tomllib.loads((ROOT / "pyproject.toml").read_text())

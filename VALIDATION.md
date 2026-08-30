@@ -321,3 +321,38 @@ scripts, internal source specs, and unused Spectrum evaluation modules. The
 exact ZIP loaded in a clean stock ComfyUI 0.33 checkout with only H3 Relay
 installed; all 13 public nodes, 20 namespaced internal runtime nodes, the
 staged HTTP route, and frontend extension registered successfully.
+
+## Experimental FastH3 VSA Relay profile
+
+The FastH3 profile was validated against ComfyUI PR #15958, comfy-kitchen PR
+#117, Kijai's step-1300 INT8 ConvRot checkpoint, and the temporary
+`SolAttnMiniMax` VSA node. The live expanded graph contained Euler, the simple
+scheduler, four steps, shifts 12/3, VSA 10 percent keep over the complete
+sampling range, no Spectrum node, and no Turbo LoRA even when the visible
+Generate Shot `h3_steps` input was 16. All 25 repository tests and the live
+ComfyUI runtime contract passed.
+
+The VSA node and H3 Relay both wrap `PackedLayout`: VSA observes segment spans,
+while Relay positions sliding-history anchors. The first continuation failed
+closed because the temporary node's Comfy loader module name is a filesystem
+path ending in `/sol_attn_minimax_v5`, not its import-style dotted name. Relay
+now recognises both exact forms only when the wrapper closure contains the
+expected callable `original_init`. A clean restart then composed both wrappers;
+the accepted first shot was recovered from disk without regeneration.
+
+Three real raw-sequence validations completed at 832x480 with 18-frame visual
+and audio overlap:
+
+- two 10-second windows assembled to 468 frames / 19.500 seconds;
+- extending the same durable run reused shots 1 and 2, generated only shot 3,
+  and assembled 693 frames / 28.875 seconds;
+- the original four-prompt Breaking Bad Part 1 sequence assembled to 1,394
+  frames / 58.085 seconds in 250.259 seconds end to end.
+
+Each continuation logged 17 history frames plus one boundary, a shortened
+target, one-frame trim, 30 audio latent steps, and zero decoded audio-duration
+drift. At the two-window seam, mean absolute pixel change was 10.257 versus
+8.894-14.149 for adjacent frame pairs. At the added third-window seam it was
+23.650 versus 22.608-44.270 nearby. The three Breaking Bad seam changes were
+2.946, 3.751, and 4.230, all inside their local neighboring motion ranges.
+No visual discontinuity spike was measured at a Relay boundary.

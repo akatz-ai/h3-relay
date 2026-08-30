@@ -7283,7 +7283,8 @@ def _steer_cache_key(sequence: dict[str, Any], shot: dict[str, Any],
                      reference_image_3: Any = None,
                      reference_video: Any = None,
                      reference_video_audio: Any = None,
-                     reference_audio: Any = None) -> str:
+                     reference_audio: Any = None,
+                     reference_images_extra: Any = None) -> str:
     """Fingerprint only inputs that can change the rendered shot.
 
     ComfyUI preview widgets are deliberately absent. The preceding accepted
@@ -7335,6 +7336,16 @@ def _steer_cache_key(sequence: dict[str, Any], shot: dict[str, Any],
                 reference_audio, "reference audio", audio=True),
         },
     }
+    extra_images = list(reference_images_extra or ())
+    if len(extra_images) > 6:
+        raise ValueError("Steerable H3 supports at most 9 reference images.")
+    if any(image is not None for image in extra_images):
+        contract["media"]["reference_images_extra"] = [
+            _steer_media_fingerprint(
+                image, "reference image %d" % (index + 4)
+            )
+            for index, image in enumerate(extra_images)
+        ]
     return _fingerprint(contract)
 
 
@@ -7474,6 +7485,7 @@ class MiniMaxH3SteerSequenceStart:
             "euler",
             "native_euler_beta",
             "native_spectrum_euler_beta57",
+            "fast_h3_vsa",
         }
         if h3_sampling_profile not in allowed_profiles:
             raise ValueError(
@@ -7851,7 +7863,8 @@ class MiniMaxH3SteerableSegment:
                  last_frame=None, reference_image_1=None,
                  reference_image_2=None, reference_image_3=None,
                  reference_video=None, reference_video_audio=None,
-                 reference_audio=None, relay_model=None):
+                 reference_audio=None, relay_model=None,
+                 reference_images_extra=None):
         if GraphBuilder is None:
             raise RuntimeError("Steerable H3 Segment requires ComfyUI GraphBuilder.")
         state, shot = _steer_state(
@@ -7865,7 +7878,8 @@ class MiniMaxH3SteerableSegment:
             reference_image_3=reference_image_3,
             reference_video=reference_video,
             reference_video_audio=reference_video_audio,
-            reference_audio=reference_audio)
+            reference_audio=reference_audio,
+            reference_images_extra=reference_images_extra)
         cached = _steer_cached_result(sequence, state, cache_key)
         if cached is not None:
             return cached
@@ -7891,6 +7905,10 @@ class MiniMaxH3SteerableSegment:
             model_before_shift = relay_model
         sampling_profile = str(
             sequence.get("h3_sampling_profile") or "turbo_auto")
+        if sampling_profile == "fast_h3_vsa" and int(shot["steps"]) != 4:
+            raise ValueError(
+                "FastH3 VSA Profile requires its trained four-forward schedule."
+            )
         explicit_sampler = sequence.get("h3_sampler")
         if explicit_sampler is not None:
             sampler_name = str(explicit_sampler)
@@ -7956,6 +7974,17 @@ class MiniMaxH3SteerableSegment:
                     ("generic_correction_attenuation", "no_attenuation")):
                 spectrum.set_input(name, value)
             sampling_model = spectrum.out(0)
+        if sampling_profile == "fast_h3_vsa":
+            vsa = graph.node("SolAttnMiniMax", "FastH3VSA")
+            vsa.set_input("model", sampling_model)
+            vsa.set_input("selection", "VSA (FastVideo)")
+            vsa.set_input("selection.vsa_keep_percent", 10.0)
+            vsa.set_input("start_percent", 0.0)
+            vsa.set_input("end_percent", 1.0)
+            vsa.set_input("min_tokens", 0)
+            vsa.set_input("sink_conditioning", "exact_kv_and_rows")
+            vsa.set_input("verbose", False)
+            sampling_model = vsa.out(0)
 
         h3_clip = graph.node("CLIPLoader", "H3Text")
         h3_clip.set_input(
@@ -7978,9 +8007,16 @@ class MiniMaxH3SteerableSegment:
                 ("length", int(shot["raw_frames"])),
                 ("ref_image_size", ref_image_size)):
             ref2va.set_input(name, value)
-        for ref_index, image in enumerate((
-                reference_image_1, reference_image_2,
-                reference_image_3)):
+        extra_images = list(reference_images_extra or ())
+        if len(extra_images) > 6:
+            raise ValueError("Steerable H3 supports at most 9 reference images.")
+        reference_images = (
+            reference_image_1,
+            reference_image_2,
+            reference_image_3,
+            *extra_images,
+        )
+        for ref_index, image in enumerate(reference_images):
             if image is not None:
                 ref2va.set_input(
                     "ref_images.ref_image_%d" % ref_index, image)

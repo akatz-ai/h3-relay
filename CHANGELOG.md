@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+- Add the experimental **FastH3 VSA Profile** loader with a cache-owned,
+  four-forward Euler/simple contract, shifts 12/3, Spectrum disabled, and
+  VSA-H3 at 10 percent keep.
+- Add **Assemble Raw Sequence** for publishing accepted native H3 chains
+  without traversing the LTX or interpolation finishing stages.
+- Compose Relay's sliding-history layout anchors with the current temporary
+  `SolAttnMiniMax` layout observer while retaining narrow fail-closed wrapper
+  validation.
+- Extend Generate Shot from three direct reference images to nine bounded,
+  cache-tracked references without changing the first three socket names.
+- Validate two- and three-window FastH3 reference sequences plus the original
+  four-window Breaking Bad Part 1 prompts with 18-frame visual/audio overlap.
+
 ## 1.0.2
 
 - Declare Generate Shot's seed control explicitly so ComfyUI restores the
