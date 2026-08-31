@@ -37,5 +37,18 @@
 - H3 Relay adaptation: the loader class is registered under a namespaced
   internal node id and used by the staged H3 generation graph.
 
+## comfy-kitchen Sol-Attention
+
+- Source: <https://github.com/Comfy-Org/comfy-kitchen>
+- Reference pull request: <https://github.com/Comfy-Org/comfy-kitchen/pull/117>
+- Source version at merge: `0.2.31`; require the `sol_attn` CUDA capability,
+  because the PyPI wheel published under the same version was observed without
+  the merged symbols on 2026-08-30.
+- License: Apache-2.0
+- H3 Relay adaptation: `h3_relay/fast_h3_vsa.py` provides a locked MiniMax H3
+  integration over the external public CUDA API. It supports only the FastH3
+  checkpoint's 10-percent VSA contract and refuses dense fallback. The generic
+  temporary test node is not redistributed or registered.
+
 Future imports should be made as isolated commits, with the upstream commit
 updated here and H3 Relay-specific changes reapplied explicitly.

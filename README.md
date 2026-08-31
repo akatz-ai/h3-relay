@@ -171,11 +171,16 @@ cache identity but cannot guarantee that a future FastH3 checkpoint preserves
 the inherited H3 reference behavior. Keep the standard FL2VA/Ref2VA profile as
 a fallback until a reference-distilled FastH3 release is available.
 
-The initial integration requires the ComfyUI FastVideo-VSA model support, a
-VSA-capable `comfy-kitchen` build, and the temporary `SolAttnMiniMax` patch node
-described in `MODELS.md`. Applying another H3 Relay LoRA or Attention Backend
-after the FastH3 profile is rejected because those controls would make the
-locked profile ambiguous.
+The integration requires the ComfyUI FastVideo-VSA model support and a
+`comfy-kitchen` CUDA build exposing the Sol-Attention API merged in PR #117.
+The merged source currently reports version 0.2.31, but the PyPI 0.2.31 wheel
+tested on 2026-08-30 does not contain `sol_attn`; H3 Relay therefore checks the
+runtime capability rather than trusting the version string. H3 Relay owns the
+narrow MiniMax VSA adapter and inserts it automatically; users do not install
+the temporary `SolAttnMiniMax` test node. Applying another H3 Relay LoRA or
+Attention Backend after the FastH3 profile is rejected because those controls
+would make the locked profile ambiguous. Missing VSA gates or CUDA kernels fail
+explicitly instead of silently generating with dense attention.
 
 ## Installation
 

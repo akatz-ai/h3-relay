@@ -7,9 +7,9 @@
   VSA-H3 at 10 percent keep.
 - Add **Assemble Raw Sequence** for publishing accepted native H3 chains
   without traversing the LTX or interpolation finishing stages.
-- Compose Relay's sliding-history layout anchors with the current temporary
-  `SolAttnMiniMax` layout observer while retaining narrow fail-closed wrapper
-  validation.
+- Replace the temporary external `SolAttnMiniMax` node with a Relay-owned,
+  fail-closed FastH3 adapter against official comfy-kitchen 0.2.31 while
+  retaining migration compatibility with the historical layout observer.
 - Extend Generate Shot from three direct reference images to nine bounded,
   cache-tracked references without changing the first three socket names.
 - Validate two- and three-window FastH3 reference sequences plus the original

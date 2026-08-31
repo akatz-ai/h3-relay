@@ -324,21 +324,52 @@ staged HTTP route, and frontend extension registered successfully.
 
 ## Experimental FastH3 VSA Relay profile
 
-The FastH3 profile was validated against ComfyUI PR #15958, comfy-kitchen PR
-#117, Kijai's step-1300 INT8 ConvRot checkpoint, and the temporary
-`SolAttnMiniMax` VSA node. The live expanded graph contained Euler, the simple
-scheduler, four steps, shifts 12/3, VSA 10 percent keep over the complete
-sampling range, no Spectrum node, and no Turbo LoRA even when the visible
-Generate Shot `h3_steps` input was 16. All 25 repository tests and the live
-ComfyUI runtime contract passed.
+The FastH3 profile was initially validated against ComfyUI PR #15958,
+comfy-kitchen PR #117, Kijai's step-1300 INT8 ConvRot checkpoint, and the
+temporary `SolAttnMiniMax` VSA node. H3 Relay now owns the equivalent narrow
+adapter against the merged comfy-kitchen PR #117 API. Capability testing found
+that the PyPI 0.2.31 wheel does not yet include that merged API, despite sharing
+the source version number; the adapter rejects that artifact before sampling.
+The live expanded graph contains Euler, the simple scheduler, four steps,
+shifts 12/3, VSA 10 percent keep over the complete sampling range, no Spectrum
+node, and no Turbo LoRA even when the visible Generate Shot `h3_steps` input is
+16.
 
-The VSA node and H3 Relay both wrap `PackedLayout`: VSA observes segment spans,
-while Relay positions sliding-history anchors. The first continuation failed
-closed because the temporary node's Comfy loader module name is a filesystem
-path ending in `/sol_attn_minimax_v5`, not its import-style dotted name. Relay
-now recognises both exact forms only when the wrapper closure contains the
-expected callable `original_init`. A clean restart then composed both wrappers;
-the accepted first shot was recovered from disk without regeneration.
+The Relay-owned adapter was validated on `akatzfeyserver` against Kijai
+ComfyUI commit `10febb01d7be73d1491cf5e5347b5ab8b6c2c09e`, PyTorch
+2.13.0+cu130, and an upstream-PR-#117-capable comfy-kitchen 0.2.31 CUDA wheel.
+The historical `sol_attn_minimax_v5` directory was mounted empty. Live
+`object_info` contained `H3RelayInternalFastH3VSA` and did not contain
+`SolAttnMiniMax`. A fresh uncached one-second request patched all 50 H3 blocks,
+executed successfully in 20.37 seconds, and assembled 39 frames / 1.625 seconds
+of 416x256 H.264 video with 32 kHz stereo AAC. The repository suite passed 30
+tests, including capability, gate, layout, graph-expansion, and fail-closed
+contracts.
+
+A second live request restored that accepted first shot, generated only a new
+continuation through the Relay-owned adapter, and assembled two segments into
+60 frames / 2.500 seconds. The continued segment delivered 21 new frames /
+0.875 seconds after its 18-frame history prefix was removed; decoded picture
+and sound were both 0.875 seconds with 0.00 ms drift. The request completed in
+21.13 seconds and exercised the VSA layout observer together with Relay's
+history-anchor and audio-trim paths.
+
+The same live request against the official PyPI 0.2.31 wheel stopped at
+`H3RelayInternalFastH3VSA` with a clear missing `sol_attn` /
+`sol_attn_chunked` error before diffusion sampling. That negative control
+confirms both the upstream artifact mismatch and the absence of a silent dense
+fallback.
+
+The VSA adapter and H3 Relay both wrap `PackedLayout`: VSA observes segment
+spans, while Relay positions sliding-history anchors. The first continuation
+failed closed because the temporary node's Comfy loader module name is a
+filesystem path ending in `/sol_attn_minimax_v5`, not its import-style dotted
+name. Relay now recognises both exact forms only when the wrapper closure
+contains the expected callable `original_init`. A clean restart then composed
+both wrappers; the accepted first shot was recovered from disk without
+regeneration. The Relay-owned wrapper uses the same narrow composition
+contract and retains compatibility with the historical temporary node during
+migration.
 
 Three real raw-sequence validations completed at 832x480 with 18-frame visual
 and audio overlap:

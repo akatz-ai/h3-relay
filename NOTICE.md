@@ -17,6 +17,12 @@ It contains attributed implementation snapshots from:
 - `ComfyUI_MinimaxH3HybridLoader`, MIT, copyright 2026 Scott Mudge. Its
   license is retained under `h3_relay/vendor/hybrid/LICENSE.txt`.
 
+The Relay-owned FastH3 VSA adapter implements the public Sol-Attention API
+introduced by Comfy-Org/comfy-kitchen PR #117 and is informed by Kijai's
+temporary MiniMax test adapter published with that pull request. comfy-kitchen
+itself is Apache-2.0 and remains an external ComfyUI runtime dependency; its
+source is not redistributed by H3 Relay.
+
 The vendored code has been adapted and combined for H3 Relay. See
 `UPSTREAMS.md` for source URLs, snapshot commits, and the local adaptation
 boundary.

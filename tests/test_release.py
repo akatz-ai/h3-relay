@@ -46,8 +46,11 @@ class ReleaseMetadataTest(unittest.TestCase):
         self.assertIn("H3RelayFastH3VSAModelLoader", source)
         self.assertIn("H3RelayAssembleRaw", source)
         self.assertIn('FAST_H3_VSA_PROFILE = "fast_h3_vsa"', source)
-        self.assertIn('graph.node("SolAttnMiniMax", "FastH3VSA")', vendor)
-        self.assertIn('vsa.set_input("selection.vsa_keep_percent", 10.0)', vendor)
+        self.assertIn("class H3RelayInternalFastH3VSA", source)
+        self.assertIn(
+            'graph.node("H3RelayInternalFastH3VSA", "FastH3VSA")', vendor
+        )
+        self.assertNotIn('graph.node("SolAttnMiniMax", "FastH3VSA")', vendor)
         self.assertIn(
             "FastH3 VSA Profile requires its trained four-forward schedule",
             vendor,
@@ -59,8 +62,16 @@ class ReleaseMetadataTest(unittest.TestCase):
             / "context_loop"
             / "patch_layout.py"
         ).read_text(encoding="utf-8")
+        self.assertIn('".fast_h3_vsa"', layout)
         self.assertIn('".sol_attn_minimax_v5"', layout)
         self.assertIn('"/sol_attn_minimax_v5"', layout)
+
+        adapter = (ROOT / "h3_relay" / "fast_h3_vsa.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('MIN_COMFY_KITCHEN_VERSION = "0.2.31"', adapter)
+        self.assertIn("VSA_KEEP_RATIO = 0.10", adapter)
+        self.assertIn("dense fallback is intentionally", adapter)
 
     def test_registry_identity(self):
         metadata = tomllib.loads((ROOT / "pyproject.toml").read_text())

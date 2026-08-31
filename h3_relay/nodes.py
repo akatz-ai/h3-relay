@@ -10,20 +10,19 @@ import uuid
 from fractions import Fraction
 from typing import Any
 
-import folder_paths
 import comfy.ldm.modules.attention as attention_module
 import comfy.samplers as sampler_module
-
+import folder_paths
 from comfy_api.latest import InputImpl, io
 from comfy_execution.graph_utils import GraphBuilder
 from comfy_extras.nodes_frame_interpolation import FrameInterpolate
 
+from . import cache as relay_cache
+from .fast_h3_vsa import apply_fast_h3_vsa
 from .vendor.context_loop import chain_nodes as context
 from .vendor.context_loop import nodes as context_nodes
 from .vendor.hybrid import MiniMaxH3HybridLoader
 from .vendor.spectrum.nodes import SpectrumApplyMiniMaxH3
-from . import cache as relay_cache
-
 
 CATEGORY = "H3 Relay"
 FINISH_TYPE = "H3_RELAY_ENHANCED"
@@ -701,6 +700,24 @@ class H3RelayModelBundlePack:
         },)
 
 
+class H3RelayInternalFastH3VSA:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {"required": {"model": ("MODEL",)}}
+
+    RETURN_TYPES = ("MODEL",)
+    RETURN_NAMES = ("model",)
+    FUNCTION = "apply"
+    CATEGORY = CATEGORY + "/internal"
+    DESCRIPTION = (
+        "Install H3 Relay's locked FastH3 VSA contract using the official "
+        "comfy-kitchen Sol-Attention runtime."
+    )
+
+    def apply(self, model):
+        return (apply_fast_h3_vsa(model),)
+
+
 class H3RelayInterpolationBundlePack:
     @classmethod
     def INPUT_TYPES(cls):
@@ -853,8 +870,8 @@ class H3RelayFastH3VSAModelLoader:
         "Load the FastVideo FastH3 four-forward checkpoint as a locked H3 "
         "Relay profile. Generate Shot forces Euler/simple, four steps, CFG 1, "
         "12/3 modality shifts, and VSA at 10% keep. This experimental profile "
-        "requires ComfyUI FastVideo-VSA support, a VSA-capable comfy-kitchen "
-        "build, and the SolAttnMiniMax patch node."
+        "requires ComfyUI FastVideo-VSA support and a comfy-kitchen CUDA build "
+        "exposing Sol-Attention PR #117; H3 Relay owns the VSA adapter."
     )
 
     def load(self, model_name, weight_dtype, manual_cache_revision):
@@ -2628,6 +2645,7 @@ NODE_CLASS_MAPPINGS = {
     "H3RelayAssemble": H3RelayAssemble,
     "H3RelayInternalHybridLoader": MiniMaxH3HybridLoader,
     "H3RelayInternalModelBundlePack": H3RelayModelBundlePack,
+    "H3RelayInternalFastH3VSA": H3RelayInternalFastH3VSA,
     "H3RelayInternalInterpolationBundlePack": H3RelayInterpolationBundlePack,
     "H3RelayInternalSpectrum": SpectrumApplyMiniMaxH3,
     "H3RelayInternalChainContext": context.MiniMaxH3ChainContext,

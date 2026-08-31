@@ -51,13 +51,16 @@ measured checkpoint SHA-256 is
 Verify the current upstream artifact before assuming that hash applies to a
 newer revision.
 
-At the time of the initial integration, native ComfyUI support is under
-<https://github.com/Comfy-Org/ComfyUI/pull/15958> and the required VSA kernel is
-under <https://github.com/Comfy-Org/comfy-kitchen/pull/117>. Install the
-temporary `SolAttnMiniMax` custom node attached to that comfy-kitchen pull
-request. **FastH3 VSA Profile** intentionally fails prompt validation when
-that node/runtime is absent instead of falling back to dense attention, because
-the checkpoint was distilled against VSA-H3 at 90 percent sparsity.
+Native ComfyUI support is under
+<https://github.com/Comfy-Org/ComfyUI/pull/15958>. The required Sol-Attention
+kernel is merged in <https://github.com/Comfy-Org/comfy-kitchen/pull/117>.
+Although the merged source reports version 0.2.31, the PyPI 0.2.31 CUDA wheel
+tested on 2026-08-30 does not expose `sol_attn`; use a build from the merged
+source until an official wheel containing that capability is published. H3
+Relay supplies its own locked MiniMax VSA adapter; do not install the temporary
+`SolAttnMiniMax` test node. **FastH3 VSA Profile** fails when the core gate
+support or CUDA kernel is absent instead of falling back to dense attention,
+because the checkpoint was distilled against VSA-H3 at 90 percent sparsity.
 
 FastVideo currently describes this preview as text-to-audio-video only.
 FL2VA, Ref2VA, and H3 Relay sliding continuation are experimental inherited

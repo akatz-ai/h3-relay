@@ -35,6 +35,7 @@ def main():
 
     for module_name in (
         "custom_nodes.sol_attn_minimax_v5",
+        "h3_relay.fast_h3_vsa",
         "/tmp/ComfyUI/custom_nodes/sol_attn_minimax_v5",
     ):
         sol_wrapper = current_sol_wrapper()
@@ -89,6 +90,7 @@ def main():
     assert "H3RelayLTXModelAdapter" in nodes.NODE_CLASS_MAPPINGS
     assert "H3RelayCacheManager" in nodes.NODE_CLASS_MAPPINGS
     assert "H3RelayFastH3VSAModelLoader" in nodes.NODE_CLASS_MAPPINGS
+    assert "H3RelayInternalFastH3VSA" in nodes.NODE_CLASS_MAPPINGS
     assert "H3RelayAssembleRaw" in nodes.NODE_CLASS_MAPPINGS
     fast_bundle = nodes.H3RelayModelBundlePack().pack(
         "h3",
@@ -211,17 +213,16 @@ def main():
     )
     fast_nodes = list(fast_graph["expand"].values())
     fast_classes = {item["class_type"] for item in fast_nodes}
-    assert "SolAttnMiniMax" in fast_classes
+    assert "H3RelayInternalFastH3VSA" in fast_classes
+    assert "SolAttnMiniMax" not in fast_classes
     assert "H3RelayInternalSpectrum" not in fast_classes
     assert "LoraLoaderModelOnly" not in fast_classes
     fast_vsa = next(
-        item for item in fast_nodes if item["class_type"] == "SolAttnMiniMax"
+        item
+        for item in fast_nodes
+        if item["class_type"] == "H3RelayInternalFastH3VSA"
     )
-    assert fast_vsa["inputs"]["selection"] == "VSA (FastVideo)"
-    assert fast_vsa["inputs"]["selection.vsa_keep_percent"] == 10.0
-    assert fast_vsa["inputs"]["start_percent"] == 0.0
-    assert fast_vsa["inputs"]["end_percent"] == 1.0
-    assert fast_vsa["inputs"]["min_tokens"] == 0
+    assert set(fast_vsa["inputs"]) == {"model"}
     fast_shift = next(
         item for item in fast_nodes
         if item["class_type"] == "MiniMaxH3SigmaShift"

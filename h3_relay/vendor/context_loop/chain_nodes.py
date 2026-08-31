@@ -7975,15 +7975,8 @@ class MiniMaxH3SteerableSegment:
                 spectrum.set_input(name, value)
             sampling_model = spectrum.out(0)
         if sampling_profile == "fast_h3_vsa":
-            vsa = graph.node("SolAttnMiniMax", "FastH3VSA")
+            vsa = graph.node("H3RelayInternalFastH3VSA", "FastH3VSA")
             vsa.set_input("model", sampling_model)
-            vsa.set_input("selection", "VSA (FastVideo)")
-            vsa.set_input("selection.vsa_keep_percent", 10.0)
-            vsa.set_input("start_percent", 0.0)
-            vsa.set_input("end_percent", 1.0)
-            vsa.set_input("min_tokens", 0)
-            vsa.set_input("sink_conditioning", "exact_kv_and_rows")
-            vsa.set_input("verbose", False)
             sampling_model = vsa.out(0)
 
         h3_clip = graph.node("CLIPLoader", "H3Text")

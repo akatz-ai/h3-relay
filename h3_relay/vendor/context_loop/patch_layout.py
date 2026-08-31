@@ -72,6 +72,7 @@ _applied = False
 SOLATTN_LAYOUT_MODULE_SUFFIXES = (
     "._morton_h3",
     ".sol_attn_minimax_v5",
+    ".fast_h3_vsa",
     "/sol_attn_minimax_v5",
 )
 
