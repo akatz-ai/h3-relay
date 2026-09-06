@@ -1,0 +1,2911 @@
+{
+  "id": "d712e7c2-89ab-4d3e-87c0-fast-h3-akatz-3x10",
+  "revision": 0,
+  "last_node_id": 28,
+  "last_link_id": 58,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        -2480,
+        -1540
+      ],
+      "size": [
+        1130,
+        660
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "# Akatz · three-stage cyberpunk escape\n\nThis canvas uses three independently reviewable **10-second FastH3 VSA generation windows**. The 18-frame AV history carried into shots 2 and 3 makes the accepted result one continuous sequence (about 28.9 delivered seconds after repeated history is trimmed).\n\n## Recommended use\n\n1. Run **Shot 1 Generate**, review/reroll it, then accept its sequence output.\n2. Run Shot 2, then Shot 3. Each downstream shot is invalidated only if its accepted predecessor changes.\n3. Run **Assemble Raw** for the native 832×480/24fps sequence.\n4. Optionally run each **H3 Ultimate 2× Enhance** in order. It reuses the connected FastH3 model, the accepted raw latent, the complete original shot prompt, and all five references; output is 1664×960/24fps.\n5. RIFE nodes are bypassed by default. Enable all three to produce a coherent 48fps finishing stream, or leave all bypassed for 24fps.\n\nSelecting the final enhanced assembler restores cached raw/enhanced work and runs only missing or stale stages. The learned H3 latent upscaler and MMH3 Ultimate custom nodes must be installed."
+      ],
+      "widgets_values_named": {
+        "value": "# Akatz · three-stage cyberpunk escape\n\nThis canvas uses three independently reviewable **10-second FastH3 VSA generation windows**. The 18-frame AV history carried into shots 2 and 3 makes the accepted result one continuous sequence (about 28.9 delivered seconds after repeated history is trimmed).\n\n## Recommended use\n\n1. Run **Shot 1 Generate**, review/reroll it, then accept its sequence output.\n2. Run Shot 2, then Shot 3. Each downstream shot is invalidated only if its accepted predecessor changes.\n3. Run **Assemble Raw** for the native 832×480/24fps sequence.\n4. Optionally run each **H3 Ultimate 2× Enhance** in order. It reuses the connected FastH3 model, the accepted raw latent, the complete original shot prompt, and all five references; output is 1664×960/24fps.\n5. RIFE nodes are bypassed by default. Enable all three to produce a coherent 48fps finishing stream, or leave all bypassed for 24fps.\n\nSelecting the final enhanced assembler restores cached raw/enhanced work and runs only missing or stale stages. The learned H3 latent upscaler and MMH3 Ultimate custom nodes must be installed."
+      },
+      "title": "READ FIRST · AKATZ 3×10 FASTH3 RELAY",
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 2,
+      "type": "MarkdownNote",
+      "pos": [
+        -1320,
+        -1540
+      ],
+      "size": [
+        920,
+        660
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Reference roles\n\n- **Pictures 1–3:** Akatz identity, full costume, face, hair, amber eyes, orange harness, boots, and katana.\n- **Picture 4:** rain-soaked neon alley used primarily in shot 1 and the chase transition.\n- **Picture 5:** cyan stairwell and service architecture used primarily in shot 2.\n- **Shot 3:** continues the accepted service passage into a warm cafe-bar; the prompt owns this new space while Pictures 1–3 keep Akatz stable.\n\nThe Ultimate node automatically reuses each accepted shot's complete global + scene prompt. Its connected text input is only an additional conservative refinement directive."
+      ],
+      "widgets_values_named": {
+        "value": "## Reference roles\n\n- **Pictures 1–3:** Akatz identity, full costume, face, hair, amber eyes, orange harness, boots, and katana.\n- **Picture 4:** rain-soaked neon alley used primarily in shot 1 and the chase transition.\n- **Picture 5:** cyan stairwell and service architecture used primarily in shot 2.\n- **Shot 3:** continues the accepted service passage into a warm cafe-bar; the prompt owns this new space while Pictures 1–3 keep Akatz stable.\n\nThe Ultimate node automatically reuses each accepted shot's complete global + scene prompt. Its connected text input is only an additional conservative refinement directive."
+      },
+      "title": "DIRECTOR MAP · REFERENCE ROLES",
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 3,
+      "type": "H3RelayFastH3VSAModelLoader",
+      "pos": [
+        -2460,
+        -760
+      ],
+      "size": [
+        650,
+        300
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model_name",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "model_name"
+          }
+        },
+        {
+          "name": "weight_dtype",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "weight_dtype"
+          }
+        },
+        {
+          "name": "manual_cache_revision",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "manual_cache_revision"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "h3_model",
+          "type": "H3_RELAY_MODEL",
+          "links": [
+            2,
+            4,
+            19,
+            22,
+            38,
+            41
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayFastH3VSAModelLoader"
+      },
+      "widgets_values": [
+        "minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors",
+        "default",
+        "akatz-3x10-ultimate-v1"
+      ],
+      "widgets_values_named": {
+        "model_name": "minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors",
+        "weight_dtype": "default",
+        "manual_cache_revision": "akatz-3x10-ultimate-v1"
+      },
+      "title": "FASTH3 VSA · SHARED GENERATION + ULTIMATE REFINEMENT MODEL"
+    },
+    {
+      "id": 4,
+      "type": "H3RelaySequenceStart",
+      "pos": [
+        -2460,
+        -400
+      ],
+      "size": [
+        650,
+        470
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "run_name",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "run_name"
+          }
+        },
+        {
+          "name": "global_prompt",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "global_prompt"
+          }
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "width"
+          }
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "height"
+          }
+        },
+        {
+          "name": "h3_overlap_frames",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "h3_overlap_frames"
+          }
+        },
+        {
+          "name": "sampler",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "sampler"
+          }
+        },
+        {
+          "name": "scheduler",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "scheduler"
+          }
+        },
+        {
+          "name": "spectrum_enabled",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "spectrum_enabled"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelaySequenceStart"
+      },
+      "widgets_values": [
+        "fast_h3_akatz_cyberpunk_escape_3x10",
+        "subject_definitions:\n<Subject 1> is Akatz, the young female cyberpunk katana fighter defined by <Picture 1>, <Picture 2>, and <Picture 3>: preserve the same pale face, amber-orange eyes, long flowing blue-black hair with heavy bangs, slim athletic proportions, glossy dark-blue leather jacket, fitted black clothing, orange harness straps, fingerless gloves, utility holsters, buckled black combat boots, and black-sheathed katana with a cyan-to-magenta reflective edge.\n<Subject 2> is the rain-soaked neon alley and street defined by <Picture 4>: dark towers, graffiti-covered walls, cyan and magenta signs, parked futuristic cars, steam vents, and deep puddle reflections.\n<Subject 3> is the steep cyberpunk stairwell and connected service architecture defined by <Picture 5>: layered landings, black railings, cyan directional markings, dense vertical signs, exposed rock and industrial structure, and deep descending perspective.\n\ncontinuity_rules:\nCreate one continuous premium live-action anime action film. Preserve <Subject 1>'s exact face, amber eyes, hair, bangs, body proportions, jacket, black clothing, orange straps, gloves, holsters, boots, and katana. Preserve travel direction, rain, illumination, weapon state, guard design, drone design, and geography across incoming H3 history. Every new segment begins from the exact incoming visual and audio moment without a reset, recap, fade, flash, title, or establishing cut. Keep action fast but physically readable. No blood, gore, dismemberment, duplicated protagonist, costume changes, or unexplained teleportation.\n\nvisual_style:\nCinematic semi-realistic cyberpunk anime rendered like a high-budget live-action film: crisp facial anatomy, deep blacks, cobalt-blue shadows, magenta and crimson highlights, controlled bloom, wet reflective materials, energetic camera movement, coherent motion blur, and readable choreography.\n\naudio_rules:\nContinuous heavy rain and neon-city ambience carry across every segment. Katana rings, laser passes, boots, fabric, impacts, drone rotors, doors, and room tone synchronize precisely with visible action. No dialogue unless explicitly written in the shot prompt.",
+        832,
+        480,
+        18,
+        "euler",
+        "simple",
+        false
+      ],
+      "widgets_values_named": {
+        "run_name": "fast_h3_akatz_cyberpunk_escape_3x10",
+        "global_prompt": "subject_definitions:\n<Subject 1> is Akatz, the young female cyberpunk katana fighter defined by <Picture 1>, <Picture 2>, and <Picture 3>: preserve the same pale face, amber-orange eyes, long flowing blue-black hair with heavy bangs, slim athletic proportions, glossy dark-blue leather jacket, fitted black clothing, orange harness straps, fingerless gloves, utility holsters, buckled black combat boots, and black-sheathed katana with a cyan-to-magenta reflective edge.\n<Subject 2> is the rain-soaked neon alley and street defined by <Picture 4>: dark towers, graffiti-covered walls, cyan and magenta signs, parked futuristic cars, steam vents, and deep puddle reflections.\n<Subject 3> is the steep cyberpunk stairwell and connected service architecture defined by <Picture 5>: layered landings, black railings, cyan directional markings, dense vertical signs, exposed rock and industrial structure, and deep descending perspective.\n\ncontinuity_rules:\nCreate one continuous premium live-action anime action film. Preserve <Subject 1>'s exact face, amber eyes, hair, bangs, body proportions, jacket, black clothing, orange straps, gloves, holsters, boots, and katana. Preserve travel direction, rain, illumination, weapon state, guard design, drone design, and geography across incoming H3 history. Every new segment begins from the exact incoming visual and audio moment without a reset, recap, fade, flash, title, or establishing cut. Keep action fast but physically readable. No blood, gore, dismemberment, duplicated protagonist, costume changes, or unexplained teleportation.\n\nvisual_style:\nCinematic semi-realistic cyberpunk anime rendered like a high-budget live-action film: crisp facial anatomy, deep blacks, cobalt-blue shadows, magenta and crimson highlights, controlled bloom, wet reflective materials, energetic camera movement, coherent motion blur, and readable choreography.\n\naudio_rules:\nContinuous heavy rain and neon-city ambience carry across every segment. Katana rings, laser passes, boots, fabric, impacts, drone rotors, doors, and room tone synchronize precisely with visible action. No dialogue unless explicitly written in the shot prompt.",
+        "width": 832,
+        "height": 480,
+        "h3_overlap_frames": 18,
+        "sampler": "euler",
+        "scheduler": "simple",
+        "spectrum_enabled": false
+      },
+      "title": "SEQUENCE START · 832×480 · 18-FRAME AV HISTORY"
+    },
+    {
+      "id": 5,
+      "type": "H3RelayInterpolationModelLoader",
+      "pos": [
+        -2460,
+        140
+      ],
+      "size": [
+        650,
+        220
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model_name",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "model_name"
+          }
+        },
+        {
+          "name": "manual_cache_revision",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "manual_cache_revision"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "interpolation",
+          "type": "H3_RELAY_INTERPOLATION",
+          "links": [
+            7,
+            25,
+            44
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayInterpolationModelLoader"
+      },
+      "widgets_values": [
+        "rife_v4.26_heavy.safetensors",
+        "v1"
+      ],
+      "widgets_values_named": {
+        "model_name": "rife_v4.26_heavy.safetensors",
+        "manual_cache_revision": "v1"
+      },
+      "title": "OPTIONAL RIFE MODEL · SHARED BY ALL SHOTS"
+    },
+    {
+      "id": 6,
+      "type": "LoadImage",
+      "pos": [
+        -1660,
+        -760
+      ],
+      "size": [
+        300,
+        330
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            9,
+            10,
+            28,
+            29,
+            47,
+            48
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "akatz-general-reference.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "akatz-general-reference.png",
+        "upload": "image"
+      },
+      "title": "Picture 1 · Akatz full reference"
+    },
+    {
+      "id": 7,
+      "type": "LoadImage",
+      "pos": [
+        -1330,
+        -760
+      ],
+      "size": [
+        300,
+        330
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            11,
+            12,
+            30,
+            31,
+            49,
+            50
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "akatz-character-sheet.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "akatz-character-sheet.png",
+        "upload": "image"
+      },
+      "title": "Picture 2 · Akatz character sheet"
+    },
+    {
+      "id": 8,
+      "type": "LoadImage",
+      "pos": [
+        -1000,
+        -760
+      ],
+      "size": [
+        300,
+        330
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            13,
+            14,
+            32,
+            33,
+            51,
+            52
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "akatz-face-closeup.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "akatz-face-closeup.png",
+        "upload": "image"
+      },
+      "title": "Picture 3 · Akatz face close-up"
+    },
+    {
+      "id": 9,
+      "type": "LoadImage",
+      "pos": [
+        -1660,
+        -370
+      ],
+      "size": [
+        300,
+        330
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            15,
+            16,
+            34,
+            35,
+            53,
+            54
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "cyberpunk-neon-street.jpg",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "cyberpunk-neon-street.jpg",
+        "upload": "image"
+      },
+      "title": "Picture 4 · neon alley"
+    },
+    {
+      "id": 10,
+      "type": "LoadImage",
+      "pos": [
+        -1330,
+        -370
+      ],
+      "size": [
+        300,
+        330
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            17,
+            18,
+            36,
+            37,
+            55,
+            56
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "cyberpunk-stairwell.jpg",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "cyberpunk-stairwell.jpg",
+        "upload": "image"
+      },
+      "title": "Picture 5 · cyberpunk stairwell"
+    },
+    {
+      "id": 11,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -820,
+        -760
+      ],
+      "size": [
+        640,
+        360
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "value"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "summary:\nAkatz escapes armored guards through the neon alley, deflects laser fire, defeats two pursuers without gore, destroys a drone, and keeps running around the corner toward the stairwell.\n\ndetailed_description:\n[Shot 1] Continue from a low rear three-quarter tracking view inside <Subject 2>. <Subject 1> sprints through heavy rain while four faceless black-armored guards pursue twenty meters behind and fire narrow red laser pulses. Her boots splash through puddles, her blue-black hair and orange straps stream naturally, and the camera tracks at waist height without losing her face in profile.\n[Shot 2] At 00:03.000, the camera whip-pans to a frontal medium-wide view as <Subject 1> pivots while still moving, draws the katana, deflects one laser pulse into a wall showering blue-white sparks, ducks beneath a second pulse, and uses the flat and hilt to knock two guards off balance. They fall safely into puddles; no blood or gore.\n[Shot 3] At 00:06.500, she turns the alley corner. A compact black pursuit drone dives from above. The camera arcs beside her as she makes one clean rising cut through the drone, its two sparking halves tumble behind her, and she accelerates toward the cyan-lit entrance of <Subject 3>. End with her left boot crossing the stairwell threshold at full running speed while the remaining guards round the wet corner behind her.\n\noverall_soundscape:\nContinuous heavy rain, neon transformer hum, distant traffic, running boot splashes, three sharp laser passes, katana draw and metallic ring, armor impacts, drone rotors, one synchronized blade strike, falling metal, and fast breathing.\n\nnon_diegetic_music:\nAn original dark synthwave chase pulse at approximately 150 BPM begins with tight electronic drums and low distorted bass; it continues without resolving at the segment boundary."
+      ],
+      "widgets_values_named": {
+        "value": "summary:\nAkatz escapes armored guards through the neon alley, deflects laser fire, defeats two pursuers without gore, destroys a drone, and keeps running around the corner toward the stairwell.\n\ndetailed_description:\n[Shot 1] Continue from a low rear three-quarter tracking view inside <Subject 2>. <Subject 1> sprints through heavy rain while four faceless black-armored guards pursue twenty meters behind and fire narrow red laser pulses. Her boots splash through puddles, her blue-black hair and orange straps stream naturally, and the camera tracks at waist height without losing her face in profile.\n[Shot 2] At 00:03.000, the camera whip-pans to a frontal medium-wide view as <Subject 1> pivots while still moving, draws the katana, deflects one laser pulse into a wall showering blue-white sparks, ducks beneath a second pulse, and uses the flat and hilt to knock two guards off balance. They fall safely into puddles; no blood or gore.\n[Shot 3] At 00:06.500, she turns the alley corner. A compact black pursuit drone dives from above. The camera arcs beside her as she makes one clean rising cut through the drone, its two sparking halves tumble behind her, and she accelerates toward the cyan-lit entrance of <Subject 3>. End with her left boot crossing the stairwell threshold at full running speed while the remaining guards round the wet corner behind her.\n\noverall_soundscape:\nContinuous heavy rain, neon transformer hum, distant traffic, running boot splashes, three sharp laser passes, katana draw and metallic ring, armor impacts, drone rotors, one synchronized blade strike, falling metal, and fast breathing.\n\nnon_diegetic_music:\nAn original dark synthwave chase pulse at approximately 150 BPM begins with tight electronic drums and low distorted bass; it continues without resolving at the segment boundary."
+      },
+      "title": "SHOT 1 · DIRECTOR PROMPT"
+    },
+    {
+      "id": 12,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -60,
+        -760
+      ],
+      "size": [
+        640,
+        360
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "value"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            20
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "summary:\nContinue the exact chase through the cyberpunk stairwell as Akatz uses acrobatics to evade guards and destroy more drones, then reaches a narrow service passage and races toward a half-open garage door.\n\ndetailed_description:\n[Shot 1] Continue from the exact incoming frame and sound as <Subject 1>'s left boot lands inside <Subject 3>. The camera follows over her shoulder down the first cyan-marked flight. Red laser pulses strike railings behind her while the same surviving guards enter at the upper landing. She never reverses direction.\n[Shot 2] At 00:02.500, use one continuous descending crane move as <Subject 1> plants a boot on the railing, vaults across the stairwell void, catches the opposite rail with one gloved hand, swings beneath two laser pulses, and lands on the lower flight. Two black drones descend beside the vertical signs. She cuts the first drone during the landing and kicks the second into an empty wall, producing sparks but no explosion.\n[Shot 3] At 00:06.000, the camera runs backward at chest height while she exits the stairwell into a narrow blue-lit service passage. One guard blocks the route with an electrified baton. She parries once, rotates under his arm, sweeps him safely to the floor with the katana sheath, and continues running. A segmented metal garage door ahead is already descending, leaving a narrowing gap at floor level. End as she lowers her center of gravity and commits to the slide, still several meters from the door.\n\noverall_soundscape:\nThe same rain becomes muffled inside the stairwell, with rapid footsteps, rail vibrations, laser ricochets, clothing movement, drone rotors, blade rings, electrical crackle, one armored fall, service-vent hum, and the garage motor growing louder.\n\nnon_diegetic_music:\nThe same synthwave chase cue adds syncopated metallic percussion and rises toward the closing door without a cadence."
+      ],
+      "widgets_values_named": {
+        "value": "summary:\nContinue the exact chase through the cyberpunk stairwell as Akatz uses acrobatics to evade guards and destroy more drones, then reaches a narrow service passage and races toward a half-open garage door.\n\ndetailed_description:\n[Shot 1] Continue from the exact incoming frame and sound as <Subject 1>'s left boot lands inside <Subject 3>. The camera follows over her shoulder down the first cyan-marked flight. Red laser pulses strike railings behind her while the same surviving guards enter at the upper landing. She never reverses direction.\n[Shot 2] At 00:02.500, use one continuous descending crane move as <Subject 1> plants a boot on the railing, vaults across the stairwell void, catches the opposite rail with one gloved hand, swings beneath two laser pulses, and lands on the lower flight. Two black drones descend beside the vertical signs. She cuts the first drone during the landing and kicks the second into an empty wall, producing sparks but no explosion.\n[Shot 3] At 00:06.000, the camera runs backward at chest height while she exits the stairwell into a narrow blue-lit service passage. One guard blocks the route with an electrified baton. She parries once, rotates under his arm, sweeps him safely to the floor with the katana sheath, and continues running. A segmented metal garage door ahead is already descending, leaving a narrowing gap at floor level. End as she lowers her center of gravity and commits to the slide, still several meters from the door.\n\noverall_soundscape:\nThe same rain becomes muffled inside the stairwell, with rapid footsteps, rail vibrations, laser ricochets, clothing movement, drone rotors, blade rings, electrical crackle, one armored fall, service-vent hum, and the garage motor growing louder.\n\nnon_diegetic_music:\nThe same synthwave chase cue adds syncopated metallic percussion and rises toward the closing door without a cadence."
+      },
+      "title": "SHOT 2 · DIRECTOR PROMPT"
+    },
+    {
+      "id": 13,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        700,
+        -760
+      ],
+      "size": [
+        640,
+        360
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "value"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            39
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "summary:\nContinue the exact slide beneath the closing garage door, reach safety in a quiet cyberpunk cafe-bar, sheath the katana, sit down, and calmly order a cold ginger soda.\n\ndetailed_description:\n[Shot 1] Continue from the exact incoming frame and audio. <Subject 1> drops into a controlled feet-first slide across the wet service floor as the segmented garage door closes. The low side-tracking camera stays with her. She passes beneath the door with only centimeters of clearance; her hair, orange straps, katana sheath, hands, and boots clear naturally. The door strikes the floor behind her with a heavy final clang, cutting off the guards and laser fire.\n[Shot 2] At 00:03.000, she rises in one fluid motion inside a small warm cyberpunk cafe-bar connected to the service bay. Amber pendant lamps and quiet cyan menu panels reflect on dark wood and brushed steel. The camera settles into a steady medium profile as she exhales, checks the closed door, wipes rain from her cheek, and slides the katana fully into its black sheath with one precise click.\n[Shot 3] At 00:06.500, <Subject 1> walks to the nearest empty stool, sits facing the bartender and camera in a clear three-quarter medium close-up, places both relaxed gloved hands on the counter, and says with a tired controlled voice: <d>[English] Ginger soda. Lots of ice.</d> Her face remains visible while speaking. She gives one small relieved breath as a cold glass is set before her. Hold on her exact identity, outfit, sheathed katana, and the quiet bar; no fade.\n\noverall_soundscape:\nGarage motor, sliding fabric, one heavy door clang, then sharply reduced chase noise; warm ventilation, quiet refrigerator hum, distant rain on metal, soft boot steps, katana sheath click, a single spoken line, glass on wood, fizz, and ice settling.\n\nnon_diegetic_music:\nThe same synthwave cue loses its drums after the door closes and resolves into a soft low sustained chord beneath the final drink order."
+      ],
+      "widgets_values_named": {
+        "value": "summary:\nContinue the exact slide beneath the closing garage door, reach safety in a quiet cyberpunk cafe-bar, sheath the katana, sit down, and calmly order a cold ginger soda.\n\ndetailed_description:\n[Shot 1] Continue from the exact incoming frame and audio. <Subject 1> drops into a controlled feet-first slide across the wet service floor as the segmented garage door closes. The low side-tracking camera stays with her. She passes beneath the door with only centimeters of clearance; her hair, orange straps, katana sheath, hands, and boots clear naturally. The door strikes the floor behind her with a heavy final clang, cutting off the guards and laser fire.\n[Shot 2] At 00:03.000, she rises in one fluid motion inside a small warm cyberpunk cafe-bar connected to the service bay. Amber pendant lamps and quiet cyan menu panels reflect on dark wood and brushed steel. The camera settles into a steady medium profile as she exhales, checks the closed door, wipes rain from her cheek, and slides the katana fully into its black sheath with one precise click.\n[Shot 3] At 00:06.500, <Subject 1> walks to the nearest empty stool, sits facing the bartender and camera in a clear three-quarter medium close-up, places both relaxed gloved hands on the counter, and says with a tired controlled voice: <d>[English] Ginger soda. Lots of ice.</d> Her face remains visible while speaking. She gives one small relieved breath as a cold glass is set before her. Hold on her exact identity, outfit, sheathed katana, and the quiet bar; no fade.\n\noverall_soundscape:\nGarage motor, sliding fabric, one heavy door clang, then sharply reduced chase noise; warm ventilation, quiet refrigerator hum, distant rain on metal, soft boot steps, katana sheath click, a single spoken line, glass on wood, fizz, and ice settling.\n\nnon_diegetic_music:\nThe same synthwave cue loses its drums after the door closes and resolves into a soft low sustained chord beneath the final drink order."
+      },
+      "title": "SHOT 3 · DIRECTOR PROMPT"
+    },
+    {
+      "id": 14,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -820,
+        2530
+      ],
+      "size": [
+        1400,
+        280
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "value"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            6,
+            24,
+            43
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "Preserve the accepted raw shot's exact subjects, action, frame timing, composition, camera motion, geometry, lighting, color palette, audio timing, and scene identity. Use the same five connected references to restore stable facial features, costume details, weapon geometry, environment texture, and clean wet-surface reflections at exactly 2x spatial resolution. Do not redesign the character or environment; do not add cuts, objects, people, text, motion, or reframing."
+      ],
+      "widgets_values_named": {
+        "value": "Preserve the accepted raw shot's exact subjects, action, frame timing, composition, camera motion, geometry, lighting, color palette, audio timing, and scene identity. Use the same five connected references to restore stable facial features, costume details, weapon geometry, environment texture, and clean wet-surface reflections at exactly 2x spatial resolution. Do not redesign the character or environment; do not add cuts, objects, people, text, motion, or reframing."
+      },
+      "title": "ULTIMATE · CONSERVATIVE REFINEMENT DIRECTIVE"
+    },
+    {
+      "id": 15,
+      "type": "H3RelayGenerateShot",
+      "pos": [
+        -820,
+        -320
+      ],
+      "size": [
+        620,
+        760
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "h3_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 2
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 1
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": 3
+        },
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_1",
+          "type": "IMAGE",
+          "link": 9,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_2",
+          "type": "IMAGE",
+          "link": 11,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_3",
+          "type": "IMAGE",
+          "link": 13,
+          "shape": 7
+        },
+        {
+          "name": "additional_reference_images.reference_image_4",
+          "type": "IMAGE",
+          "link": 15,
+          "shape": 7,
+          "label": "reference_image_4"
+        },
+        {
+          "name": "additional_reference_images.reference_image_5",
+          "type": "IMAGE",
+          "link": 17,
+          "shape": 7,
+          "label": "reference_image_5"
+        },
+        {
+          "name": "reference_video",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_video_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "seed"
+          }
+        },
+        {
+          "name": "duration_seconds",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "duration_seconds"
+          }
+        },
+        {
+          "name": "h3_steps",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "h3_steps"
+          }
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "output_crf"
+          }
+        },
+        {
+          "name": "ref_image_size",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "ref_image_size"
+          }
+        },
+        {
+          "name": "shot_id",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "shot_id"
+          },
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "links": [
+            5,
+            21
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayGenerateShot"
+      },
+      "widgets_values": [
+        424246,
+        "fixed",
+        10,
+        4,
+        18,
+        "match",
+        "akatz_chase_1"
+      ],
+      "widgets_values_named": {
+        "seed": 424246,
+        "control_after_generate": "fixed",
+        "duration_seconds": 10,
+        "h3_steps": 4,
+        "output_crf": 18,
+        "ref_image_size": "match",
+        "shot_id": "akatz_chase_1"
+      },
+      "title": "SHOT 1 · GENERATE / REVIEW / REROLL RAW FASTH3"
+    },
+    {
+      "id": 16,
+      "type": "H3RelayGenerateShot",
+      "pos": [
+        -60,
+        -320
+      ],
+      "size": [
+        620,
+        760
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "h3_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 19
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 21
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": 20
+        },
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_1",
+          "type": "IMAGE",
+          "link": 28,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_2",
+          "type": "IMAGE",
+          "link": 30,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_3",
+          "type": "IMAGE",
+          "link": 32,
+          "shape": 7
+        },
+        {
+          "name": "additional_reference_images.reference_image_4",
+          "type": "IMAGE",
+          "link": 34,
+          "shape": 7,
+          "label": "reference_image_4"
+        },
+        {
+          "name": "additional_reference_images.reference_image_5",
+          "type": "IMAGE",
+          "link": 36,
+          "shape": 7,
+          "label": "reference_image_5"
+        },
+        {
+          "name": "reference_video",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_video_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "seed"
+          }
+        },
+        {
+          "name": "duration_seconds",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "duration_seconds"
+          }
+        },
+        {
+          "name": "h3_steps",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "h3_steps"
+          }
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "output_crf"
+          }
+        },
+        {
+          "name": "ref_image_size",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "ref_image_size"
+          }
+        },
+        {
+          "name": "shot_id",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "shot_id"
+          },
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "links": [
+            23,
+            40
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayGenerateShot"
+      },
+      "widgets_values": [
+        424247,
+        "fixed",
+        10,
+        4,
+        18,
+        "match",
+        "akatz_chase_2"
+      ],
+      "widgets_values_named": {
+        "seed": 424247,
+        "control_after_generate": "fixed",
+        "duration_seconds": 10,
+        "h3_steps": 4,
+        "output_crf": 18,
+        "ref_image_size": "match",
+        "shot_id": "akatz_chase_2"
+      },
+      "title": "SHOT 2 · CONTINUE RAW FASTH3 FROM SHOT 1"
+    },
+    {
+      "id": 17,
+      "type": "H3RelayGenerateShot",
+      "pos": [
+        700,
+        -320
+      ],
+      "size": [
+        620,
+        760
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "h3_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 38
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 40
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": 39
+        },
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_1",
+          "type": "IMAGE",
+          "link": 47,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_2",
+          "type": "IMAGE",
+          "link": 49,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_3",
+          "type": "IMAGE",
+          "link": 51,
+          "shape": 7
+        },
+        {
+          "name": "additional_reference_images.reference_image_4",
+          "type": "IMAGE",
+          "link": 53,
+          "shape": 7,
+          "label": "reference_image_4"
+        },
+        {
+          "name": "additional_reference_images.reference_image_5",
+          "type": "IMAGE",
+          "link": 55,
+          "shape": 7,
+          "label": "reference_image_5"
+        },
+        {
+          "name": "reference_video",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_video_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "seed"
+          }
+        },
+        {
+          "name": "duration_seconds",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "duration_seconds"
+          }
+        },
+        {
+          "name": "h3_steps",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "h3_steps"
+          }
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "output_crf"
+          }
+        },
+        {
+          "name": "ref_image_size",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "ref_image_size"
+          }
+        },
+        {
+          "name": "shot_id",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "shot_id"
+          },
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "links": [
+            42,
+            57
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayGenerateShot"
+      },
+      "widgets_values": [
+        424248,
+        "fixed",
+        10,
+        4,
+        18,
+        "match",
+        "akatz_chase_3"
+      ],
+      "widgets_values_named": {
+        "seed": 424248,
+        "control_after_generate": "fixed",
+        "duration_seconds": 10,
+        "h3_steps": 4,
+        "output_crf": 18,
+        "ref_image_size": "match",
+        "shot_id": "akatz_chase_3"
+      },
+      "title": "SHOT 3 · CONTINUE RAW FASTH3 FROM SHOT 2"
+    },
+    {
+      "id": 18,
+      "type": "H3RelayAssembleRaw",
+      "pos": [
+        1450,
+        -60
+      ],
+      "size": [
+        600,
+        410
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 57
+        },
+        {
+          "name": "filename",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "filename"
+          }
+        },
+        {
+          "name": "audio_bitrate",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "audio_bitrate"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayAssembleRaw"
+      },
+      "widgets_values": [
+        "fast_h3_akatz_escape_raw",
+        256
+      ],
+      "widgets_values_named": {
+        "filename": "fast_h3_akatz_escape_raw",
+        "audio_bitrate": 256
+      },
+      "title": "ASSEMBLE ACCEPTED RAW FASTH3 SEQUENCE"
+    },
+    {
+      "id": 19,
+      "type": "H3RelayUltimateEnhanceShot",
+      "pos": [
+        -820,
+        760
+      ],
+      "size": [
+        640,
+        700
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "h3_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 4
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 5
+        },
+        {
+          "name": "enhancement_prompt",
+          "type": "STRING",
+          "link": 6
+        },
+        {
+          "name": "previous_enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_1",
+          "type": "IMAGE",
+          "link": 10,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_2",
+          "type": "IMAGE",
+          "link": 12,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_3",
+          "type": "IMAGE",
+          "link": 14,
+          "shape": 7
+        },
+        {
+          "name": "additional_reference_images.reference_image_4",
+          "type": "IMAGE",
+          "link": 16,
+          "shape": 7,
+          "label": "reference_image_4"
+        },
+        {
+          "name": "additional_reference_images.reference_image_5",
+          "type": "IMAGE",
+          "link": 18,
+          "shape": 7,
+          "label": "reference_image_5"
+        },
+        {
+          "name": "refinement_seed",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "refinement_seed"
+          }
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "output_crf"
+          }
+        },
+        {
+          "name": "ref_image_size",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "ref_image_size"
+          }
+        },
+        {
+          "name": "temporal_chunk_frames",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "temporal_chunk_frames"
+          }
+        },
+        {
+          "name": "temporal_overlap_frames",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "temporal_overlap_frames"
+          }
+        },
+        {
+          "name": "anchor_strength",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "anchor_strength"
+          }
+        },
+        {
+          "name": "tile_width",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "tile_width"
+          }
+        },
+        {
+          "name": "tile_height",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "tile_height"
+          }
+        },
+        {
+          "name": "spatial_overlap",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "spatial_overlap"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "links": [
+            8
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayUltimateEnhanceShot"
+      },
+      "widgets_values": [
+        424264,
+        "fixed",
+        18,
+        "match",
+        136,
+        17,
+        0.999,
+        1024,
+        1024,
+        128
+      ],
+      "widgets_values_named": {
+        "refinement_seed": 424264,
+        "control_after_generate": "fixed",
+        "output_crf": 18,
+        "ref_image_size": "match",
+        "temporal_chunk_frames": 136,
+        "temporal_overlap_frames": 17,
+        "anchor_strength": 0.999,
+        "tile_width": 1024,
+        "tile_height": 1024,
+        "spatial_overlap": 128
+      },
+      "title": "SHOT 1 · OPTIONAL H3 ULTIMATE 2× ENHANCE"
+    },
+    {
+      "id": 20,
+      "type": "H3RelayUltimateEnhanceShot",
+      "pos": [
+        -60,
+        760
+      ],
+      "size": [
+        640,
+        700
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "h3_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 22
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 23
+        },
+        {
+          "name": "enhancement_prompt",
+          "type": "STRING",
+          "link": 24
+        },
+        {
+          "name": "previous_enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": 27,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_1",
+          "type": "IMAGE",
+          "link": 29,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_2",
+          "type": "IMAGE",
+          "link": 31,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_3",
+          "type": "IMAGE",
+          "link": 33,
+          "shape": 7
+        },
+        {
+          "name": "additional_reference_images.reference_image_4",
+          "type": "IMAGE",
+          "link": 35,
+          "shape": 7,
+          "label": "reference_image_4"
+        },
+        {
+          "name": "additional_reference_images.reference_image_5",
+          "type": "IMAGE",
+          "link": 37,
+          "shape": 7,
+          "label": "reference_image_5"
+        },
+        {
+          "name": "refinement_seed",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "refinement_seed"
+          }
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "output_crf"
+          }
+        },
+        {
+          "name": "ref_image_size",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "ref_image_size"
+          }
+        },
+        {
+          "name": "temporal_chunk_frames",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "temporal_chunk_frames"
+          }
+        },
+        {
+          "name": "temporal_overlap_frames",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "temporal_overlap_frames"
+          }
+        },
+        {
+          "name": "anchor_strength",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "anchor_strength"
+          }
+        },
+        {
+          "name": "tile_width",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "tile_width"
+          }
+        },
+        {
+          "name": "tile_height",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "tile_height"
+          }
+        },
+        {
+          "name": "spatial_overlap",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "spatial_overlap"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "links": [
+            26
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayUltimateEnhanceShot"
+      },
+      "widgets_values": [
+        424265,
+        "fixed",
+        18,
+        "match",
+        136,
+        17,
+        0.999,
+        1024,
+        1024,
+        128
+      ],
+      "widgets_values_named": {
+        "refinement_seed": 424265,
+        "control_after_generate": "fixed",
+        "output_crf": 18,
+        "ref_image_size": "match",
+        "temporal_chunk_frames": 136,
+        "temporal_overlap_frames": 17,
+        "anchor_strength": 0.999,
+        "tile_width": 1024,
+        "tile_height": 1024,
+        "spatial_overlap": 128
+      },
+      "title": "SHOT 2 · OPTIONAL H3 ULTIMATE 2× ENHANCE"
+    },
+    {
+      "id": 21,
+      "type": "H3RelayUltimateEnhanceShot",
+      "pos": [
+        700,
+        760
+      ],
+      "size": [
+        640,
+        700
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "h3_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 41
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 42
+        },
+        {
+          "name": "enhancement_prompt",
+          "type": "STRING",
+          "link": 43
+        },
+        {
+          "name": "previous_enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": 46,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_1",
+          "type": "IMAGE",
+          "link": 48,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_2",
+          "type": "IMAGE",
+          "link": 50,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_3",
+          "type": "IMAGE",
+          "link": 52,
+          "shape": 7
+        },
+        {
+          "name": "additional_reference_images.reference_image_4",
+          "type": "IMAGE",
+          "link": 54,
+          "shape": 7,
+          "label": "reference_image_4"
+        },
+        {
+          "name": "additional_reference_images.reference_image_5",
+          "type": "IMAGE",
+          "link": 56,
+          "shape": 7,
+          "label": "reference_image_5"
+        },
+        {
+          "name": "refinement_seed",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "refinement_seed"
+          }
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "output_crf"
+          }
+        },
+        {
+          "name": "ref_image_size",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "ref_image_size"
+          }
+        },
+        {
+          "name": "temporal_chunk_frames",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "temporal_chunk_frames"
+          }
+        },
+        {
+          "name": "temporal_overlap_frames",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "temporal_overlap_frames"
+          }
+        },
+        {
+          "name": "anchor_strength",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "anchor_strength"
+          }
+        },
+        {
+          "name": "tile_width",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "tile_width"
+          }
+        },
+        {
+          "name": "tile_height",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "tile_height"
+          }
+        },
+        {
+          "name": "spatial_overlap",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "spatial_overlap"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "links": [
+            45
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayUltimateEnhanceShot"
+      },
+      "widgets_values": [
+        424266,
+        "fixed",
+        18,
+        "match",
+        136,
+        17,
+        0.999,
+        1024,
+        1024,
+        128
+      ],
+      "widgets_values_named": {
+        "refinement_seed": 424266,
+        "control_after_generate": "fixed",
+        "output_crf": 18,
+        "ref_image_size": "match",
+        "temporal_chunk_frames": 136,
+        "temporal_overlap_frames": 17,
+        "anchor_strength": 0.999,
+        "tile_width": 1024,
+        "tile_height": 1024,
+        "spatial_overlap": 128
+      },
+      "title": "SHOT 3 · OPTIONAL H3 ULTIMATE 2× ENHANCE"
+    },
+    {
+      "id": 22,
+      "type": "H3RelayInterpolateShot",
+      "pos": [
+        -820,
+        1540
+      ],
+      "size": [
+        640,
+        430
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "interpolation",
+          "type": "H3_RELAY_INTERPOLATION",
+          "link": 7
+        },
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": 8
+        },
+        {
+          "name": "multiplier",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "multiplier"
+          }
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "output_crf"
+          }
+        },
+        {
+          "name": "chunk_frames",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "chunk_frames"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "links": [
+            27
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayInterpolateShot"
+      },
+      "widgets_values": [
+        2,
+        18,
+        48
+      ],
+      "widgets_values_named": {
+        "multiplier": 2,
+        "output_crf": 18,
+        "chunk_frames": 48
+      },
+      "title": "SHOT 1 · OPTIONAL RIFE 24 → 48 FPS (BYPASSED)"
+    },
+    {
+      "id": 23,
+      "type": "H3RelayInterpolateShot",
+      "pos": [
+        -60,
+        1540
+      ],
+      "size": [
+        640,
+        430
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "interpolation",
+          "type": "H3_RELAY_INTERPOLATION",
+          "link": 25
+        },
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": 26
+        },
+        {
+          "name": "multiplier",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "multiplier"
+          }
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "output_crf"
+          }
+        },
+        {
+          "name": "chunk_frames",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "chunk_frames"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "links": [
+            46
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayInterpolateShot"
+      },
+      "widgets_values": [
+        2,
+        18,
+        48
+      ],
+      "widgets_values_named": {
+        "multiplier": 2,
+        "output_crf": 18,
+        "chunk_frames": 48
+      },
+      "title": "SHOT 2 · OPTIONAL RIFE 24 → 48 FPS (BYPASSED)"
+    },
+    {
+      "id": 24,
+      "type": "H3RelayInterpolateShot",
+      "pos": [
+        700,
+        1540
+      ],
+      "size": [
+        640,
+        430
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "interpolation",
+          "type": "H3_RELAY_INTERPOLATION",
+          "link": 44
+        },
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": 45
+        },
+        {
+          "name": "multiplier",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "multiplier"
+          }
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "output_crf"
+          }
+        },
+        {
+          "name": "chunk_frames",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "chunk_frames"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "links": [
+            58
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayInterpolateShot"
+      },
+      "widgets_values": [
+        2,
+        18,
+        48
+      ],
+      "widgets_values_named": {
+        "multiplier": 2,
+        "output_crf": 18,
+        "chunk_frames": 48
+      },
+      "title": "SHOT 3 · OPTIONAL RIFE 24 → 48 FPS (BYPASSED)"
+    },
+    {
+      "id": 25,
+      "type": "H3RelayAssemble",
+      "pos": [
+        1450,
+        1120
+      ],
+      "size": [
+        630,
+        460
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": 58
+        },
+        {
+          "name": "output_stage",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "output_stage"
+          }
+        },
+        {
+          "name": "filename",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "filename"
+          }
+        },
+        {
+          "name": "audio_bitrate",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "audio_bitrate"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayAssemble"
+      },
+      "widgets_values": [
+        "auto",
+        "fast_h3_akatz_escape_ultimate_2x",
+        256
+      ],
+      "widgets_values_named": {
+        "output_stage": "auto",
+        "filename": "fast_h3_akatz_escape_ultimate_2x",
+        "audio_bitrate": 256
+      },
+      "title": "ASSEMBLE H3 ULTIMATE 2× / OPTIONAL 48 FPS SEQUENCE"
+    },
+    {
+      "id": 26,
+      "type": "MarkdownNote",
+      "pos": [
+        -3012,
+        -762
+      ],
+      "size": [
+        500,
+        805
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Model Links\n\n**diffusion_models**\n\n- [minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors](https://huggingface.co/Kijai/MiniMax-H3-experimental/resolve/main/minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors)\n\n**text_encoders**\n\n- [qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors)\n\n**vae**\n\n- [minimax_h3_video_vae_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors)\n- [minimax_h3_audio_vae_fp32.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors)\n\n**latent_upscale_models**\n\n- [minimax_h3_latent_upscaler_3d_fp16.safetensors](https://huggingface.co/LBH-123-AI/Minimax_h3_latent_Upscaler/resolve/main/minimax_h3_latent_upscaler_3d_fp16.safetensors)\n\n**frame_interpolation (optional)**\n\n- [rife_v4.26_heavy.safetensors](https://huggingface.co/Comfy-Org/frame_interpolation/resolve/main/frame_interpolation/rife_v4.26_heavy.safetensors)\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n└── 📂 models/\n    ├── 📂 diffusion_models/\n    │   └── minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors\n    ├── 📂 text_encoders/\n    │   └── qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n    ├── 📂 vae/\n    │   ├── minimax_h3_video_vae_fp16.safetensors\n    │   └── minimax_h3_audio_vae_fp32.safetensors\n    ├── 📂 latent_upscale_models/\n    │   └── minimax_h3_latent_upscaler_3d_fp16.safetensors\n    └── 📂 frame_interpolation/\n        └── rife_v4.26_heavy.safetensors\n```\n\nH3 Relay expands its public nodes into native conditioning/VAE stages, so the text encoder and both VAEs are required even though they are not visible as separate canvas nodes."
+      ],
+      "widgets_values_named": {
+        "value": "## Model Links\n\n**diffusion_models**\n\n- [minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors](https://huggingface.co/Kijai/MiniMax-H3-experimental/resolve/main/minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors)\n\n**text_encoders**\n\n- [qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors)\n\n**vae**\n\n- [minimax_h3_video_vae_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors)\n- [minimax_h3_audio_vae_fp32.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors)\n\n**latent_upscale_models**\n\n- [minimax_h3_latent_upscaler_3d_fp16.safetensors](https://huggingface.co/LBH-123-AI/Minimax_h3_latent_Upscaler/resolve/main/minimax_h3_latent_upscaler_3d_fp16.safetensors)\n\n**frame_interpolation (optional)**\n\n- [rife_v4.26_heavy.safetensors](https://huggingface.co/Comfy-Org/frame_interpolation/resolve/main/frame_interpolation/rife_v4.26_heavy.safetensors)\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n└── 📂 models/\n    ├── 📂 diffusion_models/\n    │   └── minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors\n    ├── 📂 text_encoders/\n    │   └── qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n    ├── 📂 vae/\n    │   ├── minimax_h3_video_vae_fp16.safetensors\n    │   └── minimax_h3_audio_vae_fp32.safetensors\n    ├── 📂 latent_upscale_models/\n    │   └── minimax_h3_latent_upscaler_3d_fp16.safetensors\n    └── 📂 frame_interpolation/\n        └── rife_v4.26_heavy.safetensors\n```\n\nH3 Relay expands its public nodes into native conditioning/VAE stages, so the text encoder and both VAEs are required even though they are not visible as separate canvas nodes."
+      },
+      "title": "Note: Model Links",
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 27,
+      "type": "MarkdownNote",
+      "pos": [
+        -3015,
+        90
+      ],
+      "size": [
+        500,
+        760
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## H3 Relay · FastH3 VSA\n\nThis workflow requires the experimental FastH3 VSA runtime. It does **not** run on an ordinary stock ComfyUI checkout yet.\n\n## Exact tested runtime\n\n- **ComfyUI:** Kijai VSA commit [10febb01d7be73d1491cf5e5347b5ab8b6c2c09e](https://github.com/kijai/ComfyUI/commit/10febb01d7be73d1491cf5e5347b5ab8b6c2c09e) from draft [PR #15958](https://github.com/Comfy-Org/ComfyUI/pull/15958)\n- **comfy-kitchen:** official PyPI `comfy-kitchen==0.2.33` CUDA wheel, with CUDA `sol_attn` and `sol_attn_chunked`\n- **VSA adapter:** included in H3 Relay for both generation and Ultimate refinement; no temporary custom node is required\n- **H3 Relay:** [github.com/akatz-ai/h3-relay](https://github.com/akatz-ai/h3-relay); use the release containing **FastH3 VSA Profile** and **H3 Ultimate 2x Enhance**\n- **MMH3 Ultimate Upscale:** [bbaudio-2025/Comfyui-MMH3-UltimateUpscale](https://github.com/bbaudio-2025/Comfyui-MMH3-UltimateUpscale), tested at commit [6db8fa5a4e4ca0718d2ea8d08002ea899fe27721](https://github.com/bbaudio-2025/Comfyui-MMH3-UltimateUpscale/commit/6db8fa5a4e4ca0718d2ea8d08002ea899fe27721)\n- **H3 latent upscaler:** [LBH-123-AI/Minimax_h3_latent_Upscaler](https://huggingface.co/LBH-123-AI/Minimax_h3_latent_Upscaler)\n\nUntil ComfyUI's VSA model support is available in a normal release, treat this as an advanced experimental workflow. The reference runtime uses Python 3.11, PyTorch 2.13.0+cu130, and an NVIDIA driver compatible with CUDA 13. See VALIDATION.md for the official-wheel test results and limitations.\n\n## Run order\n\n1. Keep the FastH3 profile at Euler/simple, four forwards, shifts 12/3, Spectrum off, and VSA 10 percent. H3 Relay owns these values even if a stale visible step widget says otherwise.\n2. Run **Generate Shot**, review its native 24fps video and synchronized H3 audio, and reroll before accepting downstream work.\n3. Run **H3 Ultimate 2x Enhance** only after accepting the raw result. It reuses the accepted AV latent and complete shot prompt.\n4. Ultimate emits 24fps video at exactly 2x width and height. The bundled RIFE nodes are bypassed by default; enable all of them for 48fps.\n\n## Sequence behavior\n\n- Shots 2 and 3 continue from 18 frames of accepted visual/audio history. Three 10-second generation windows deliver about 28.9 seconds after repeated history is trimmed.\n- Run or reroll each Generate Shot independently. Final assemblers restore cached predecessors and run only missing or stale stages.\n\n## Managed outputs\n\nGenerate, Ultimate, and interpolation intermediates are integrity-checked managed cache artifacts. Their previews are playable, but they are not published files. Use a final Assemble node or connect a native Save Video node when you want a durable output in ComfyUI's output directory.\n\n## Bundled reference assets\n\nCopy the five files from `example_workflows/assets/` into `ComfyUI/input/` before loading this workflow. The saved Load Image nodes expect the exact bundled filenames. Pictures 1-3 define Akatz; Pictures 4-5 define the alley and stairwell."
+      ],
+      "widgets_values_named": {
+        "value": "## H3 Relay · FastH3 VSA\n\nThis workflow requires the experimental FastH3 VSA runtime. It does **not** run on an ordinary stock ComfyUI checkout yet.\n\n## Exact tested runtime\n\n- **ComfyUI:** Kijai VSA commit [10febb01d7be73d1491cf5e5347b5ab8b6c2c09e](https://github.com/kijai/ComfyUI/commit/10febb01d7be73d1491cf5e5347b5ab8b6c2c09e) from draft [PR #15958](https://github.com/Comfy-Org/ComfyUI/pull/15958)\n- **comfy-kitchen:** official PyPI `comfy-kitchen==0.2.33` CUDA wheel, with CUDA `sol_attn` and `sol_attn_chunked`\n- **VSA adapter:** included in H3 Relay for both generation and Ultimate refinement; no temporary custom node is required\n- **H3 Relay:** [github.com/akatz-ai/h3-relay](https://github.com/akatz-ai/h3-relay); use the release containing **FastH3 VSA Profile** and **H3 Ultimate 2x Enhance**\n- **MMH3 Ultimate Upscale:** [bbaudio-2025/Comfyui-MMH3-UltimateUpscale](https://github.com/bbaudio-2025/Comfyui-MMH3-UltimateUpscale), tested at commit [6db8fa5a4e4ca0718d2ea8d08002ea899fe27721](https://github.com/bbaudio-2025/Comfyui-MMH3-UltimateUpscale/commit/6db8fa5a4e4ca0718d2ea8d08002ea899fe27721)\n- **H3 latent upscaler:** [LBH-123-AI/Minimax_h3_latent_Upscaler](https://huggingface.co/LBH-123-AI/Minimax_h3_latent_Upscaler)\n\nUntil ComfyUI's VSA model support is available in a normal release, treat this as an advanced experimental workflow. The reference runtime uses Python 3.11, PyTorch 2.13.0+cu130, and an NVIDIA driver compatible with CUDA 13. See VALIDATION.md for the official-wheel test results and limitations.\n\n## Run order\n\n1. Keep the FastH3 profile at Euler/simple, four forwards, shifts 12/3, Spectrum off, and VSA 10 percent. H3 Relay owns these values even if a stale visible step widget says otherwise.\n2. Run **Generate Shot**, review its native 24fps video and synchronized H3 audio, and reroll before accepting downstream work.\n3. Run **H3 Ultimate 2x Enhance** only after accepting the raw result. It reuses the accepted AV latent and complete shot prompt.\n4. Ultimate emits 24fps video at exactly 2x width and height. The bundled RIFE nodes are bypassed by default; enable all of them for 48fps.\n\n## Sequence behavior\n\n- Shots 2 and 3 continue from 18 frames of accepted visual/audio history. Three 10-second generation windows deliver about 28.9 seconds after repeated history is trimmed.\n- Run or reroll each Generate Shot independently. Final assemblers restore cached predecessors and run only missing or stale stages.\n\n## Managed outputs\n\nGenerate, Ultimate, and interpolation intermediates are integrity-checked managed cache artifacts. Their previews are playable, but they are not published files. Use a final Assemble node or connect a native Save Video node when you want a durable output in ComfyUI's output directory.\n\n## Bundled reference assets\n\nCopy the five files from `example_workflows/assets/` into `ComfyUI/input/` before loading this workflow. The saved Load Image nodes expect the exact bundled filenames. Pictures 1-3 define Akatz; Pictures 4-5 define the alley and stairwell."
+      },
+      "title": "Note: H3 Relay",
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 28,
+      "type": "MarkdownNote",
+      "pos": [
+        -2456,
+        460
+      ],
+      "size": [
+        360,
+        440
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "| megapixels | Aspect | Native H3 (multiple=32) | H3 Ultimate 2x |\n|---|---|---|---|\n| 0.2 | 16:9 | 608 x 352 | 1216 x 704 |\n| 0.3 | 16:9 | 736 x 416 | 1472 x 832 |\n| 0.4 | 16:9 | 864 x 480 | 1728 x 960 |\n| 0.5 | 16:9 | 960 x 544 | 1920 x 1088 |\n| 0.6 | 16:9 | 1056 x 608 | 2112 x 1216 |\n| 0.7 | 16:9 | 1152 x 640 | 2304 x 1280 |\n| 0.8 | 16:9 | 1216 x 672 | 2432 x 1344 |\n| 0.9 | 16:9 | 1280 x 736 | 2560 x 1472 |\n| 0.98 | 16:9 | 1344 x 768 | 2688 x 1536 |\n\nThe bundled examples use **832 x 480**, which becomes **1664 x 960** after Ultimate. Sequence width and height must remain multiples of 32. Ultimate derives the exact 2x canvas and safely clamps tile maxima to it."
+      ],
+      "widgets_values_named": {
+        "value": "| megapixels | Aspect | Native H3 (multiple=32) | H3 Ultimate 2x |\n|---|---|---|---|\n| 0.2 | 16:9 | 608 x 352 | 1216 x 704 |\n| 0.3 | 16:9 | 736 x 416 | 1472 x 832 |\n| 0.4 | 16:9 | 864 x 480 | 1728 x 960 |\n| 0.5 | 16:9 | 960 x 544 | 1920 x 1088 |\n| 0.6 | 16:9 | 1056 x 608 | 2112 x 1216 |\n| 0.7 | 16:9 | 1152 x 640 | 2304 x 1280 |\n| 0.8 | 16:9 | 1216 x 672 | 2432 x 1344 |\n| 0.9 | 16:9 | 1280 x 736 | 2560 x 1472 |\n| 0.98 | 16:9 | 1344 x 768 | 2688 x 1536 |\n\nThe bundled examples use **832 x 480**, which becomes **1664 x 960** after Ultimate. Sequence width and height must remain multiples of 32. Ultimate derives the exact 2x canvas and safely clamps tile maxima to it."
+      },
+      "title": "Note: Size Settings Reference",
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      1,
+      4,
+      0,
+      15,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      2,
+      3,
+      0,
+      15,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      3,
+      11,
+      0,
+      15,
+      2,
+      "STRING"
+    ],
+    [
+      4,
+      3,
+      0,
+      19,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      5,
+      15,
+      0,
+      19,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      6,
+      14,
+      0,
+      19,
+      2,
+      "STRING"
+    ],
+    [
+      7,
+      5,
+      0,
+      22,
+      0,
+      "H3_RELAY_INTERPOLATION"
+    ],
+    [
+      8,
+      19,
+      0,
+      22,
+      1,
+      "H3_RELAY_ENHANCED"
+    ],
+    [
+      9,
+      6,
+      0,
+      15,
+      5,
+      "IMAGE"
+    ],
+    [
+      10,
+      6,
+      0,
+      19,
+      4,
+      "IMAGE"
+    ],
+    [
+      11,
+      7,
+      0,
+      15,
+      6,
+      "IMAGE"
+    ],
+    [
+      12,
+      7,
+      0,
+      19,
+      5,
+      "IMAGE"
+    ],
+    [
+      13,
+      8,
+      0,
+      15,
+      7,
+      "IMAGE"
+    ],
+    [
+      14,
+      8,
+      0,
+      19,
+      6,
+      "IMAGE"
+    ],
+    [
+      15,
+      9,
+      0,
+      15,
+      8,
+      "IMAGE"
+    ],
+    [
+      16,
+      9,
+      0,
+      19,
+      7,
+      "IMAGE"
+    ],
+    [
+      17,
+      10,
+      0,
+      15,
+      9,
+      "IMAGE"
+    ],
+    [
+      18,
+      10,
+      0,
+      19,
+      8,
+      "IMAGE"
+    ],
+    [
+      19,
+      3,
+      0,
+      16,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      20,
+      12,
+      0,
+      16,
+      2,
+      "STRING"
+    ],
+    [
+      21,
+      15,
+      0,
+      16,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      22,
+      3,
+      0,
+      20,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      23,
+      16,
+      0,
+      20,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      24,
+      14,
+      0,
+      20,
+      2,
+      "STRING"
+    ],
+    [
+      25,
+      5,
+      0,
+      23,
+      0,
+      "H3_RELAY_INTERPOLATION"
+    ],
+    [
+      26,
+      20,
+      0,
+      23,
+      1,
+      "H3_RELAY_ENHANCED"
+    ],
+    [
+      27,
+      22,
+      0,
+      20,
+      3,
+      "H3_RELAY_ENHANCED"
+    ],
+    [
+      28,
+      6,
+      0,
+      16,
+      5,
+      "IMAGE"
+    ],
+    [
+      29,
+      6,
+      0,
+      20,
+      4,
+      "IMAGE"
+    ],
+    [
+      30,
+      7,
+      0,
+      16,
+      6,
+      "IMAGE"
+    ],
+    [
+      31,
+      7,
+      0,
+      20,
+      5,
+      "IMAGE"
+    ],
+    [
+      32,
+      8,
+      0,
+      16,
+      7,
+      "IMAGE"
+    ],
+    [
+      33,
+      8,
+      0,
+      20,
+      6,
+      "IMAGE"
+    ],
+    [
+      34,
+      9,
+      0,
+      16,
+      8,
+      "IMAGE"
+    ],
+    [
+      35,
+      9,
+      0,
+      20,
+      7,
+      "IMAGE"
+    ],
+    [
+      36,
+      10,
+      0,
+      16,
+      9,
+      "IMAGE"
+    ],
+    [
+      37,
+      10,
+      0,
+      20,
+      8,
+      "IMAGE"
+    ],
+    [
+      38,
+      3,
+      0,
+      17,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      39,
+      13,
+      0,
+      17,
+      2,
+      "STRING"
+    ],
+    [
+      40,
+      16,
+      0,
+      17,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      41,
+      3,
+      0,
+      21,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      42,
+      17,
+      0,
+      21,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      43,
+      14,
+      0,
+      21,
+      2,
+      "STRING"
+    ],
+    [
+      44,
+      5,
+      0,
+      24,
+      0,
+      "H3_RELAY_INTERPOLATION"
+    ],
+    [
+      45,
+      21,
+      0,
+      24,
+      1,
+      "H3_RELAY_ENHANCED"
+    ],
+    [
+      46,
+      23,
+      0,
+      21,
+      3,
+      "H3_RELAY_ENHANCED"
+    ],
+    [
+      47,
+      6,
+      0,
+      17,
+      5,
+      "IMAGE"
+    ],
+    [
+      48,
+      6,
+      0,
+      21,
+      4,
+      "IMAGE"
+    ],
+    [
+      49,
+      7,
+      0,
+      17,
+      6,
+      "IMAGE"
+    ],
+    [
+      50,
+      7,
+      0,
+      21,
+      5,
+      "IMAGE"
+    ],
+    [
+      51,
+      8,
+      0,
+      17,
+      7,
+      "IMAGE"
+    ],
+    [
+      52,
+      8,
+      0,
+      21,
+      6,
+      "IMAGE"
+    ],
+    [
+      53,
+      9,
+      0,
+      17,
+      8,
+      "IMAGE"
+    ],
+    [
+      54,
+      9,
+      0,
+      21,
+      7,
+      "IMAGE"
+    ],
+    [
+      55,
+      10,
+      0,
+      17,
+      9,
+      "IMAGE"
+    ],
+    [
+      56,
+      10,
+      0,
+      21,
+      8,
+      "IMAGE"
+    ],
+    [
+      57,
+      17,
+      0,
+      18,
+      0,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      58,
+      24,
+      0,
+      25,
+      0,
+      "H3_RELAY_ENHANCED"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "frontendVersion": "1.49.6",
+    "ds": {
+      "scale": 0.56,
+      "offset": [
+        1320,
+        850
+      ]
+    },
+    "h3_relay_example": {
+      "profile": "fast_h3_vsa",
+      "shots": 3,
+      "generation_window_seconds": 10,
+      "native_resolution": [
+        832,
+        480
+      ],
+      "ultimate_resolution": [
+        1664,
+        960
+      ],
+      "references": [
+        "akatz-general-reference.png",
+        "akatz-character-sheet.png",
+        "akatz-face-closeup.png",
+        "cyberpunk-neon-street.jpg",
+        "cyberpunk-stairwell.jpg"
+      ]
+    }
+  },
+  "version": 0.4,
+  "definitions": {
+    "subgraphs": []
+  }
+}

@@ -1,5 +1,9 @@
 # H3 Relay ComfyGit environment
 
+This is the historical standard-H3/LTX/RIFE reference baseline. For the
+experimental FastH3 VSA + H3 Ultimate path with official comfy-kitchen 0.2.33,
+use [`../comfygit_fast_h3_environment/`](../comfygit_fast_h3_environment/README.md).
+
 This directory is a portable ComfyGit source for the full H3 Relay reference
 workflow. It pins:
 

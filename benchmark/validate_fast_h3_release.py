@@ -95,12 +95,23 @@ def main():
                  if node["class_type"] == "H3RelayGenerateShot"]
         if len(shots) != 1:
             raise RuntimeError("A workflow with multiple shots needs an assembler")
+        finishers = [key for key, node in prompt.items()
+                     if node["class_type"] in {"H3RelayUltimateEnhanceShot", "H3RelayEnhanceShot"}]
+        if len(finishers) > 1:
+            raise RuntimeError("Select one finishing branch for automatic assembly")
         targets = ["release_validation_assemble"]
-        prompt[targets[0]] = {
-            "class_type": "H3RelayAssembleRaw",
-            "inputs": {"sequence": [shots[0], 0],
-                       "filename": args.run_name + "_raw", "audio_bitrate": 256},
-        }
+        if finishers:
+            prompt[targets[0]] = {
+                "class_type": "H3RelayAssemble",
+                "inputs": {"enhanced": [finishers[0], 0], "output_stage": "auto",
+                           "filename": args.run_name + "_enhanced", "audio_bitrate": 256},
+            }
+        else:
+            prompt[targets[0]] = {
+                "class_type": "H3RelayAssembleRaw",
+                "inputs": {"sequence": [shots[0], 0],
+                           "filename": args.run_name + "_raw", "audio_bitrate": 256},
+            }
     if len(targets) != 1:
         raise RuntimeError("Select a workflow with exactly one final assembler")
     missing = sorted({n["class_type"] for n in prompt.values()} - schema.keys())

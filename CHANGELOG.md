@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add a separate, materialization-tested ComfyGit FastH3/Ultimate recipe with
+  immutable public model sources and official kitchen 0.2.33. Keep the older
+  standard-H3/LTX/RIFE recipe as a clearly identified historical baseline.
 - Use the official comfy-kitchen 0.2.33 CUDA wheel and Relay-owned VSA adapter
   for both FastH3 generation and Ultimate refinement.
 - Fit short Ultimate continuation audio to the exact video clock when the

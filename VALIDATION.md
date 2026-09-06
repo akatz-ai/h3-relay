@@ -19,7 +19,7 @@ the unmodified official PyPI `comfy-kitchen==0.2.33` wheel, PyTorch
   This shortened run is a functional test, not full-duration quality proof.
 - Standard H3 hybrid/Spectrum-16 first-shot regression on the same runtime:
   416x256, 39 frames, stereo audio, successful history and full decode.
-- 41 Relay unit tests pass, including exact native-audio rounding acceptance
+- 45 Relay unit/package/harness tests pass, including exact native-audio rounding acceptance
   and rejection of unrelated waveform truncation. Expanded runtime contracts pass.
 - Recovery deliberately restored accepted raw checkpoints and completed the
   remaining Ultimate stages after fixing the 266-sample native-audio tail.
@@ -49,6 +49,39 @@ Local evidence is retained under `benchmark/results/official-wheel-20260906/`
 (ignored): frozen prompts, all histories, kernel JUnit XML, stream metadata,
 media hashes, and full-decode results. The desktop remained active and 9 GiB
 VRAM was reserved, so timings are not controlled performance benchmarks.
+
+### ComfyGit materialization and longer Ultimate validation
+
+The dedicated `comfygit_fast_h3_environment/` recipe was then materialized by
+ComfyGit source `ee0e595a602ce373d8e24f0675845a6d6be0a92e` into a new workspace.
+Both custom-node commits, all three saved workflows, and all five required
+model records resolved. For prepublication validation only, a process-local
+Git transport redirect supplied the unpublished Relay commit from the local
+repository; all other repository/package sources remained public. Fetching
+that Relay commit from public GitHub remains a post-publication check.
+
+The fresh ComfyGit environment resolved Python 3.11.16,
+`torch==2.14.0+cu130`, `torchvision==0.29.0+cu130`,
+`torchaudio==2.11.0+cu130`, `comfy-kitchen==0.2.33`, Transformers 5.16.1,
+and PyAV 18.1.0. ComfyGit owns backend-specific PyTorch resolution; the recipe
+pins kitchen and the VSA model integration rather than conflicting with that
+backend selection.
+
+The one-shot Ultimate workflow was run with its duration increased to ten
+seconds, no references, and unchanged 832x480 dimensions. Fresh raw generation,
+learned 2x upscaling, temporally tiled one-step refinement (136-frame chunks /
+17-frame overlap), and assembly all completed. The final result is 1664x960,
+24 fps, 243 frames, with exactly 10.125 seconds of both video and stereo
+32-kHz audio. Full audio/video decode and the expanded runtime contract pass.
+Final MP4 SHA-256:
+`aa8f3d47d9c4a3f3a8e36f2a7a7ea6f4c299d1d0a54571a7559a50bb8934482a`.
+
+Initial packaging attempts are preserved as failure evidence. ComfyGit's model
+path guard rejected category symlinks escaping the test model directory;
+same-filesystem hard links reused the exact bytes within an isolated root.
+A manually pinned PyTorch trio conflicted with ComfyGit's resolved backend
+versions, so the final recipe delegates the trio to ComfyGit. No ComfyGit
+source or existing user environment was modified to make this test pass.
 
 Validation was performed on 2026-08-16 with ComfyUI
 `v0.33.0-6-g1c6d8d45`, an RTX 4090, and the model filenames documented in the

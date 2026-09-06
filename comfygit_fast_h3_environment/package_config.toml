@@ -1,0 +1,10 @@
+[substitutions]
+opencv-python = "opencv-contrib-python-headless"
+opencv-contrib-python = "opencv-contrib-python-headless"
+opencv-python-headless = "opencv-contrib-python-headless"
+
+[exclude]
+packages = ["opencv-python", "opencv-contrib-python", "opencv-python-headless"]
+
+[probe]
+protected = ["torch", "torchvision", "torchaudio", "torchsde", "uv"]

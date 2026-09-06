@@ -309,6 +309,13 @@ at a time:
   bypassed for 24 fps.
 
 All three workflows contain exact experimental runtime and model-install cards.
+
+The matching portable recipe is
+[`comfygit_fast_h3_environment/`](comfygit_fast_h3_environment/README.md).
+It pins official comfy-kitchen 0.2.33 and the required VSA-capable ComfyUI
+commit; the older standard-H3 `comfygit_environment/` is a separate baseline.
+See [validation limits](VALIDATION.md) before treating this experimental path
+as a generally supported runtime.
 The original generated Akatz references are included under
 `example_workflows/assets/`; copy them into `ComfyUI/input/` before loading the
 three-shot workflow. See `example_workflows/README.md` for the tier comparison.
