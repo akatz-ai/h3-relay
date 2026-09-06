@@ -27,7 +27,7 @@ BLOCK_SIZE = 64
 PRODUCER_CHUNK = 4096
 VSA_KEEP_RATIO = 0.10
 VSA_CUBE = (4, 4, 4)
-MIN_COMFY_KITCHEN_VERSION = "0.2.31"
+MIN_COMFY_KITCHEN_VERSION = "0.2.33"
 
 _LOG = logging.getLogger("h3_relay.fast_h3_vsa")
 _INSTALLED_MODELS: set[int] = set()
@@ -87,8 +87,8 @@ def require_runtime():
     ):
         raise RuntimeError(
             "FastH3 VSA requires a comfy-kitchen CUDA build with sol_attn and "
-            "sol_attn_chunked from PR #117. The package version alone is not "
-            "sufficient; the current PyPI 0.2.31 wheel may lack those symbols."
+            "sol_attn_chunked. Install the official comfy-kitchen >= 0.2.33 "
+            "CUDA wheel in the ComfyUI environment."
         )
     backends = comfy_kitchen.list_backends()
     cuda_info = backends.get("cuda", {})

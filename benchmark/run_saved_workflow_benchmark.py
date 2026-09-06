@@ -41,8 +41,10 @@ WIDGET_INPUTS = {
         "weight_dtype",
     ),
     "H3RelayH3ModelLoader": (
-        "model_name", "text_encoder_name", "video_vae_name",
-        "audio_vae_name", "weight_dtype", "manual_cache_revision",
+        "model_name", "weight_dtype", "manual_cache_revision",
+    ),
+    "H3RelayFastH3VSAModelLoader": (
+        "model_name", "weight_dtype", "manual_cache_revision",
     ),
     "H3RelayModelLoRA": ("lora_name", "strength"),
     "H3RelayAttention": ("attention",),
@@ -64,11 +66,19 @@ WIDGET_INPUTS = {
         "output_crf", "context_window_frames", "context_overlap_frames",
         "vae_temporal_tile_frames", "vae_temporal_overlap_frames",
     ),
+    "H3RelayUltimateEnhanceShot": (
+        "refinement_seed", "control_after_generate", "output_crf",
+        "ref_image_size", "temporal_chunk_frames",
+        "temporal_overlap_frames", "anchor_strength", "tile_width",
+        "tile_height", "spatial_overlap",
+    ),
     "H3RelayInterpolationModelLoader": (
         "model_name", "manual_cache_revision",
     ),
     "H3RelayInterpolateShot": ("multiplier", "output_crf", "chunk_frames"),
     "H3RelayAssemble": ("output_stage", "filename", "audio_bitrate"),
+    "H3RelayAssembleRaw": ("filename", "audio_bitrate"),
+    "H3RelayAcceptedRawLatent": ("shot_index", "verify_sha256"),
     "H3RelayCacheManager": (
         "action", "keep_revisions_per_shot", "budget_gb",
     ),
@@ -170,12 +180,19 @@ def api_prompt_from_workflow(
                 inputs[name] = [str(origin_id), origin_slot]
             elif name in widget_values and name not in SKIP_SERVER_INPUTS:
                 inputs[name] = widget_values[name]
+        # Core frontend nodes such as LoadImage do not serialize widget-backed
+        # values in their `inputs` array. Named widget state remains the
+        # authority, so add mapped server inputs that were not represented by
+        # a socket instead of silently producing an invalid API prompt.
+        for name, value in widget_values.items():
+            if name not in inputs and name not in SKIP_SERVER_INPUTS:
+                inputs[name] = value
         if node_type == "H3RelayInterpolateShot":
             inputs.setdefault("chunk_frames", int(widget_values["chunk_frames"]))
 
         if node_type == "H3RelaySequenceStart":
             inputs["run_name"] = benchmark_run_name
-        elif node_type == "H3RelayAssemble":
+        elif node_type in {"H3RelayAssemble", "H3RelayAssembleRaw"}:
             inputs["filename"] = benchmark_run_name + "_assembled"
 
         prompt[str(node_id)] = {

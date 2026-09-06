@@ -27,7 +27,12 @@ _ROUTES_REGISTERED = False
 STAGED_CLASSES = {
     "H3RelayGenerateShot": "h3",
     "H3RelayEnhanceShot": "ltx",
+    "H3RelayUltimateEnhanceShot": "ultimate",
     "H3RelayInterpolateShot": "rife",
+}
+ENHANCEMENT_CLASSES = {
+    "H3RelayEnhanceShot": "ltx",
+    "H3RelayUltimateEnhanceShot": "ultimate",
 }
 
 
@@ -75,18 +80,22 @@ def build_stage_plan(prompt: dict[str, Any], assemble_node_id: str) -> list[dict
           if prompt[node_id].get("class_type") == "H3RelayGenerateShot"]
     finishing = [node_id for node_id in ordered
                  if prompt[node_id].get("class_type") in {
-                     "H3RelayEnhanceShot", "H3RelayInterpolateShot"}]
+                     *ENHANCEMENT_CLASSES, "H3RelayInterpolateShot"}]
     if not h3:
         raise ValueError("The selected Assemble node has no H3 shot ancestors.")
     if not finishing:
         raise ValueError("The selected Assemble node has no finishing-stage ancestors.")
     targets = h3 + finishing + [assemble_node_id]
     h3_indices = {node_id: index for index, node_id in enumerate(h3, 1)}
-    ltx_nodes = [node_id for node_id in finishing
-                 if prompt[node_id].get("class_type") == "H3RelayEnhanceShot"]
+    enhancement_nodes = [
+        node_id for node_id in finishing
+        if prompt[node_id].get("class_type") in ENHANCEMENT_CLASSES
+    ]
     rife_nodes = [node_id for node_id in finishing
                   if prompt[node_id].get("class_type") == "H3RelayInterpolateShot"]
-    ltx_indices = {node_id: index for index, node_id in enumerate(ltx_nodes, 1)}
+    enhancement_indices = {
+        node_id: index for index, node_id in enumerate(enhancement_nodes, 1)
+    }
     rife_indices = {node_id: index for index, node_id in enumerate(rife_nodes, 1)}
     plan = [{
         "node_id": node_id,
@@ -95,7 +104,7 @@ def build_stage_plan(prompt: dict[str, Any], assemble_node_id: str) -> list[dict
                      or prompt[node_id].get("class_type") or node_id),
         "shot_index": str(
             h3_indices.get(node_id)
-            or ltx_indices.get(node_id)
+            or enhancement_indices.get(node_id)
             or rife_indices.get(node_id)
             or len(h3)
         ),
@@ -108,11 +117,19 @@ def build_stage_plan(prompt: dict[str, Any], assemble_node_id: str) -> list[dict
             1 for candidate in ordered[:position]
             if prompt[candidate].get("class_type") == "H3RelayInterpolateShot"
         ))
-        if stage["kind"] == "ltx" and int(stage["shot_index"]) > 1:
+        if stage["kind"] in {"ltx", "ultimate"} and int(stage["shot_index"]) > 1:
             source = _link_source((node.get("inputs") or {}).get("previous_enhanced"))
             source_type = (prompt.get(source, {}).get("class_type") if source else None)
             stage["previous_stage"] = (
-                "interpolated" if source_type == "H3RelayInterpolateShot" else "ltx"
+                "interpolated"
+                if source_type == "H3RelayInterpolateShot"
+                else ENHANCEMENT_CLASSES.get(source_type, stage["kind"])
+            )
+        if stage["kind"] == "rife":
+            source = _link_source((node.get("inputs") or {}).get("enhanced"))
+            source_type = (prompt.get(source, {}).get("class_type") if source else None)
+            stage["enhancement_stage"] = ENHANCEMENT_CLASSES.get(
+                source_type, "ltx"
             )
         if stage["kind"] == "assemble":
             stage["delivery_count"] = str(sum(
@@ -122,7 +139,9 @@ def build_stage_plan(prompt: dict[str, Any], assemble_node_id: str) -> list[dict
             source = _link_source((node.get("inputs") or {}).get("enhanced"))
             source_type = (prompt.get(source, {}).get("class_type") if source else None)
             stage["source_stage"] = (
-                "interpolated" if source_type == "H3RelayInterpolateShot" else "ltx"
+                "interpolated"
+                if source_type == "H3RelayInterpolateShot"
+                else ENHANCEMENT_CLASSES.get(source_type, "ltx")
             )
     return plan
 
@@ -179,7 +198,7 @@ def rewrite_stage_with_disk_restores(
     inputs = node.setdefault("inputs", {})
     if stage["kind"] == "h3" and shot_index > 1:
         inputs["sequence"] = raw_restore(shot_index - 1)
-    elif stage["kind"] == "ltx":
+    elif stage["kind"] in {"ltx", "ultimate"}:
         inputs["sequence"] = raw_restore(shot_index)
         if shot_index > 1:
             inputs["previous_enhanced"] = enhanced_restore(
@@ -191,7 +210,9 @@ def rewrite_stage_with_disk_restores(
             inputs.pop("previous_enhanced", None)
     elif stage["kind"] == "rife":
         inputs["enhanced"] = enhanced_restore(
-            shot_index, "ltx", int(stage.get("delivery_count") or 0)
+            shot_index,
+            str(stage.get("enhancement_stage") or "ltx"),
+            int(stage.get("delivery_count") or 0),
         )
     elif stage["kind"] == "assemble":
         inputs["enhanced"] = enhanced_restore(

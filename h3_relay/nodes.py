@@ -34,6 +34,7 @@ MODEL_BUNDLE_FORMAT = "h3_relay_model_v1"
 INTERPOLATION_BUNDLE_TYPE = "H3_RELAY_INTERPOLATION"
 INTERPOLATION_BUNDLE_FORMAT = "h3_relay_interpolation_v1"
 FPS = 24
+H3_AUDIO_LATENT_FPS = 40
 LTX_CONTEXT_FRAMES = 17
 LTX_CONTEXT_STEPS = 3
 
@@ -42,6 +43,16 @@ H3_OVERLAY_MODEL = "minimax_h3_ref2va_int8_convrot.safetensors"
 H3_TEXT_ENCODER = "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors"
 H3_VIDEO_VAE = "minimax_h3_video_vae_fp16.safetensors"
 H3_AUDIO_VAE = "minimax_h3_audio_vae_fp32.safetensors"
+H3_LATENT_UPSCALER = "minimax_h3_latent_upscaler_3d_fp16.safetensors"
+ULTIMATE_ENGINE_REPOSITORY = (
+    "https://github.com/bbaudio-2025/Comfyui-MMH3-UltimateUpscale"
+)
+ULTIMATE_ENGINE_NODE_TYPES = (
+    "MMH3LatentUpscaleWithModelParams",
+    "MMH3TemporalSplitParams",
+    "MMH3SpatialSplitParams",
+    "MMH3UltimateUpscale",
+)
 FAST_H3_VSA_MODEL = (
     "minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors"
 )
@@ -78,6 +89,31 @@ def _manual_cache_revision_input():
 def _require_video_api() -> None:
     if InputImpl is None:
         raise RuntimeError("H3 Relay requires ComfyUI 0.32.0 or newer.")
+
+
+def _require_ultimate_engine(node_mappings: Any = None) -> None:
+    """Fail clearly when the optional MMH3 Ultimate execution engine is absent."""
+    if node_mappings is None:
+        try:
+            import nodes as comfy_nodes
+        except ImportError as exc:
+            raise RuntimeError(
+                "H3 Relay could not inspect ComfyUI's custom-node registry."
+            ) from exc
+        node_mappings = getattr(comfy_nodes, "NODE_CLASS_MAPPINGS", {})
+    missing = [
+        name for name in ULTIMATE_ENGINE_NODE_TYPES
+        if name not in node_mappings
+    ]
+    if not missing:
+        return
+    raise RuntimeError(
+        "H3 Relay · H3 Ultimate 2x Enhance requires the external "
+        "Comfyui-MMH3-UltimateUpscale node pack. Install %s under "
+        "ComfyUI/custom_nodes, restart ComfyUI, and retry. Missing node "
+        "classes: %s. Other H3 Relay nodes do not require this pack."
+        % (ULTIMATE_ENGINE_REPOSITORY, ", ".join(missing))
+    )
 
 
 def _duration_frames(seconds: float) -> int:
@@ -118,6 +154,111 @@ def _validate_ltx_tiling(
     return window, overlap, vae_tile, vae_overlap
 
 
+def _resolve_ultimate_spatial_tiling(
+    target_width: int,
+    target_height: int,
+    tile_width: int,
+    tile_height: int,
+    spatial_overlap: int,
+) -> tuple[int, int, int]:
+    """Resolve user tile maxima against the actual 2x sequence canvas."""
+    target_width = int(target_width)
+    target_height = int(target_height)
+    tile_width = int(tile_width)
+    tile_height = int(tile_height)
+    spatial_overlap = int(spatial_overlap)
+    for label, value in (
+        ("target width", target_width),
+        ("target height", target_height),
+        ("tile width", tile_width),
+        ("tile height", tile_height),
+    ):
+        if value < 32 or value % 32:
+            raise ValueError(
+                "Ultimate %s must be a positive multiple of 32." % label
+            )
+    if spatial_overlap < 0 or spatial_overlap % 32:
+        raise ValueError(
+            "Ultimate spatial overlap must be a non-negative multiple of 32."
+        )
+    effective_width = min(tile_width, target_width)
+    effective_height = min(tile_height, target_height)
+    max_overlap = max(0, min(effective_width, effective_height) - 32)
+    effective_overlap = min(spatial_overlap, max_overlap)
+    effective_overlap -= effective_overlap % 32
+    return effective_width, effective_height, effective_overlap
+
+
+def _h3_frames_for_video_tokens(token_count: int) -> int:
+    try:
+        from comfy.ldm.minimax.model import FRAME_PER_TOKEN
+    except (ImportError, AttributeError):
+        FRAME_PER_TOKEN = (1, 4, 4, 4, 4)
+    return sum(
+        int(FRAME_PER_TOKEN[index % len(FRAME_PER_TOKEN)])
+        for index in range(int(token_count))
+    )
+
+
+def _accepted_checkpoint_frame_count(segment: dict[str, Any]) -> int:
+    recorded = segment.get("checkpoint_frames")
+    if recorded is not None:
+        frames = int(recorded)
+        if frames < 1:
+            raise ValueError("Accepted H3 checkpoint frame count must be positive.")
+        return frames
+    checkpoint_uri = str(segment.get("checkpoint") or "")
+    if not checkpoint_uri:
+        raise ValueError("Accepted H3 shot has no durable latent checkpoint.")
+    path = relay_cache.resolve_artifact(checkpoint_uri)
+    if not os.path.isfile(path):
+        raise FileNotFoundError("Accepted H3 checkpoint is missing: %s" % path)
+    from safetensors import safe_open
+
+    with safe_open(path, framework="pt", device="cpu") as handle:
+        if "video" not in handle.keys():
+            raise ValueError("Accepted H3 checkpoint has no video tensor.")
+        shape = handle.get_slice("video").get_shape()
+    if len(shape) != 5 or int(shape[1]) != 24:
+        raise ValueError(
+            "Accepted H3 checkpoint video tensor has invalid shape %r."
+            % (tuple(shape),)
+        )
+    return _h3_frames_for_video_tokens(int(shape[2]))
+
+
+def _resolve_ultimate_frame_contract(
+    output_frames: int,
+    checkpoint_frames: int,
+    delivered_frames: int,
+    maximum_context_frames: int,
+) -> tuple[int, int, int]:
+    output_frames = int(output_frames)
+    checkpoint_frames = int(checkpoint_frames)
+    delivered_frames = int(delivered_frames)
+    maximum_context_frames = int(maximum_context_frames)
+    if output_frames != checkpoint_frames:
+        raise ValueError(
+            "H3 Relay Ultimate output contains %d frames; the accepted latent "
+            "checkpoint contains %d."
+            % (output_frames, checkpoint_frames)
+        )
+    context_frames = checkpoint_frames - delivered_frames
+    if context_frames < 0:
+        raise ValueError(
+            "H3 Relay Ultimate checkpoint contains %d frames, fewer than the "
+            "%d delivered frames recorded for this shot."
+            % (checkpoint_frames, delivered_frames)
+        )
+    if context_frames > maximum_context_frames:
+        raise ValueError(
+            "H3 Relay Ultimate checkpoint retains %d context frames; the "
+            "sequence permits at most %d."
+            % (context_frames, maximum_context_frames)
+        )
+    return checkpoint_frames, context_frames, delivered_frames
+
+
 def _raw_sequence(value: Any) -> dict[str, Any]:
     sequence = context._steer_sequence(value)
     if str(sequence.get("output_profile")) != "raw_h3":
@@ -136,7 +277,7 @@ def _finish(value: Any) -> dict[str, Any]:
     ):
         raise ValueError("H3 Relay received an invalid finishing token.")
     if not isinstance(value.get("ltx_segments"), list):
-        raise ValueError("H3 Relay finishing token has no LTX segment list.")
+        raise ValueError("H3 Relay finishing token has no enhanced segment list.")
     if not isinstance(value.get("delivery_segments"), list):
         raise ValueError("H3 Relay finishing token has no delivery segment list.")
     return value
@@ -257,7 +398,7 @@ def _finish_base(raw_sequence: dict[str, Any], previous: Any) -> dict[str, Any]:
     expected = index - 1
     if len(previous["ltx_segments"]) != expected:
         raise ValueError(
-            "H3 Relay shot %d enhancement requires %d preceding LTX results."
+            "H3 Relay shot %d enhancement requires %d preceding enhanced results."
             % (index, expected)
         )
     previous_revisions = list(previous.get("raw_revisions") or [])
@@ -339,6 +480,43 @@ def _valid_file(path_value: str, expected_hash: str) -> bool:
         return False
 
 
+def _crop_audio_frames(
+    audio: Any, start_frames: int, delivered_frames: int, label: str
+) -> dict[str, Any]:
+    """Crop an H3 AUDIO tensor on the same 24fps timeline as its video."""
+    waveform, sample_rate = context._validate_audio(audio, label)
+    start_sample = int(round(int(start_frames) / float(FPS) * sample_rate))
+    sample_count = int(round(int(delivered_frames) / float(FPS) * sample_rate))
+    end_sample = start_sample + sample_count
+    if int(waveform.shape[-1]) < end_sample:
+        # H3 rounds the full checkpoint duration to 40 Hz before audio decode.
+        # Fit that known quantization boundary to the 24 fps delivery clock;
+        # arbitrary short or truncated waveforms must still fail.
+        native_steps = round(
+            (int(start_frames) + int(delivered_frames)) / FPS * H3_AUDIO_LATENT_FPS
+        )
+        native_samples = round(native_steps * sample_rate / H3_AUDIO_LATENT_FPS)
+        if int(waveform.shape[-1]) != native_samples:
+            raise ValueError(
+                "%s contains %d samples; expected at least %d for a %d+%d frame crop."
+                % (
+                    label,
+                    int(waveform.shape[-1]),
+                    end_sample,
+                    int(start_frames),
+                    int(delivered_frames),
+                )
+            )
+        waveform = context._pad_audio_to_samples(audio, end_sample, label)["waveform"]
+    return {
+        "waveform": waveform[..., start_sample:end_sample]
+        .detach()
+        .cpu()
+        .contiguous(),
+        "sample_rate": sample_rate,
+    }
+
+
 def _append_ltx(base: dict[str, Any], raw_sequence: dict[str, Any], record: dict[str, Any]):
     updated = dict(base)
     updated["format"] = FINISH_FORMAT
@@ -352,7 +530,11 @@ def _append_ltx(base: dict[str, Any], raw_sequence: dict[str, Any], record: dict
     updated["delivery_segments"] = [
         dict(item) for item in base["delivery_segments"]
     ]
-    updated["stage"] = "ltx"
+    # `ltx_segments` is retained as the durable v1 field name so existing
+    # workflows and cached finishing tokens remain readable. It now stores
+    # either an LTX result or an H3 Ultimate result, distinguished by the
+    # record's finish_method/finish_stage metadata.
+    updated["stage"] = str(record.get("finish_stage") or "ltx")
     return updated
 
 
@@ -413,8 +595,10 @@ def _restore_finish_from_disk(
     delivery_count: int | None = None,
 ) -> dict[str, Any]:
     stage = str(stage)
-    if stage not in {"ltx", "interpolated"}:
-        raise ValueError("H3 Relay restore stage must be ltx or interpolated.")
+    if stage not in {"ltx", "ultimate", "interpolated"}:
+        raise ValueError(
+            "H3 Relay restore stage must be ltx, ultimate, or interpolated."
+        )
     path = _stage_paths(str(run_name), stage, int(shot_index), "restore")["sequence"]
     try:
         finish = _finish(context._read_json(path))
@@ -426,7 +610,7 @@ def _restore_finish_from_disk(
     shot_index = int(shot_index)
     if len(finish["ltx_segments"]) < shot_index:
         raise ValueError(
-            "H3 Relay %s restore needs shot %d, but only %d LTX shots are saved."
+            "H3 Relay %s restore needs shot %d, but only %d enhanced shots are saved."
             % (stage, shot_index, len(finish["ltx_segments"]))
         )
     if delivery_count is None:
@@ -457,7 +641,9 @@ def _restore_finish_from_disk(
             str(record.get("full_segment") or ""),
             str(record.get("full_segment_sha256") or ""),
         ):
-            raise ValueError("Restored LTX shot %d failed integrity validation." % index)
+            raise ValueError(
+                "Restored enhanced shot %d failed integrity validation." % index
+            )
     for index, record in enumerate(updated["delivery_segments"], 1):
         if not _valid_file(
             str(record.get("delivery_segment") or ""),
@@ -495,7 +681,10 @@ class H3RelayRestoreEnhanced:
             "required": {
                 "run_name": ("STRING", {"forceInput": True}),
                 "shot_index": ("INT", {"default": 1, "min": 1, "max": 128}),
-                "stage": (["ltx", "interpolated"], {"default": "interpolated"}),
+                "stage": (
+                    ["ltx", "ultimate", "interpolated"],
+                    {"default": "interpolated"},
+                ),
                 "delivery_count": ("INT", {"default": 1, "min": 0, "max": 128}),
             }
         }
@@ -1579,12 +1768,142 @@ class H3RelayGenerateShot(io.ComfyNode):
         return _video_ui(preview, final_status, result_tuple)
 
 
+class H3RelayAcceptedRawLatent:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "sequence": (context.STEER_SEQUENCE_TYPE,),
+                "shot_index": ("INT", {
+                    "default": -1,
+                    "min": -1,
+                    "max": 1000,
+                    "tooltip": (
+                        "Accepted shot to load. -1 selects the latest shot; "
+                        "positive values are one-based sequence positions."
+                    ),
+                }),
+                "verify_sha256": ("BOOLEAN", {
+                    "default": True,
+                    "tooltip": (
+                        "Verify the durable checkpoint against the hash "
+                        "recorded in the accepted sequence before loading."
+                    ),
+                }),
+            },
+        }
+
+    RETURN_TYPES = ("LATENT", "STRING", "STRING")
+    RETURN_NAMES = ("latent", "checkpoint_uri", "status")
+    FUNCTION = "load"
+    CATEGORY = CATEGORY + "/cache"
+    DESCRIPTION = (
+        "Load the nested video/audio latent from an accepted H3 Relay shot. "
+        "Use this bridge to feed durable raw generations into latent-aware "
+        "finishers such as MMH3 Ultimate Upscale without hard-coded paths."
+    )
+
+    def load(self, sequence, shot_index, verify_sha256):
+        sequence = context._steer_sequence(sequence)
+        segments = sequence.get("segments") or []
+        if not segments:
+            raise ValueError(
+                "Accepted Raw Latent requires at least one generated shot."
+            )
+        requested = int(shot_index)
+        index = len(segments) if requested == -1 else requested
+        if index < 1 or index > len(segments):
+            raise ValueError(
+                "Accepted Raw Latent shot_index must be -1 or between 1 and %d."
+                % len(segments)
+            )
+        record = segments[index - 1]
+        segment = record.get("h3_segment")
+        if not isinstance(segment, dict):
+            raise ValueError(
+                "Accepted shot %d does not contain an H3 checkpoint record."
+                % index
+            )
+        checkpoint_uri = str(segment.get("checkpoint") or "")
+        expected_hash = str(segment.get("checkpoint_sha256") or "")
+        if not checkpoint_uri:
+            raise ValueError(
+                "Accepted shot %d has no durable latent checkpoint." % index
+            )
+        path = relay_cache.resolve_artifact(checkpoint_uri)
+        if not os.path.isfile(path):
+            raise FileNotFoundError(
+                "Accepted shot %d checkpoint is missing: %s" % (index, path)
+            )
+        if bool(verify_sha256):
+            if not expected_hash:
+                raise ValueError(
+                    "Accepted shot %d has no recorded checkpoint SHA-256."
+                    % index
+                )
+            actual_hash = context._file_sha256(path)
+            if actual_hash != expected_hash:
+                raise ValueError(
+                    "Accepted shot %d checkpoint hash mismatch: expected %s, "
+                    "found %s." % (index, expected_hash, actual_hash)
+                )
+
+        import comfy.nested_tensor
+        from safetensors.torch import load_file
+
+        tensors = load_file(path, device="cpu")
+        video = tensors.get("video")
+        audio = tensors.get("audio")
+        if video is None or audio is None:
+            raise ValueError(
+                "Accepted shot %d checkpoint is missing video/audio tensors."
+                % index
+            )
+        checkpoint_frames = _h3_frames_for_video_tokens(int(video.shape[2]))
+        recorded_frames = segment.get("checkpoint_frames")
+        if (
+            recorded_frames is not None
+            and int(recorded_frames) != checkpoint_frames
+        ):
+            raise ValueError(
+                "Accepted shot %d checkpoint frame metadata says %d, but "
+                "the video tensor contains %d pixel frames."
+                % (index, int(recorded_frames), checkpoint_frames)
+            )
+        latent = {
+            "samples": comfy.nested_tensor.NestedTensor((video, audio)),
+        }
+        status = (
+            "loaded accepted shot %d/%d AV latent %d video tokens / %d "
+            "pixel frames / %d audio tokens <- %s"
+            % (
+                index,
+                len(segments),
+                int(video.shape[2]),
+                checkpoint_frames,
+                int(audio.shape[3]),
+                checkpoint_uri,
+            )
+        )
+        return latent, checkpoint_uri, status
+
+
 class H3RelayAcceptRaw(context.MiniMaxH3SteerAcceptRaw):
     CATEGORY = CATEGORY + "/internal"
 
     def accept(self, sequence, state, segment):
         output_crf = int(sequence.get("relay_output_crf", 18))
         updated, _, _, status = super().accept(sequence, state, segment)
+        updated = dict(updated)
+        records = [dict(item) for item in updated["segments"]]
+        current = dict(records[-1])
+        h3_segment = dict(current["h3_segment"])
+        h3_segment["checkpoint_frames"] = _accepted_checkpoint_frame_count(
+            h3_segment
+        )
+        current["h3_segment"] = h3_segment
+        records[-1] = current
+        updated["segments"] = records
         updated, preview, mux_status = _raw_preview_with_audio(
             updated, output_crf
         )
@@ -1733,6 +2052,196 @@ class H3RelayAcceptLTX:
             )
         )
         return updated, InputImpl.VideoFromFile(delivery_path), delivery_path, status
+
+
+class H3RelayAcceptUltimate:
+    """Persist one H3 Ultimate result in the v1 finishing stream."""
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "base_enhanced": (FINISH_TYPE,),
+                "sequence": (context.STEER_SEQUENCE_TYPE,),
+                "segment": (context.SEGMENT_TYPE,),
+                "images": ("IMAGE",),
+                "audio": ("AUDIO",),
+                "cache_key": ("STRING", {"forceInput": True}),
+                "checkpoint_frames": ("INT", {
+                    "default": 5, "min": 1, "max": 100000,
+                }),
+                "output_crf": ("INT", {"default": 18, "min": 0, "max": 51}),
+                "refinement_seed": ("INT", {
+                    "default": 424264,
+                    "min": 0,
+                    "max": context.MAX_SEED,
+                }),
+                "temporal_chunk_frames": ("INT", {
+                    "default": 136, "min": 17, "max": 100000, "step": 17,
+                }),
+                "temporal_overlap_frames": ("INT", {
+                    "default": 17, "min": 0, "max": 100000, "step": 17,
+                }),
+                "tile_width": ("INT", {
+                    "default": 1024, "min": 32, "max": 4096, "step": 32,
+                }),
+                "tile_height": ("INT", {
+                    "default": 1024, "min": 32, "max": 4096, "step": 32,
+                }),
+                "spatial_overlap": ("INT", {
+                    "default": 128, "min": 0, "max": 2048, "step": 32,
+                }),
+            }
+        }
+
+    RETURN_TYPES = (FINISH_TYPE, "VIDEO", "STRING", "STRING")
+    RETURN_NAMES = ("enhanced", "video", "video_path", "status")
+    FUNCTION = "accept"
+    CATEGORY = CATEGORY + "/internal"
+
+    def accept(
+        self,
+        base_enhanced,
+        sequence,
+        segment,
+        images,
+        audio,
+        cache_key,
+        checkpoint_frames,
+        output_crf,
+        refinement_seed,
+        temporal_chunk_frames,
+        temporal_overlap_frames,
+        tile_width,
+        tile_height,
+        spatial_overlap,
+    ):
+        _require_video_api()
+        raw_sequence = _raw_sequence(sequence)
+        index = len(raw_sequence["segments"])
+        original_frames, context_frames, delivered_frames = (
+            _resolve_ultimate_frame_contract(
+                int(images.shape[0]),
+                int(checkpoint_frames),
+                int(segment["delivered_frames"]),
+                int(raw_sequence.get("h3_context_frames", 18)),
+            )
+        )
+        if context_frames >= original_frames:
+            raise ValueError("H3 Relay Ultimate context consumes the current shot.")
+
+        revision = uuid.uuid4().hex
+        paths = _stage_paths(
+            raw_sequence["run_name"], "ultimate", index, revision
+        )
+        os.makedirs(os.path.dirname(paths["full"]), exist_ok=True)
+        os.makedirs(os.path.dirname(paths["segment"]), exist_ok=True)
+        metadata = {
+            "title": "H3 Relay Ultimate shot %d" % index,
+            "h3_source_segment": str(segment["segment"]),
+            "h3_generation_window_frames": str(segment["raw_frames"]),
+            "h3_checkpoint_frames": str(original_frames),
+            "h3_context_prefix_frames": str(context_frames),
+            "h3_ultimate_refinement_seed": str(refinement_seed),
+            "h3_ultimate_temporal_chunk_frames": str(temporal_chunk_frames),
+            "h3_ultimate_temporal_overlap_frames": str(temporal_overlap_frames),
+            "h3_ultimate_tile": "%dx%d" % (int(tile_width), int(tile_height)),
+            "h3_ultimate_spatial_overlap": str(spatial_overlap),
+        }
+        context._write_segment_video(
+            images.detach().cpu().contiguous(),
+            paths["full"],
+            FPS,
+            18,
+            metadata=metadata,
+        )
+        delivered = images[context_frames:].detach().cpu().contiguous()
+        delivered_audio = _crop_audio_frames(
+            audio,
+            context_frames,
+            delivered_frames,
+            "H3 Relay Ultimate shot %d audio" % index,
+        )
+        context._write_steer_enhanced_segment(
+            delivered,
+            delivered_audio,
+            paths["segment"],
+            FPS,
+            18,
+            metadata,
+        )
+        output_crf = int(output_crf)
+        delivery_path = paths["segment"]
+        if output_crf != 18:
+            delivery_path = _stage_paths(
+                raw_sequence["run_name"],
+                "ultimate",
+                index,
+                "%s.crf%02d" % (revision, output_crf),
+            )["segment"]
+            _transcode_video(paths["segment"], delivery_path, output_crf)
+        record = {
+            "index": index,
+            "id": str(segment["id"]),
+            "revision": revision,
+            "cache_key": str(cache_key),
+            "raw_record": dict(raw_sequence["segments"][index - 1]),
+            "full_segment": context._relative_output_path(paths["full"]),
+            "full_segment_sha256": context._file_sha256(paths["full"]),
+            "master_delivery_segment": context._relative_output_path(
+                paths["segment"]
+            ),
+            "master_delivery_segment_sha256": context._file_sha256(
+                paths["segment"]
+            ),
+            "delivery_segment": context._relative_output_path(delivery_path),
+            "delivery_segment_sha256": context._file_sha256(delivery_path),
+            "output_crf": output_crf,
+            "context_frames": context_frames,
+            "original_frames": original_frames,
+            "delivered_frames": int(delivered.shape[0]),
+            "fps": FPS,
+            "generated_audio": str(segment["generated_audio"]),
+            "finish_method": "h3_ultimate_2x",
+            "finish_stage": "ultimate",
+            "refinement_seed": int(refinement_seed),
+            "temporal_chunk_frames": int(temporal_chunk_frames),
+            "temporal_overlap_frames": int(temporal_overlap_frames),
+            "tile_width": int(tile_width),
+            "tile_height": int(tile_height),
+            "spatial_overlap": int(spatial_overlap),
+        }
+        updated = _append_ltx(base_enhanced, raw_sequence, record)
+        context._atomic_json(paths["metadata"], {
+            "format": "h3_relay_ultimate_cache_v1",
+            "cache_key": str(cache_key),
+            "record": record,
+        })
+        context._atomic_json(paths["sequence"], updated)
+        if context._relative_output_path(paths["segment"]).startswith(
+                relay_cache.CACHE_SCHEME):
+            relay_cache.maybe_prune_run(keep_per_shot=2)
+        status = (
+            "H3 Ultimate enhanced shot %d at 2x: %d context + %d delivered "
+            "frames; %d/%d temporal, %dx%d tiles + %d overlap -> %s"
+            % (
+                index,
+                context_frames,
+                int(delivered.shape[0]),
+                int(temporal_chunk_frames),
+                int(temporal_overlap_frames),
+                int(tile_width),
+                int(tile_height),
+                int(spatial_overlap),
+                delivery_path,
+            )
+        )
+        return (
+            updated,
+            InputImpl.VideoFromFile(delivery_path),
+            delivery_path,
+            status,
+        )
 
 
 class H3RelayEnhanceShot:
@@ -2021,6 +2530,474 @@ class H3RelayEnhanceShot:
         accept.set_input("vae_temporal_tile_frames", vae_temporal_tile_frames)
         accept.set_input("vae_temporal_overlap_frames", vae_temporal_overlap_frames)
         preview = graph.node("H3RelayInternalVideoOutput", "LTXPreview")
+        preview.set_input("video_path", accept.out(2))
+        return {
+            "result": (accept.out(0), accept.out(1), accept.out(2), accept.out(3)),
+            "expand": graph.finalize(),
+        }
+
+
+class H3RelayUltimateEnhanceShot(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        additional_images = io.Autogrow.TemplateNames(
+            input=io.Image.Input("reference_image"),
+            names=list(ADDITIONAL_REFERENCE_IMAGE_NAMES),
+            min=0,
+        )
+        return io.Schema(
+            node_id="H3RelayUltimateEnhanceShot",
+            display_name="H3 Relay · H3 Ultimate 2× Enhance",
+            category=CATEGORY,
+            description=(
+                "Enhance the latest accepted raw H3 shot with the learned H3 "
+                "latent 2x upscaler plus tiled one-step FastH3 VSA refinement."
+            ),
+            is_output_node=True,
+            enable_expand=True,
+            inputs=[
+                io.Custom(MODEL_BUNDLE_TYPE).Input("h3_model"),
+                io.Custom(context.STEER_SEQUENCE_TYPE).Input("sequence"),
+                io.String.Input(
+                    "enhancement_prompt",
+                    force_input=True,
+                    tooltip=(
+                        "Additional H3 refinement direction. The accepted shot's "
+                        "complete global + scene prompt is reused automatically."
+                    ),
+                ),
+                io.Int.Input(
+                    "refinement_seed",
+                    default=424264,
+                    min=0,
+                    max=context.MAX_SEED,
+                    control_after_generate=True,
+                ),
+                io.Int.Input("output_crf", default=18, min=0, max=51),
+                io.Combo.Input(
+                    "ref_image_size", options=["match", "max"], default="match"
+                ),
+                io.Int.Input(
+                    "temporal_chunk_frames",
+                    default=136,
+                    min=17,
+                    max=100000,
+                    step=17,
+                    tooltip="Pixel frames per Ultimate temporal window; must be 17n.",
+                ),
+                io.Int.Input(
+                    "temporal_overlap_frames",
+                    default=17,
+                    min=0,
+                    max=100000,
+                    step=17,
+                    tooltip="Temporal overlap between Ultimate windows; must be 17n.",
+                ),
+                io.Float.Input(
+                    "anchor_strength",
+                    default=0.999,
+                    min=0.0,
+                    max=1.0,
+                    step=0.001,
+                ),
+                io.Int.Input(
+                    "tile_width",
+                    default=1024,
+                    min=256,
+                    max=4096,
+                    step=32,
+                    tooltip=(
+                        "Maximum spatial tile width. Automatically clamped "
+                        "to the sequence's actual 2x target width."
+                    ),
+                ),
+                io.Int.Input(
+                    "tile_height",
+                    default=1024,
+                    min=256,
+                    max=4096,
+                    step=32,
+                    tooltip=(
+                        "Maximum spatial tile height. Automatically clamped "
+                        "to the sequence's actual 2x target height."
+                    ),
+                ),
+                io.Int.Input(
+                    "spatial_overlap",
+                    default=128,
+                    min=0,
+                    max=2048,
+                    step=32,
+                    tooltip=(
+                        "Maximum tile overlap. Automatically clamped below "
+                        "the effective tile dimensions."
+                    ),
+                ),
+                io.Custom(FINISH_TYPE).Input("previous_enhanced", optional=True),
+                io.Image.Input("reference_image_1", optional=True),
+                io.Image.Input("reference_image_2", optional=True),
+                io.Image.Input("reference_image_3", optional=True),
+                io.Autogrow.Input(
+                    "additional_reference_images",
+                    template=additional_images,
+                    optional=True,
+                ),
+            ],
+            outputs=[
+                io.Custom(FINISH_TYPE).Output("enhanced"),
+                io.Video.Output("video"),
+                io.String.Output("video_path"),
+                io.String.Output("status"),
+            ],
+        )
+
+    @classmethod
+    def execute(
+        cls,
+        h3_model,
+        sequence,
+        enhancement_prompt,
+        refinement_seed,
+        output_crf,
+        ref_image_size,
+        temporal_chunk_frames,
+        temporal_overlap_frames,
+        anchor_strength,
+        tile_width,
+        tile_height,
+        spatial_overlap,
+        previous_enhanced=None,
+        reference_image_1=None,
+        reference_image_2=None,
+        reference_image_3=None,
+        additional_reference_images=None,
+    ):
+        result = cls.enhance(
+            h3_model,
+            sequence,
+            enhancement_prompt,
+            refinement_seed,
+            output_crf,
+            ref_image_size,
+            temporal_chunk_frames,
+            temporal_overlap_frames,
+            anchor_strength,
+            tile_width,
+            tile_height,
+            spatial_overlap,
+            previous_enhanced,
+            reference_image_1,
+            reference_image_2,
+            reference_image_3,
+            additional_reference_images,
+        )
+        if isinstance(result, dict):
+            return io.NodeOutput(
+                *result.get("result", ()),
+                ui=result.get("ui"),
+                expand=result.get("expand"),
+            )
+        return io.NodeOutput(*result)
+
+    @classmethod
+    def enhance(
+        cls,
+        h3_model,
+        sequence,
+        enhancement_prompt,
+        refinement_seed,
+        output_crf,
+        ref_image_size,
+        temporal_chunk_frames,
+        temporal_overlap_frames,
+        anchor_strength,
+        tile_width,
+        tile_height,
+        spatial_overlap,
+        previous_enhanced=None,
+        reference_image_1=None,
+        reference_image_2=None,
+        reference_image_3=None,
+        additional_reference_images=None,
+    ):
+        _require_video_api()
+        raw_sequence, bundle = _sequence_with_h3_model(sequence, h3_model)
+        profile = str(bundle.get("h3_profile") or "standard")
+        if profile != FAST_H3_VSA_PROFILE:
+            raise ValueError(
+                "H3 Ultimate 2x Enhance currently requires the FastH3 VSA "
+                "Profile used to generate the raw sequence."
+            )
+        base_finish = _finish_base(raw_sequence, previous_enhanced)
+        state, shot, segment = _rebuild_state(raw_sequence)
+        index = int(state["index"])
+        checkpoint_frames = _accepted_checkpoint_frame_count(segment)
+        refinement_direction = str(enhancement_prompt or "").strip()
+        resolved_enhancement_prompt = str(shot["prompt"])
+        if refinement_direction:
+            resolved_enhancement_prompt += (
+                "\n\nrefinement_directive:\n" + refinement_direction
+            )
+        previous_result = (
+            base_finish["ltx_segments"][-1]
+            if base_finish["ltx_segments"] else None
+        )
+        temporal_chunk_frames = int(temporal_chunk_frames)
+        temporal_overlap_frames = int(temporal_overlap_frames)
+        tile_width = int(tile_width)
+        tile_height = int(tile_height)
+        spatial_overlap = int(spatial_overlap)
+        if temporal_chunk_frames % 17 or temporal_chunk_frames < 17:
+            raise ValueError("Ultimate temporal chunk frames must be a positive multiple of 17.")
+        if (
+            temporal_overlap_frames < 0
+            or temporal_overlap_frames % 17
+            or temporal_overlap_frames >= temporal_chunk_frames
+        ):
+            raise ValueError(
+                "Ultimate temporal overlap must be a non-negative multiple of 17 smaller than the chunk."
+            )
+        target_width = int(raw_sequence["width"]) * 2
+        target_height = int(raw_sequence["height"]) * 2
+        if target_width > 4096 or target_height > 4096:
+            raise ValueError(
+                "H3 Ultimate 2x target %dx%d exceeds the learned upscaler's 4096px limit."
+                % (target_width, target_height)
+            )
+        tile_width, tile_height, spatial_overlap = (
+            _resolve_ultimate_spatial_tiling(
+                target_width,
+                target_height,
+                tile_width,
+                tile_height,
+                spatial_overlap,
+            )
+        )
+        reference_images = _reference_image_slots(
+            reference_image_1,
+            reference_image_2,
+            reference_image_3,
+            additional_reference_images,
+        )
+        reference_fingerprints = [
+            context._steer_media_fingerprint(
+                image, "Ultimate reference image %d" % (slot + 1)
+            )
+            if image is not None else None
+            for slot, image in enumerate(reference_images)
+        ]
+        cache_contract = {
+            "version": 1,
+            "finish_method": "h3_ultimate_2x",
+            "raw_revision": str(segment["revision"]),
+            "raw_checkpoint_sha256": str(segment["checkpoint_sha256"]),
+            "previous_revision": (
+                str(previous_result["revision"]) if previous_result else ""
+            ),
+            "previous_sha256": (
+                str(previous_result["full_segment_sha256"])
+                if previous_result else ""
+            ),
+            "enhancement_prompt": resolved_enhancement_prompt,
+            "ref_image_size": str(ref_image_size),
+            "reference_images": reference_fingerprints,
+            "refinement_seed": int(refinement_seed),
+            "model_cache_tag": str(bundle["cache_tag"]),
+            "target": [target_width, target_height],
+            "steps": 1,
+            "denoise": 0.2,
+            "temporal_chunk_frames": temporal_chunk_frames,
+            "temporal_overlap_frames": temporal_overlap_frames,
+            "anchor_strength": float(anchor_strength),
+            "tile_width": tile_width,
+            "tile_height": tile_height,
+            "spatial_overlap": spatial_overlap,
+            "latent_upscaler": H3_LATENT_UPSCALER,
+        }
+        cache_key = context._fingerprint(cache_contract)
+        lookup = _stage_paths(raw_sequence["run_name"], "ultimate", index, "lookup")
+        try:
+            payload = context._read_json(lookup["metadata"])
+            record = payload["record"]
+        except (FileNotFoundError, KeyError, OSError, ValueError):
+            payload = {}
+            record = None
+        if (
+            isinstance(record, dict)
+            and payload.get("format") == "h3_relay_ultimate_cache_v1"
+            and str(payload.get("cache_key")) == cache_key
+            and _valid_file(
+                record.get("full_segment", ""),
+                record.get("full_segment_sha256", ""),
+            )
+            and _valid_file(
+                record.get("master_delivery_segment", record.get("delivery_segment", "")),
+                record.get(
+                    "master_delivery_segment_sha256",
+                    record.get("delivery_segment_sha256", ""),
+                ),
+            )
+        ):
+            record = dict(record)
+            requested_crf = int(output_crf)
+            master_value = record.get(
+                "master_delivery_segment", record["delivery_segment"]
+            )
+            master_hash = record.get(
+                "master_delivery_segment_sha256",
+                record["delivery_segment_sha256"],
+            )
+            master_path = context._absolute_output_path(master_value)
+            if requested_crf == 18:
+                delivery_path = master_path
+            else:
+                delivery_path = _stage_paths(
+                    raw_sequence["run_name"],
+                    "ultimate",
+                    index,
+                    "%s.crf%02d" % (record["revision"], requested_crf),
+                )["segment"]
+                if not os.path.isfile(delivery_path):
+                    _transcode_video(master_path, delivery_path, requested_crf)
+            record.update({
+                "master_delivery_segment": master_value,
+                "master_delivery_segment_sha256": master_hash,
+                "delivery_segment": context._relative_output_path(delivery_path),
+                "delivery_segment_sha256": context._file_sha256(delivery_path),
+                "output_crf": requested_crf,
+            })
+            updated = _append_ltx(base_finish, raw_sequence, record)
+            context._atomic_json(lookup["metadata"], {
+                "format": "h3_relay_ultimate_cache_v1",
+                "cache_key": cache_key,
+                "record": record,
+            })
+            context._atomic_json(lookup["sequence"], updated)
+            status = (
+                "reused cached H3 Ultimate inference for shot %d; encoded output at CRF %d"
+                % (index, requested_crf)
+            )
+            return _video_ui(
+                delivery_path,
+                status,
+                (
+                    updated,
+                    InputImpl.VideoFromFile(delivery_path),
+                    delivery_path,
+                    status,
+                ),
+            )
+
+        _require_ultimate_engine()
+        graph = GraphBuilder()
+        shift = graph.node("MiniMaxH3SigmaShift", "UltimateShift")
+        shift.set_input("model", bundle["model"])
+        shift.set_input("shift_video", 12.0)
+        shift.set_input("shift_audio", 3.0)
+        vsa = graph.node("H3RelayInternalFastH3VSA", "UltimateVSA")
+        vsa.set_input("model", shift.out(0))
+
+        clip = graph.node("CLIPLoader", "UltimateText")
+        clip.set_input("clip_name", H3_TEXT_ENCODER)
+        clip.set_input("type", "minimax")
+        clip.set_input("device", "default")
+        video_vae = graph.node("VAELoader", "UltimateVideoVAE")
+        video_vae.set_input("vae_name", H3_VIDEO_VAE)
+        audio_vae = graph.node("VAELoader", "UltimateAudioVAE")
+        audio_vae.set_input("vae_name", H3_AUDIO_VAE)
+        conditioning = graph.node("MiniMaxH3ReferenceToVideo", "UltimateConditioning")
+        conditioning.set_input("clip", clip.out(0))
+        conditioning.set_input("vae", video_vae.out(0))
+        conditioning.set_input("audio_vae", audio_vae.out(0))
+        conditioning.set_input("prompt", resolved_enhancement_prompt)
+        conditioning.set_input("width", target_width)
+        conditioning.set_input("height", target_height)
+        conditioning.set_input("length", checkpoint_frames)
+        conditioning.set_input("ref_image_size", str(ref_image_size))
+        for ref_index, image in enumerate(reference_images):
+            if image is not None:
+                conditioning.set_input(
+                    "ref_images.ref_image_%d" % ref_index, image
+                )
+
+        accepted = graph.node("H3RelayAcceptedRawLatent", "UltimateRawLatent")
+        accepted.set_input("sequence", raw_sequence)
+        accepted.set_input("shot_index", -1)
+        accepted.set_input("verify_sha256", True)
+        noise = graph.node("RandomNoise", "UltimateNoise")
+        noise.set_input("noise_seed", int(refinement_seed))
+        sampler = graph.node("KSamplerSelect", "UltimateSampler")
+        sampler.set_input("sampler_name", "euler")
+        sigmas = graph.node("BasicScheduler", "UltimateSigmas")
+        sigmas.set_input("model", vsa.out(0))
+        sigmas.set_input("scheduler", "simple")
+        sigmas.set_input("steps", 1)
+        sigmas.set_input("denoise", 0.2)
+        upscale = graph.node(
+            "MMH3LatentUpscaleWithModelParams", "UltimateLearned2x"
+        )
+        upscale.set_input("model_name", H3_LATENT_UPSCALER)
+        upscale.set_input("width", target_width)
+        upscale.set_input("height", target_height)
+        upscale.set_input("device", "cuda")
+        upscale.set_input("precision", "fp16")
+        temporal = graph.node("MMH3TemporalSplitParams", "UltimateTemporal")
+        temporal.set_input("chunk_length", temporal_chunk_frames)
+        temporal.set_input("temporal_overlap", temporal_overlap_frames)
+        temporal.set_input("anchor_strength", float(anchor_strength))
+        spatial = graph.node("MMH3SpatialSplitParams", "UltimateSpatial")
+        spatial.set_input("upscale_width", target_width)
+        spatial.set_input("upscale_height", target_height)
+        spatial.set_input("tile_size_mode", "specific_size")
+        spatial.set_input("tile_width", tile_width)
+        spatial.set_input("tile_height", tile_height)
+        spatial.set_input("grid_rows", 2)
+        spatial.set_input("grid_cols", 2)
+        spatial.set_input("spatial_w_overlap", spatial_overlap)
+        spatial.set_input("spatial_h_overlap", spatial_overlap)
+        fade = min(64, spatial_overlap)
+        spatial.set_input("fade_width", fade)
+        spatial.set_input("fade_height", fade)
+        spatial.set_input("min_tile_size", min(256, tile_width, tile_height))
+        spatial.set_input("overlap_mode", "later")
+        spatial.set_input("overlap_blend", "linear")
+        ultimate = graph.node("MMH3UltimateUpscale", "UltimateRefine")
+        ultimate.set_input("model", vsa.out(0))
+        ultimate.set_input("conditioning", conditioning.out(0))
+        ultimate.set_input("latent", accepted.out(0))
+        ultimate.set_input("noise", noise.out(0))
+        ultimate.set_input("sampler", sampler.out(0))
+        ultimate.set_input("sigmas", sigmas.out(0))
+        ultimate.set_input("cfg", 1.0)
+        ultimate.set_input("latent_upscale_param", upscale.out(0))
+        ultimate.set_input("temporal_split_param", temporal.out(0))
+        ultimate.set_input("spatial_split_param", spatial.out(0))
+        decode = graph.node("VAEDecodeTiled", "UltimateDecodeVideo")
+        decode.set_input("samples", ultimate.out(0))
+        decode.set_input("vae", video_vae.out(0))
+        decode.set_input("tile_size", 768)
+        decode.set_input("overlap", 64)
+        decode.set_input("temporal_size", 64)
+        decode.set_input("temporal_overlap", 8)
+        decode_audio = graph.node("VAEDecodeAudio", "UltimateDecodeAudio")
+        decode_audio.set_input("samples", ultimate.out(0))
+        decode_audio.set_input("vae", audio_vae.out(0))
+        accept = graph.node("H3RelayInternalAcceptUltimate", "AcceptUltimate")
+        accept.set_input("base_enhanced", base_finish)
+        accept.set_input("sequence", raw_sequence)
+        accept.set_input("segment", segment)
+        accept.set_input("images", decode.out(0))
+        accept.set_input("audio", decode_audio.out(0))
+        accept.set_input("cache_key", cache_key)
+        accept.set_input("checkpoint_frames", checkpoint_frames)
+        accept.set_input("output_crf", int(output_crf))
+        accept.set_input("refinement_seed", int(refinement_seed))
+        accept.set_input("temporal_chunk_frames", temporal_chunk_frames)
+        accept.set_input("temporal_overlap_frames", temporal_overlap_frames)
+        accept.set_input("tile_width", tile_width)
+        accept.set_input("tile_height", tile_height)
+        accept.set_input("spatial_overlap", spatial_overlap)
+        preview = graph.node("H3RelayInternalVideoOutput", "UltimatePreview")
         preview.set_input("video_path", accept.out(2))
         return {
             "result": (accept.out(0), accept.out(1), accept.out(2), accept.out(3)),
@@ -2395,7 +3372,7 @@ class H3RelayInterpolateShot:
     FUNCTION = "interpolate"
     OUTPUT_NODE = True
     CATEGORY = CATEGORY
-    DESCRIPTION = "Interpolate the latest LTX result with ComfyUI's core frame-interpolation runtime."
+    DESCRIPTION = "Interpolate the latest LTX or H3 Ultimate result with ComfyUI's core frame-interpolation runtime."
 
     def interpolate(
         self,
@@ -2418,10 +3395,10 @@ class H3RelayInterpolateShot:
         finish = _finish(enhanced)
         index = len(finish["ltx_segments"])
         if index < 1:
-            raise ValueError("H3 Relay interpolation requires an LTX result.")
+            raise ValueError("H3 Relay interpolation requires an enhanced result.")
         if len(finish["delivery_segments"]) != index - 1:
             raise ValueError(
-                "Interpolate each accepted LTX shot in order before continuing."
+                "Interpolate each accepted enhanced shot in order before continuing."
             )
         source = finish["ltx_segments"][index - 1]
         cache_contract = {
@@ -2565,7 +3542,7 @@ class H3RelayAssemble:
         return {
             "required": {
                 "enhanced": (FINISH_TYPE,),
-                "output_stage": (["auto", "interpolated", "ltx"], {"default": "auto"}),
+                "output_stage": (["auto", "interpolated", "ltx", "enhanced"], {"default": "auto"}),
                 "filename": ("STRING", {"default": "h3_relay_movie_%date:yyyy-MM-dd_HH-mm-ss%"}),
                 "audio_bitrate": ("INT", {"default": 256, "min": 64, "max": 512}),
             }
@@ -2588,7 +3565,7 @@ class H3RelayAssemble:
         if not selected:
             raise ValueError("H3 Relay assembly has no finished shots.")
         if output_stage == "interpolated" and len(delivery) != len(ltx):
-            raise ValueError("Interpolate every LTX shot before interpolated assembly.")
+            raise ValueError("Interpolate every enhanced shot before interpolated assembly.")
         fps_values = {int(item["fps"]) for item in selected}
         if len(fps_values) != 1:
             raise ValueError("H3 Relay assembly requires one consistent frame rate.")
@@ -2613,7 +3590,14 @@ class H3RelayAssemble:
         sequence = dict(raw_sequence)
         sequence["segments"] = records
         sequence["enhanced_fps"] = next(iter(fps_values))
-        sequence["output_profile"] = "enhanced_ltx_rife"
+        finish_methods = {
+            str(item.get("finish_method") or "ltx_2x") for item in ltx
+        }
+        sequence["output_profile"] = (
+            "enhanced_h3_ultimate_rife"
+            if "h3_ultimate_2x" in finish_methods
+            else "enhanced_ltx_rife"
+        )
         sequence["total_enhanced_frames"] = sum(
             int(item["enhanced_frames"]) for item in records
         )
@@ -2639,7 +3623,9 @@ NODE_CLASS_MAPPINGS = {
     "H3RelayAttention": H3RelayAttention,
     "H3RelaySequenceStart": H3RelaySequenceStart,
     "H3RelayGenerateShot": H3RelayGenerateShot,
+    "H3RelayAcceptedRawLatent": H3RelayAcceptedRawLatent,
     "H3RelayEnhanceShot": H3RelayEnhanceShot,
+    "H3RelayUltimateEnhanceShot": H3RelayUltimateEnhanceShot,
     "H3RelayInterpolateShot": H3RelayInterpolateShot,
     "H3RelayAssembleRaw": H3RelayAssembleRaw,
     "H3RelayAssemble": H3RelayAssemble,
@@ -2659,6 +3645,7 @@ NODE_CLASS_MAPPINGS = {
     "H3RelayInternalLTXRollingCheckpoint": context.MiniMaxH3LTXRollingCheckpoint,
     "H3RelayInternalLTXRollingCrop": context.MiniMaxH3LTXRollingCrop,
     "H3RelayInternalAcceptLTX": H3RelayAcceptLTX,
+    "H3RelayInternalAcceptUltimate": H3RelayAcceptUltimate,
     "H3RelayInternalLoadFrames": H3RelayLoadFrames,
     "H3RelayInternalAcceptInterpolation": H3RelayAcceptInterpolation,
     "H3RelayInternalMemoryRelease": H3RelayMemoryRelease,
@@ -2678,7 +3665,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "H3RelayAttention": "H3 Relay · Attention Backend",
     "H3RelaySequenceStart": "H3 Relay · Sequence Start",
     "H3RelayGenerateShot": "H3 Relay · Generate Shot",
+    "H3RelayAcceptedRawLatent": "H3 Relay · Accepted Raw Latent",
     "H3RelayEnhanceShot": "H3 Relay · LTX 2× Enhance",
+    "H3RelayUltimateEnhanceShot": "H3 Relay · H3 Ultimate 2× Enhance",
     "H3RelayInterpolateShot": "H3 Relay · Interpolate",
     "H3RelayAssembleRaw": "H3 Relay · Assemble Raw Sequence",
     "H3RelayAssemble": "H3 Relay · Assemble",

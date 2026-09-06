@@ -45,6 +45,14 @@ class ReleaseMetadataTest(unittest.TestCase):
         self.assertIn("class H3RelayFastH3VSAModelLoader", source)
         self.assertIn("H3RelayFastH3VSAModelLoader", source)
         self.assertIn("H3RelayAssembleRaw", source)
+        self.assertIn("H3RelayAcceptedRawLatent", source)
+        self.assertIn("class H3RelayUltimateEnhanceShot", source)
+        self.assertIn("H3RelayInternalAcceptUltimate", source)
+        self.assertIn('"MMH3UltimateUpscale", "UltimateRefine"', source)
+        self.assertIn('"MMH3LatentUpscaleWithModelParams"', source)
+        self.assertIn("ULTIMATE_ENGINE_NODE_TYPES", source)
+        self.assertIn("def _require_ultimate_engine", source)
+        self.assertIn("Comfyui-MMH3-UltimateUpscale", source)
         self.assertIn('FAST_H3_VSA_PROFILE = "fast_h3_vsa"', source)
         self.assertIn("class H3RelayInternalFastH3VSA", source)
         self.assertIn(
@@ -69,9 +77,30 @@ class ReleaseMetadataTest(unittest.TestCase):
         adapter = (ROOT / "h3_relay" / "fast_h3_vsa.py").read_text(
             encoding="utf-8"
         )
-        self.assertIn('MIN_COMFY_KITCHEN_VERSION = "0.2.31"', adapter)
+        self.assertIn('MIN_COMFY_KITCHEN_VERSION = "0.2.33"', adapter)
         self.assertIn("VSA_KEEP_RATIO = 0.10", adapter)
         self.assertIn("dense fallback is intentionally", adapter)
+
+        self.assertIn(
+            '"H3RelayAcceptedRawLatent": H3RelayAcceptedRawLatent',
+            source,
+        )
+        self.assertIn("relay_cache.resolve_artifact(checkpoint_uri)", source)
+        self.assertIn("checkpoint_sha256", source)
+
+    def test_model_facing_shot_prompt_preserves_outer_whitespace(self):
+        source = (
+            ROOT / "h3_relay" / "vendor" / "context_loop" / "chain_nodes.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("preserve_outer_whitespace: bool = False", source)
+        self.assertIn(
+            "return normalized if preserve_outer_whitespace else normalized.strip()",
+            source,
+        )
+        self.assertGreaterEqual(
+            source.count("preserve_outer_whitespace=True"),
+            2,
+        )
 
     def test_registry_identity(self):
         metadata = tomllib.loads((ROOT / "pyproject.toml").read_text())

@@ -1,5 +1,55 @@
 # Validation record
 
+## Official comfy-kitchen 0.2.33 release candidate (2026-09-06 UTC)
+
+Linux RTX 4090 functional validation used a fresh Python 3.11 environment,
+the unmodified official PyPI `comfy-kitchen==0.2.33` wheel, PyTorch
+`2.13.0+cu130`, Kijai ComfyUI VSA commit
+`10febb01d7be73d1491cf5e5347b5ab8b6c2c09e`, and MMH3 Ultimate commit
+`6db8fa5a4e4ca0718d2ea8d08002ea899fe27721`. No temporary
+`SolAttnMiniMax` node or private kernel wheel was installed.
+
+- FastH3 raw smoke: 416x256, 39 frames, native stereo audio, successful history
+  and full video/audio decode.
+- Three-shot five-reference continuation: the packaged 3x10-second graph was
+  deliberately shortened to three 3-second windows at 832x480. All three raw
+  shots and all three one-step Ultimate 2x passes completed. Delivery contains
+  73 + 55 + 55 = 183 frames after continuation trimming. Final assembly is
+  1664x960 at 24 fps with 7.625 seconds of stereo 32-kHz audio; full decode passes.
+  This shortened run is a functional test, not full-duration quality proof.
+- Standard H3 hybrid/Spectrum-16 first-shot regression on the same runtime:
+  416x256, 39 frames, stereo audio, successful history and full decode.
+- 41 Relay unit tests pass, including exact native-audio rounding acceptance
+  and rejection of unrelated waveform truncation. Expanded runtime contracts pass.
+- Recovery deliberately restored accepted raw checkpoints and completed the
+  remaining Ultimate stages after fixing the 266-sample native-audio tail.
+  Initial failure histories are retained rather than discarded.
+
+The original 56-frame continuation checkpoint can decode to 74,400 audio
+samples because H3 rounds duration to its 40-Hz audio-latent grid; the exact
+video clock needs 74,666. Relay now pads only this exact expected native
+rounding case before cropping the boundary frame. Other short waveforms fail.
+
+Upstream caveat: the installed wheel does **not** pass its entire upstream
+Sol-Attention suite. A clean-process valid-input selection produced 93 passes,
+one failure, and 11 deselections. The failure is the synthetic top-k-ties
+accuracy case (cosine 0.982592 versus 0.99). The full 105-case run additionally
+exposed direct native-binding validation failures; a negative-range case caused
+an illegal CUDA access and subsequent process-local cascades. All tested
+chunked VSA/coarse-gate valid-input cases passed. These results support this
+tested Relay path, not a blanket claim of upstream kernel correctness.
+
+Windows GPU execution remains unvalidated in this pass. The official Windows
+wheel's published hash and exported wrapper/native symbols were checked, but
+that is not equivalent to running inference. Stock ComfyUI remains insufficient
+for FastH3 until its VSA model integration is available; the VSA commit is part
+of the required configuration.
+
+Local evidence is retained under `benchmark/results/official-wheel-20260906/`
+(ignored): frozen prompts, all histories, kernel JUnit XML, stream metadata,
+media hashes, and full-decode results. The desktop remained active and 9 GiB
+VRAM was reserved, so timings are not controlled performance benchmarks.
+
 Validation was performed on 2026-08-16 with ComfyUI
 `v0.33.0-6-g1c6d8d45`, an RTX 4090, and the model filenames documented in the
 example workflow.
@@ -387,3 +437,107 @@ drift. At the two-window seam, mean absolute pixel change was 10.257 versus
 23.650 versus 22.608-44.270 nearby. The three Breaking Bad seam changes were
 2.946, 3.751, and 4.230, all inside their local neighboring motion ranges.
 No visual discontinuity spike was measured at a Relay boundary.
+
+### Direct-graph parity and accepted-latent finishing bridge
+
+The FastH3 public profile was replayed against the frozen five-reference,
+1344x768, 362-frame direct graph from `INV-H3-007-016` using the same model,
+reference hashes/order, seed 424246, Euler/simple four-forward schedule, shifts
+12/3, and VSA 10 percent contract. A fresh direct control reproduced the frozen
+video and audio latents exactly. The initial public-node replay differed because
+shot prompt normalization removed one trailing newline (4616 model-facing
+characters became 4615). Preserving nonblank model-facing shot prompt bytes
+restored exact equality across all 10,354,176 video-latent and 38,592
+audio-latent values; both maximum absolute differences were 0.0. The corrected
+public-node run completed in 202.182 seconds versus 203.191 seconds for the
+fresh direct control.
+
+**Accepted Raw Latent** was then live-loaded from the hash-recorded sequence
+checkpoint and emitted the expected `[1,24,107,48,84]` video and
+`[1,32,2,603]` audio tensors in 1.008 seconds. The browser-loaded Ultimate
+example converted to a valid 29-node API graph with the bridge feeding MMH3
+Ultimate Upscale. Neither workflow had missing node types, and no finishing
+generation was submitted during workflow validation.
+
+### First-class Ultimate finishing and Akatz three-shot example
+
+The public **H3 Ultimate 2× Enhance** node was registered in the same isolated
+RTX 4090 ComfyUI 0.34.0 runtime used for the FastH3 reference checks. The live
+runtime contract expanded one accepted 243-frame shot into a graph containing:
+
+- the shared FastH3 bundle followed by 12/3 shifts and VSA 10 percent;
+- the accepted raw latent bridge with SHA-256 verification;
+- matching H3 prompt/reference conditioning at 1664x960;
+- the learned H3 latent 2x model;
+- 136/17 temporal splitting and 1024x1024 spatial tiles with 128-pixel overlap;
+- one Euler/simple refinement step at denoise 0.2;
+- tiled video/audio decode and the namespaced Ultimate acceptance stage.
+
+The generated `H3-Relay-FastH3-Akatz-3x10-Ultimate.json` then loaded through
+the live ComfyUI frontend with 25 nodes and 58 links. All three Generate Shot
+nodes restored seeds, fixed control mode, 10-second windows, four steps, CRF,
+reference sizing, shot IDs, and five connected references without `NaN` or
+positional shifts. All three Ultimate nodes restored their distinct seeds,
+fixed control mode, tiling values, five references, and ordered enhanced-state
+links. The three RIFE nodes remained bypassed as authored. Conversion produced
+20 executable API nodes with no missing class types or required inputs. The
+queue remained empty; this validation did not submit the 30-second generation
+or its three finishing passes.
+
+The first real 832x480-to-1664x960 attempt exposed an upstream spatial-parameter
+constraint: the fixed 1024-pixel tile height exceeded the 960-pixel output
+height. Ultimate tiling now resolves from the sequence-derived 2x canvas. The
+live runtime contract confirms that the same saved 1024x1024/128 request becomes
+1024x960/128 for this canvas, remains 1024x1024/128 for a 2688x1536 target, and
+also clamps overlap below very small target dimensions. The failed job left the
+queue empty and did not invalidate its accepted raw H3 cache.
+
+### Release example tiers and reference assets
+
+The FastH3 builder now emits three separate release examples from one source:
+
+- raw one-shot: 7 canvas / 4 executable API nodes;
+- one-shot plus H3 Ultimate 2x: 9 canvas / 6 executable API nodes;
+- Akatz three-shot sequence: 28 canvas / 58 links / 20 executable API nodes
+  after the three intentionally bypassed RIFE nodes are removed.
+
+All three converted against the live ComfyUI 0.34.0 object schema with no
+missing class types or required inputs. A browser load restored the focused
+workflow's `424246` seed, fixed control mode, 5-second duration, four visible
+steps, CRF 18, reference sizing, and shot id. The Ultimate example also
+restored `424264`, fixed control mode, 136/17 temporal settings, 0.999 anchor,
+1024 tile maxima, and 128 overlap. The complex workflow restored all three
+10-second generators, three Ultimate nodes, five references, five instruction
+cards, and three bypassed RIFE modes without unknown nodes or `NaN` values.
+
+The five packaged reference images were checked byte-for-byte against the
+validated inputs and are guarded by SHA-256 tests. No generation was submitted
+during this workflow-documentation pass.
+
+Ultimate dependency handling was also tested explicitly. A complete synthetic
+MMH3 class registry passes; removing `MMH3UltimateUpscale` raises the documented
+error with the external repository URL, missing class name, restart direction,
+and confirmation that other Relay nodes are unaffected. The preflight occurs
+after durable cache lookup. The live RTX 4090 service reported all four required
+MMH3 classes present, passed the runtime contract, and retained an empty queue.
+
+### Continuation-checkpoint Ultimate frame contract
+
+A real three-shot 1344x768 FastH3 sequence exposed the difference between the
+planned generation window and sampled continuation checkpoint. Shot 1 retained
+72 video tokens / 243 pixel frames and delivered all 243. Shots 2 and 3 each
+retained 67 video tokens / 226 pixel frames: one boundary frame plus 225
+delivered frames. The previous Ultimate accept path incorrectly expected the
+243-frame plan length and rejected the valid 226-frame decode.
+
+Ultimate now reads the accepted safetensors header, conditions at the actual
+checkpoint frame count, validates decoded output against that checkpoint, and
+derives the removable prefix as checkpoint minus delivered frames. A targeted
+disk-restored replay reused all raw shots and Ultimate shot 1. Ultimate shot 2
+completed in 346.91 seconds and shot 3 in 339.69 seconds; both persisted
+`original_frames=226`, `context_frames=1`, and `delivered_frames=225`.
+
+The final cached-only assembly completed in 1.38 seconds and published a
+2688x1536, 24fps, 693-frame / 28.875-second video with stereo 32kHz AAC of the
+same duration. No H3 generation or first-shot Ultimate inference was repeated,
+and the queue finished empty.

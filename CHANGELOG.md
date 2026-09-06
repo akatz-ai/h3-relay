@@ -2,13 +2,48 @@
 
 ## Unreleased
 
+- Use the official comfy-kitchen 0.2.33 CUDA wheel and Relay-owned VSA adapter
+  for both FastH3 generation and Ultimate refinement.
+- Fit short Ultimate continuation audio to the exact video clock when the
+  native 40 Hz audio-latent rounding leaves a sub-frame tail; reject waveforms
+  that do not match that native duration.
+- Add **H3 Ultimate 2× Enhance**, a cache-aware, sequence-compatible finisher
+  that reuses the connected FastH3 VSA model, the accepted AV latent, the full
+  accepted shot prompt, and up to nine H3 references. It applies the learned
+  H3 latent 2× model plus tiled one-step refinement and emits the same
+  `enhanced` stream consumed by Interpolate and Assemble.
+- Document MMH3 Ultimate as a required external node pack for fresh Ultimate
+  execution and add an actionable runtime preflight listing missing engine
+  classes. Other Relay nodes and verified cached Ultimate results remain usable
+  without materializing the external engine.
+- Treat Ultimate tile dimensions and spatial overlap as safe upper bounds,
+  clamping them to the sequence-derived 2x canvas. A 832x480 sequence now
+  resolves the standard 1024x1024 request to 1024x960 automatically.
+- Derive Ultimate conditioning and acceptance length from the accepted AV
+  checkpoint rather than the larger continuation generation window. Later
+  shots retain one boundary frame in their sampled latent (226 checkpoint / 1
+  boundary / 225 delivered for a 243-frame window), which is now refined and
+  cropped without rejecting the valid output.
+- Replace the generic FastH3/LTX sample with a reproducible Akatz three-shot,
+  three-by-ten-second cyberpunk sequence. The new canvas includes five
+  references, raw assembly, per-shot H3 Ultimate finishing, and bypassed
+  optional RIFE stages.
+- Package three documented FastH3 example tiers: raw one-shot, one-shot plus
+  H3 Ultimate 2x, and the complete three-shot reference sequence. Include the
+  five original generated reference assets, exact experimental runtime pins,
+  per-tier model links/storage paths, and resolution guidance.
+- Add **Accepted Raw Latent**, an integrity-checked public bridge from an
+  accepted sequence shot to nested H3 video/audio latent finishers.
+- Preserve nonblank model-facing shot prompt bytes, including outer
+  whitespace, so the public FastH3 profile can reproduce equivalent direct
+  graphs at the same seed.
 - Add the experimental **FastH3 VSA Profile** loader with a cache-owned,
   four-forward Euler/simple contract, shifts 12/3, Spectrum disabled, and
   VSA-H3 at 10 percent keep.
 - Add **Assemble Raw Sequence** for publishing accepted native H3 chains
   without traversing the LTX or interpolation finishing stages.
 - Replace the temporary external `SolAttnMiniMax` node with a Relay-owned,
-  fail-closed FastH3 adapter against official comfy-kitchen 0.2.31 while
+  fail-closed FastH3 adapter against official comfy-kitchen 0.2.33 while
   retaining migration compatibility with the historical layout observer.
 - Extend Generate Shot from three direct reference images to nine bounded,
   cache-tracked references without changing the first three socket names.

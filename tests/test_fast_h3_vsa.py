@@ -44,7 +44,7 @@ class FastH3VSATest(unittest.TestCase):
             mock.patch.object(
                 fast_h3_vsa.importlib.metadata,
                 "version",
-                return_value="0.2.31",
+                return_value="0.2.33",
             ),
             mock.patch.object(torch.cuda, "is_available", return_value=True),
             mock.patch.object(
@@ -75,7 +75,7 @@ class FastH3VSATest(unittest.TestCase):
             mock.patch.object(
                 fast_h3_vsa.importlib.metadata,
                 "version",
-                return_value="0.2.31",
+                return_value="0.2.33",
             ),
         ):
             with self.assertRaisesRegex(RuntimeError, "cannot use comfy-kitchen CUDA"):

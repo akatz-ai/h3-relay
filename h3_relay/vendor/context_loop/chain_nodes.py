@@ -184,13 +184,18 @@ def _available_versioned_path(path: str) -> str:
         version += 1
 
 
-def _prompt_text(value: Any, label: str) -> str:
-    """Normalize a prompt string or a human-editable JSON array of lines."""
+def _prompt_text(value: Any, label: str,
+                 preserve_outer_whitespace: bool = False) -> str:
+    """Validate prompt text while optionally preserving model-facing bytes."""
     if isinstance(value, list):
         if not all(isinstance(line, str) for line in value):
             raise ValueError("%s line arrays may contain only strings." % label)
-        return "\n".join(value).strip()
-    return str(value or "").strip()
+        normalized = "\n".join(value)
+    else:
+        normalized = str(value or "")
+    if not normalized.strip():
+        return ""
+    return normalized if preserve_outer_whitespace else normalized.strip()
 
 
 def _h3_frame_length(seconds: float) -> int:
@@ -1462,9 +1467,9 @@ def _plan_with_review_revision(plan: dict[str, Any], index: int,
     index = int(index)
     if index < 1 or index > len(plan["shots"]):
         raise ValueError("H3 review revision index is outside the plan.")
-    scene_prompt = str(scene_prompt or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+    scene_prompt = str(scene_prompt or "").replace("\r\n", "\n").replace("\r", "\n")
     prefix = str(plan.get("prompt_prefix") or "").strip()
-    if not scene_prompt and not prefix:
+    if not scene_prompt.strip() and not prefix:
         raise ValueError(
             "H3 review retry requires a scene prompt or shared prompt.")
     seed = int(seed)
@@ -1650,8 +1655,11 @@ def _normalize_plan(
             raise ValueError("Duplicate H3 shot id %r." % shot_id)
         seen_ids.add(shot_id)
 
-        prompt = _prompt_text(item.get("prompt", ""),
-                              "Shot %d (%s) prompt" % (index, shot_id))
+        prompt = _prompt_text(
+            item.get("prompt", ""),
+            "Shot %d (%s) prompt" % (index, shot_id),
+            preserve_outer_whitespace=True,
+        )
         if not prompt and not prompt_prefix:
             raise ValueError(
                 "Shot %d (%s) requires a scene prompt or shared prompt." %
@@ -7221,7 +7229,10 @@ def _steer_state(sequence: dict[str, Any], shot_name: str, prompt: str,
     if seed < 0 or seed > MAX_SEED:
         raise ValueError("Steerable H3 seed is outside the uint64 range.")
     scene_prompt = _prompt_text(
-        prompt, "Steerable H3 shot %d prompt" % index)
+        prompt,
+        "Steerable H3 shot %d prompt" % index,
+        preserve_outer_whitespace=True,
+    )
     if not scene_prompt and not str(sequence.get("global_prompt") or "").strip():
         raise ValueError("Steerable H3 Segment requires a shot or global prompt.")
 

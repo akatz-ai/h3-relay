@@ -98,6 +98,71 @@ class StagedPlanTest(unittest.TestCase):
         restore = rewritten["h3_relay_restore_ltx_0001"]
         self.assertEqual(restore["inputs"]["delivery_count"], 0)
 
+    def test_ultimate_chain_restores_ultimate_or_interpolated_state(self):
+        prompt = {
+            "1": node("H3RelaySequenceStart", run_name="ultimate_chain"),
+            "10": node("H3RelayGenerateShot", sequence=["1", 0]),
+            "11": node("H3RelayGenerateShot", sequence=["10", 0]),
+            "20": node("H3RelayUltimateEnhanceShot", sequence=["10", 0]),
+            "30": node("H3RelayInterpolateShot", enhanced=["20", 0]),
+            "21": node(
+                "H3RelayUltimateEnhanceShot",
+                sequence=["11", 0],
+                previous_enhanced=["30", 0],
+            ),
+            "31": node("H3RelayInterpolateShot", enhanced=["21", 0]),
+            "40": node("H3RelayAssemble", enhanced=["31", 0]),
+        }
+        plan = STAGED.build_stage_plan(prompt, "40")
+        self.assertEqual(
+            [item["kind"] for item in plan],
+            ["h3", "h3", "ultimate", "rife", "ultimate", "rife", "assemble"],
+        )
+        self.assertEqual(plan[3]["enhancement_stage"], "ultimate")
+        self.assertEqual(plan[4]["previous_stage"], "interpolated")
+        rewritten_ultimate = STAGED.rewrite_stage_with_disk_restores(
+            prompt, plan[4], "ultimate_chain"
+        )
+        self.assertEqual(
+            rewritten_ultimate["21"]["inputs"]["previous_enhanced"],
+            ["h3_relay_restore_interpolated_0001", 0],
+        )
+        rewritten_rife = STAGED.rewrite_stage_with_disk_restores(
+            prompt, plan[5], "ultimate_chain"
+        )
+        self.assertEqual(
+            rewritten_rife["31"]["inputs"]["enhanced"],
+            ["h3_relay_restore_ultimate_0002", 0],
+        )
+
+    def test_bypassed_rife_ultimate_chain_stays_on_ultimate_stage(self):
+        prompt = {
+            "1": node("H3RelaySequenceStart", run_name="ultimate_only"),
+            "10": node("H3RelayGenerateShot", sequence=["1", 0]),
+            "11": node("H3RelayGenerateShot", sequence=["10", 0]),
+            "20": node("H3RelayUltimateEnhanceShot", sequence=["10", 0]),
+            "21": node(
+                "H3RelayUltimateEnhanceShot",
+                sequence=["11", 0],
+                previous_enhanced=["20", 0],
+            ),
+            "40": node("H3RelayAssemble", enhanced=["21", 0]),
+        }
+        plan = STAGED.build_stage_plan(prompt, "40")
+        self.assertEqual(
+            [item["kind"] for item in plan],
+            ["h3", "h3", "ultimate", "ultimate", "assemble"],
+        )
+        self.assertEqual(plan[3]["previous_stage"], "ultimate")
+        self.assertEqual(plan[4]["source_stage"], "ultimate")
+        rewritten = STAGED.rewrite_stage_with_disk_restores(
+            prompt, plan[4], "ultimate_only"
+        )
+        self.assertEqual(
+            rewritten["40"]["inputs"]["enhanced"],
+            ["h3_relay_restore_ultimate_0002", 0],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

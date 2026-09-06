@@ -1,0 +1,835 @@
+{
+  "id": "5de37eb4-5073-48f9-a1c0-fast-h3-vsa-ultimate-2x",
+  "revision": 0,
+  "last_node_id": 28,
+  "last_link_id": 6,
+  "nodes": [
+    {
+      "id": 3,
+      "type": "H3RelayFastH3VSAModelLoader",
+      "pos": [
+        -820,
+        -760
+      ],
+      "size": [
+        650,
+        300
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model_name",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "model_name"
+          }
+        },
+        {
+          "name": "weight_dtype",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "weight_dtype"
+          }
+        },
+        {
+          "name": "manual_cache_revision",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "manual_cache_revision"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "h3_model",
+          "type": "H3_RELAY_MODEL",
+          "links": [
+            2,
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayFastH3VSAModelLoader"
+      },
+      "widgets_values": [
+        "minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors",
+        "default",
+        "fast-h3-vsa-one_shot_ultimate_2x-v1"
+      ],
+      "widgets_values_named": {
+        "model_name": "minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors",
+        "weight_dtype": "default",
+        "manual_cache_revision": "fast-h3-vsa-one_shot_ultimate_2x-v1"
+      },
+      "title": "FASTH3 VSA PROFILE · LOCKED FOUR-FORWARD MODEL"
+    },
+    {
+      "id": 4,
+      "type": "H3RelaySequenceStart",
+      "pos": [
+        -820,
+        -400
+      ],
+      "size": [
+        650,
+        470
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "run_name",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "run_name"
+          }
+        },
+        {
+          "name": "global_prompt",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "global_prompt"
+          }
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "width"
+          }
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "height"
+          }
+        },
+        {
+          "name": "h3_overlap_frames",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "h3_overlap_frames"
+          }
+        },
+        {
+          "name": "sampler",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "sampler"
+          }
+        },
+        {
+          "name": "scheduler",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "scheduler"
+          }
+        },
+        {
+          "name": "spectrum_enabled",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "spectrum_enabled"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelaySequenceStart"
+      },
+      "widgets_values": [
+        "fast_h3_vsa_one_shot_ultimate_2x",
+        "visual_style:\nPremium cinematic cyberpunk anime rendered like a high-budget live-action film, with crisp anatomy, deep cobalt shadows, restrained magenta and cyan highlights, controlled bloom, coherent motion blur, and physically readable movement.\n\ncontinuity_rules:\nMaintain one coherent subject, wardrobe, environment, direction of travel, illumination, camera language, and soundscape for the complete generation. No text, titles, fades, duplicated subjects, or unexplained cuts.",
+        832,
+        480,
+        18,
+        "euler",
+        "simple",
+        false
+      ],
+      "widgets_values_named": {
+        "run_name": "fast_h3_vsa_one_shot_ultimate_2x",
+        "global_prompt": "visual_style:\nPremium cinematic cyberpunk anime rendered like a high-budget live-action film, with crisp anatomy, deep cobalt shadows, restrained magenta and cyan highlights, controlled bloom, coherent motion blur, and physically readable movement.\n\ncontinuity_rules:\nMaintain one coherent subject, wardrobe, environment, direction of travel, illumination, camera language, and soundscape for the complete generation. No text, titles, fades, duplicated subjects, or unexplained cuts.",
+        "width": 832,
+        "height": 480,
+        "h3_overlap_frames": 18,
+        "sampler": "euler",
+        "scheduler": "simple",
+        "spectrum_enabled": false
+      },
+      "title": "SEQUENCE START · 832×480 · FASTH3 VSA"
+    },
+    {
+      "id": 11,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -80,
+        -760
+      ],
+      "size": [
+        640,
+        360
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "value"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "summary:\nA lone cyberpunk courier races across a rain-slick rooftop, vaults a ventilation duct, turns to deflect one red energy pulse with a short luminous blade, and escapes through a maintenance doorway.\n\ndetailed_description:\n[Shot 1] A low side-tracking medium-wide shot follows a lone courier sprinting across a rain-soaked rooftop at night. Dark towers and restrained cyan-magenta signs reflect in shallow puddles. Their coat and hair react naturally to speed and wind while the camera preserves a readable silhouette.\n[Shot 2] At 00:02.000, the courier plants one hand on a waist-high ventilation duct, vaults it cleanly, lands without losing momentum, and glances over one shoulder as a narrow red energy pulse approaches.\n[Shot 3] At 00:03.500, the camera arcs to a frontal three-quarter view. The courier draws a short cyan blade, deflects the pulse into an empty metal panel with synchronized sparks, then turns and disappears through a maintenance doorway. Hold briefly on the closing door and settling rain; no fade.\n\noverall_soundscape:\nContinuous rooftop rain, distant traffic, boot splashes, fabric movement, one energy pulse, a bright blade ring, synchronized metal sparks, a pneumatic doorway, and rooftop wind.\n\nnon_diegetic_music:\nAn original restrained dark synth pulse supports the action and resolves beneath the closing doorway."
+      ],
+      "widgets_values_named": {
+        "value": "summary:\nA lone cyberpunk courier races across a rain-slick rooftop, vaults a ventilation duct, turns to deflect one red energy pulse with a short luminous blade, and escapes through a maintenance doorway.\n\ndetailed_description:\n[Shot 1] A low side-tracking medium-wide shot follows a lone courier sprinting across a rain-soaked rooftop at night. Dark towers and restrained cyan-magenta signs reflect in shallow puddles. Their coat and hair react naturally to speed and wind while the camera preserves a readable silhouette.\n[Shot 2] At 00:02.000, the courier plants one hand on a waist-high ventilation duct, vaults it cleanly, lands without losing momentum, and glances over one shoulder as a narrow red energy pulse approaches.\n[Shot 3] At 00:03.500, the camera arcs to a frontal three-quarter view. The courier draws a short cyan blade, deflects the pulse into an empty metal panel with synchronized sparks, then turns and disappears through a maintenance doorway. Hold briefly on the closing door and settling rain; no fade.\n\noverall_soundscape:\nContinuous rooftop rain, distant traffic, boot splashes, fabric movement, one energy pulse, a bright blade ring, synchronized metal sparks, a pneumatic doorway, and rooftop wind.\n\nnon_diegetic_music:\nAn original restrained dark synth pulse supports the action and resolves beneath the closing doorway."
+      },
+      "title": "ONE-SHOT · H3 DIRECTOR PROMPT"
+    },
+    {
+      "id": 14,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        650,
+        -760
+      ],
+      "size": [
+        640,
+        300
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "value"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "Preserve the accepted raw shot's exact subject, action, frame timing, composition, camera motion, geometry, lighting, color palette, and audio timing. Restore stable fine detail, clean edges, material texture, and wet-surface reflections at exactly 2x spatial resolution. Do not redesign the subject or environment; do not add cuts, objects, people, text, motion, or reframing."
+      ],
+      "widgets_values_named": {
+        "value": "Preserve the accepted raw shot's exact subject, action, frame timing, composition, camera motion, geometry, lighting, color palette, and audio timing. Restore stable fine detail, clean edges, material texture, and wet-surface reflections at exactly 2x spatial resolution. Do not redesign the subject or environment; do not add cuts, objects, people, text, motion, or reframing."
+      },
+      "title": "ULTIMATE · CONSERVATIVE REFINEMENT DIRECTIVE"
+    },
+    {
+      "id": 15,
+      "type": "H3RelayGenerateShot",
+      "pos": [
+        -80,
+        -320
+      ],
+      "size": [
+        620,
+        760
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "h3_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 2
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 1
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": 3
+        },
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_2",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_3",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "additional_reference_images.reference_image_4",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7,
+          "label": "reference_image_4"
+        },
+        {
+          "name": "additional_reference_images.reference_image_5",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7,
+          "label": "reference_image_5"
+        },
+        {
+          "name": "reference_video",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_video_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "seed"
+          }
+        },
+        {
+          "name": "duration_seconds",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "duration_seconds"
+          }
+        },
+        {
+          "name": "h3_steps",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "h3_steps"
+          }
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "output_crf"
+          }
+        },
+        {
+          "name": "ref_image_size",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "ref_image_size"
+          }
+        },
+        {
+          "name": "shot_id",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "shot_id"
+          },
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "links": [
+            5
+          ]
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayGenerateShot"
+      },
+      "widgets_values": [
+        424246,
+        "fixed",
+        5,
+        4,
+        18,
+        "match",
+        "fast_h3_vsa_one_shot_ultimate_2x"
+      ],
+      "widgets_values_named": {
+        "seed": 424246,
+        "control_after_generate": "fixed",
+        "duration_seconds": 5,
+        "h3_steps": 4,
+        "output_crf": 18,
+        "ref_image_size": "match",
+        "shot_id": "fast_h3_vsa_one_shot_ultimate_2x"
+      },
+      "title": "GENERATE / REVIEW / REROLL · RAW FASTH3 VSA"
+    },
+    {
+      "id": 19,
+      "type": "H3RelayUltimateEnhanceShot",
+      "pos": [
+        650,
+        -320
+      ],
+      "size": [
+        640,
+        700
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "h3_model",
+          "type": "H3_RELAY_MODEL",
+          "link": 4
+        },
+        {
+          "name": "sequence",
+          "type": "H3_RELAY_SEQUENCE",
+          "link": 5
+        },
+        {
+          "name": "enhancement_prompt",
+          "type": "STRING",
+          "link": 6
+        },
+        {
+          "name": "previous_enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_2",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "reference_image_3",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "additional_reference_images.reference_image_4",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7,
+          "label": "reference_image_4"
+        },
+        {
+          "name": "additional_reference_images.reference_image_5",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7,
+          "label": "reference_image_5"
+        },
+        {
+          "name": "refinement_seed",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "refinement_seed"
+          }
+        },
+        {
+          "name": "output_crf",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "output_crf"
+          }
+        },
+        {
+          "name": "ref_image_size",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "ref_image_size"
+          }
+        },
+        {
+          "name": "temporal_chunk_frames",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "temporal_chunk_frames"
+          }
+        },
+        {
+          "name": "temporal_overlap_frames",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "temporal_overlap_frames"
+          }
+        },
+        {
+          "name": "anchor_strength",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "anchor_strength"
+          }
+        },
+        {
+          "name": "tile_width",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "tile_width"
+          }
+        },
+        {
+          "name": "tile_height",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "tile_height"
+          }
+        },
+        {
+          "name": "spatial_overlap",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "spatial_overlap"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "enhanced",
+          "type": "H3_RELAY_ENHANCED",
+          "links": null
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        },
+        {
+          "name": "video_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "h3-relay",
+        "ver": "1.0.2",
+        "Node name for S&R": "H3RelayUltimateEnhanceShot"
+      },
+      "widgets_values": [
+        424264,
+        "fixed",
+        18,
+        "match",
+        136,
+        17,
+        0.999,
+        1024,
+        1024,
+        128
+      ],
+      "widgets_values_named": {
+        "refinement_seed": 424264,
+        "control_after_generate": "fixed",
+        "output_crf": 18,
+        "ref_image_size": "match",
+        "temporal_chunk_frames": 136,
+        "temporal_overlap_frames": 17,
+        "anchor_strength": 0.999,
+        "tile_width": 1024,
+        "tile_height": 1024,
+        "spatial_overlap": 128
+      },
+      "title": "H3 ULTIMATE 2× ENHANCE · ACCEPTED RAW LATENT"
+    },
+    {
+      "id": 26,
+      "type": "MarkdownNote",
+      "pos": [
+        -1420,
+        -760
+      ],
+      "size": [
+        520,
+        850
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Model Links\n\n**diffusion_models**\n\n- [minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors](https://huggingface.co/Kijai/MiniMax-H3-experimental/resolve/main/minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors)\n\n**text_encoders**\n\n- [qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors)\n\n**vae**\n\n- [minimax_h3_video_vae_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors)\n- [minimax_h3_audio_vae_fp32.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors)\n\n**latent_upscale_models**\n\n- [minimax_h3_latent_upscaler_3d_fp16.safetensors](https://huggingface.co/LBH-123-AI/Minimax_h3_latent_Upscaler/resolve/main/minimax_h3_latent_upscaler_3d_fp16.safetensors)\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n└── 📂 models/\n    ├── 📂 diffusion_models/\n    │   └── minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors\n    ├── 📂 text_encoders/\n    │   └── qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n    ├── 📂 vae/\n    │   ├── minimax_h3_video_vae_fp16.safetensors\n    │   └── minimax_h3_audio_vae_fp32.safetensors\n    └── 📂 latent_upscale_models/\n        └── minimax_h3_latent_upscaler_3d_fp16.safetensors\n```\n\nH3 Relay expands its public nodes into native conditioning/VAE stages, so the text encoder and both VAEs are required even though they are not visible as separate canvas nodes."
+      ],
+      "widgets_values_named": {
+        "value": "## Model Links\n\n**diffusion_models**\n\n- [minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors](https://huggingface.co/Kijai/MiniMax-H3-experimental/resolve/main/minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors)\n\n**text_encoders**\n\n- [qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors)\n\n**vae**\n\n- [minimax_h3_video_vae_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors)\n- [minimax_h3_audio_vae_fp32.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors)\n\n**latent_upscale_models**\n\n- [minimax_h3_latent_upscaler_3d_fp16.safetensors](https://huggingface.co/LBH-123-AI/Minimax_h3_latent_Upscaler/resolve/main/minimax_h3_latent_upscaler_3d_fp16.safetensors)\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n└── 📂 models/\n    ├── 📂 diffusion_models/\n    │   └── minimax_h3_fastvideo_vsa_datafree_1300step_4step_int8_convrot.safetensors\n    ├── 📂 text_encoders/\n    │   └── qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n    ├── 📂 vae/\n    │   ├── minimax_h3_video_vae_fp16.safetensors\n    │   └── minimax_h3_audio_vae_fp32.safetensors\n    └── 📂 latent_upscale_models/\n        └── minimax_h3_latent_upscaler_3d_fp16.safetensors\n```\n\nH3 Relay expands its public nodes into native conditioning/VAE stages, so the text encoder and both VAEs are required even though they are not visible as separate canvas nodes."
+      },
+      "title": "Note: Model Links",
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 27,
+      "type": "MarkdownNote",
+      "pos": [
+        -1420,
+        130
+      ],
+      "size": [
+        520,
+        800
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## H3 Relay · FastH3 VSA\n\nThis workflow requires the experimental FastH3 VSA runtime. It does **not** run on an ordinary stock ComfyUI checkout yet.\n\n## Exact tested runtime\n\n- **ComfyUI:** Kijai VSA commit [10febb01d7be73d1491cf5e5347b5ab8b6c2c09e](https://github.com/kijai/ComfyUI/commit/10febb01d7be73d1491cf5e5347b5ab8b6c2c09e) from draft [PR #15958](https://github.com/Comfy-Org/ComfyUI/pull/15958)\n- **comfy-kitchen:** official PyPI `comfy-kitchen==0.2.33` CUDA wheel, with CUDA `sol_attn` and `sol_attn_chunked`\n- **VSA adapter:** included in H3 Relay for both generation and Ultimate refinement; no temporary custom node is required\n- **H3 Relay:** [github.com/akatz-ai/h3-relay](https://github.com/akatz-ai/h3-relay); use the release containing **FastH3 VSA Profile** and **H3 Ultimate 2x Enhance**\n- **MMH3 Ultimate Upscale:** [bbaudio-2025/Comfyui-MMH3-UltimateUpscale](https://github.com/bbaudio-2025/Comfyui-MMH3-UltimateUpscale), tested at commit [6db8fa5a4e4ca0718d2ea8d08002ea899fe27721](https://github.com/bbaudio-2025/Comfyui-MMH3-UltimateUpscale/commit/6db8fa5a4e4ca0718d2ea8d08002ea899fe27721)\n- **H3 latent upscaler:** [LBH-123-AI/Minimax_h3_latent_Upscaler](https://huggingface.co/LBH-123-AI/Minimax_h3_latent_Upscaler)\n\nUntil ComfyUI's VSA model support is available in a normal release, treat this as an advanced experimental workflow. The reference runtime uses Python 3.11, PyTorch 2.13.0+cu130, and an NVIDIA driver compatible with CUDA 13. See VALIDATION.md for the official-wheel test results and limitations.\n\n## Run order\n\n1. Keep the FastH3 profile at Euler/simple, four forwards, shifts 12/3, Spectrum off, and VSA 10 percent. H3 Relay owns these values even if a stale visible step widget says otherwise.\n2. Run **Generate Shot**, review its native 24fps video and synchronized H3 audio, and reroll before accepting downstream work.\n3. Run **H3 Ultimate 2x Enhance** only after accepting the raw result. It reuses the accepted AV latent and complete shot prompt.\n4. Ultimate emits 24fps video at exactly 2x width and height. This focused example intentionally stops at 24fps.\n\n## Managed outputs\n\nGenerate, Ultimate, and interpolation intermediates are integrity-checked managed cache artifacts. Their previews are playable, but they are not published files. Use a final Assemble node or connect a native Save Video node when you want a durable output in ComfyUI's output directory."
+      ],
+      "widgets_values_named": {
+        "value": "## H3 Relay · FastH3 VSA\n\nThis workflow requires the experimental FastH3 VSA runtime. It does **not** run on an ordinary stock ComfyUI checkout yet.\n\n## Exact tested runtime\n\n- **ComfyUI:** Kijai VSA commit [10febb01d7be73d1491cf5e5347b5ab8b6c2c09e](https://github.com/kijai/ComfyUI/commit/10febb01d7be73d1491cf5e5347b5ab8b6c2c09e) from draft [PR #15958](https://github.com/Comfy-Org/ComfyUI/pull/15958)\n- **comfy-kitchen:** official PyPI `comfy-kitchen==0.2.33` CUDA wheel, with CUDA `sol_attn` and `sol_attn_chunked`\n- **VSA adapter:** included in H3 Relay for both generation and Ultimate refinement; no temporary custom node is required\n- **H3 Relay:** [github.com/akatz-ai/h3-relay](https://github.com/akatz-ai/h3-relay); use the release containing **FastH3 VSA Profile** and **H3 Ultimate 2x Enhance**\n- **MMH3 Ultimate Upscale:** [bbaudio-2025/Comfyui-MMH3-UltimateUpscale](https://github.com/bbaudio-2025/Comfyui-MMH3-UltimateUpscale), tested at commit [6db8fa5a4e4ca0718d2ea8d08002ea899fe27721](https://github.com/bbaudio-2025/Comfyui-MMH3-UltimateUpscale/commit/6db8fa5a4e4ca0718d2ea8d08002ea899fe27721)\n- **H3 latent upscaler:** [LBH-123-AI/Minimax_h3_latent_Upscaler](https://huggingface.co/LBH-123-AI/Minimax_h3_latent_Upscaler)\n\nUntil ComfyUI's VSA model support is available in a normal release, treat this as an advanced experimental workflow. The reference runtime uses Python 3.11, PyTorch 2.13.0+cu130, and an NVIDIA driver compatible with CUDA 13. See VALIDATION.md for the official-wheel test results and limitations.\n\n## Run order\n\n1. Keep the FastH3 profile at Euler/simple, four forwards, shifts 12/3, Spectrum off, and VSA 10 percent. H3 Relay owns these values even if a stale visible step widget says otherwise.\n2. Run **Generate Shot**, review its native 24fps video and synchronized H3 audio, and reroll before accepting downstream work.\n3. Run **H3 Ultimate 2x Enhance** only after accepting the raw result. It reuses the accepted AV latent and complete shot prompt.\n4. Ultimate emits 24fps video at exactly 2x width and height. This focused example intentionally stops at 24fps.\n\n## Managed outputs\n\nGenerate, Ultimate, and interpolation intermediates are integrity-checked managed cache artifacts. Their previews are playable, but they are not published files. Use a final Assemble node or connect a native Save Video node when you want a durable output in ComfyUI's output directory."
+      },
+      "title": "Note: H3 Relay",
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 28,
+      "type": "MarkdownNote",
+      "pos": [
+        -820,
+        500
+      ],
+      "size": [
+        400,
+        440
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "| megapixels | Aspect | Native H3 (multiple=32) | H3 Ultimate 2x |\n|---|---|---|---|\n| 0.2 | 16:9 | 608 x 352 | 1216 x 704 |\n| 0.3 | 16:9 | 736 x 416 | 1472 x 832 |\n| 0.4 | 16:9 | 864 x 480 | 1728 x 960 |\n| 0.5 | 16:9 | 960 x 544 | 1920 x 1088 |\n| 0.6 | 16:9 | 1056 x 608 | 2112 x 1216 |\n| 0.7 | 16:9 | 1152 x 640 | 2304 x 1280 |\n| 0.8 | 16:9 | 1216 x 672 | 2432 x 1344 |\n| 0.9 | 16:9 | 1280 x 736 | 2560 x 1472 |\n| 0.98 | 16:9 | 1344 x 768 | 2688 x 1536 |\n\nThe bundled examples use **832 x 480**, which becomes **1664 x 960** after Ultimate. Sequence width and height must remain multiples of 32. Ultimate derives the exact 2x canvas and safely clamps tile maxima to it."
+      ],
+      "widgets_values_named": {
+        "value": "| megapixels | Aspect | Native H3 (multiple=32) | H3 Ultimate 2x |\n|---|---|---|---|\n| 0.2 | 16:9 | 608 x 352 | 1216 x 704 |\n| 0.3 | 16:9 | 736 x 416 | 1472 x 832 |\n| 0.4 | 16:9 | 864 x 480 | 1728 x 960 |\n| 0.5 | 16:9 | 960 x 544 | 1920 x 1088 |\n| 0.6 | 16:9 | 1056 x 608 | 2112 x 1216 |\n| 0.7 | 16:9 | 1152 x 640 | 2304 x 1280 |\n| 0.8 | 16:9 | 1216 x 672 | 2432 x 1344 |\n| 0.9 | 16:9 | 1280 x 736 | 2560 x 1472 |\n| 0.98 | 16:9 | 1344 x 768 | 2688 x 1536 |\n\nThe bundled examples use **832 x 480**, which becomes **1664 x 960** after Ultimate. Sequence width and height must remain multiples of 32. Ultimate derives the exact 2x canvas and safely clamps tile maxima to it."
+      },
+      "title": "Note: Size Settings Reference",
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      1,
+      4,
+      0,
+      15,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      2,
+      3,
+      0,
+      15,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      3,
+      11,
+      0,
+      15,
+      2,
+      "STRING"
+    ],
+    [
+      4,
+      3,
+      0,
+      19,
+      0,
+      "H3_RELAY_MODEL"
+    ],
+    [
+      5,
+      15,
+      0,
+      19,
+      1,
+      "H3_RELAY_SEQUENCE"
+    ],
+    [
+      6,
+      14,
+      0,
+      19,
+      2,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "frontendVersion": "1.49.6",
+    "ds": {
+      "scale": 0.62,
+      "offset": [
+        1050,
+        700
+      ]
+    },
+    "h3_relay_example": {
+      "tier": "02-vsa-ultimate-2x",
+      "profile": "fast_h3_vsa",
+      "shots": 1,
+      "generation_window_seconds": 5,
+      "native_resolution": [
+        832,
+        480
+      ],
+      "ultimate_resolution": [
+        1664,
+        960
+      ],
+      "required_models": 5
+    }
+  },
+  "version": 0.4,
+  "definitions": {
+    "subgraphs": []
+  }
+}

@@ -54,6 +54,27 @@ def main():
         362,
     ]
     assert nodes._validate_ltx_tiling(193, 64, 128, 16) == (193, 64, 128, 16)
+    assert nodes._resolve_ultimate_spatial_tiling(
+        1664, 960, 1024, 1024, 128
+    ) == (1024, 960, 128)
+    assert nodes._resolve_ultimate_spatial_tiling(
+        2688, 1536, 1024, 1024, 128
+    ) == (1024, 1024, 128)
+    assert nodes._resolve_ultimate_spatial_tiling(
+        640, 64, 1024, 1024, 128
+    ) == (640, 64, 32)
+    assert nodes._resolve_ultimate_frame_contract(
+        243, 243, 243, 18
+    ) == (243, 0, 243)
+    assert nodes._resolve_ultimate_frame_contract(
+        226, 226, 225, 18
+    ) == (226, 1, 225)
+    try:
+        nodes._resolve_ultimate_frame_contract(226, 243, 225, 18)
+    except ValueError as exc:
+        assert "accepted latent checkpoint contains 243" in str(exc)
+    else:
+        raise AssertionError("Ultimate output must match checkpoint frames")
     import torch
     generator_schema = nodes.H3RelayGenerateShot.GET_SCHEMA()
     generator_inputs = {item.id: item for item in generator_schema.inputs}
@@ -64,6 +85,14 @@ def main():
         nodes.ADDITIONAL_REFERENCE_IMAGE_NAMES
     )
     assert additional_images.template.min == 0
+    ultimate_schema = nodes.H3RelayUltimateEnhanceShot.GET_SCHEMA()
+    ultimate_inputs = {item.id: item for item in ultimate_schema.inputs}
+    assert "h3_model" in ultimate_inputs
+    assert "sequence" in ultimate_inputs
+    assert "previous_enhanced" in ultimate_inputs
+    assert ultimate_inputs["additional_reference_images"].template.names == list(
+        nodes.ADDITIONAL_REFERENCE_IMAGE_NAMES
+    )
     with tempfile.TemporaryDirectory() as chunk_directory:
         chunk_video = os.path.join(chunk_directory, "chunk-contract.mp4")
         frames = torch.linspace(
@@ -91,6 +120,9 @@ def main():
     assert "H3RelayCacheManager" in nodes.NODE_CLASS_MAPPINGS
     assert "H3RelayFastH3VSAModelLoader" in nodes.NODE_CLASS_MAPPINGS
     assert "H3RelayInternalFastH3VSA" in nodes.NODE_CLASS_MAPPINGS
+    assert "H3RelayAcceptedRawLatent" in nodes.NODE_CLASS_MAPPINGS
+    assert "H3RelayUltimateEnhanceShot" in nodes.NODE_CLASS_MAPPINGS
+    assert "H3RelayInternalAcceptUltimate" in nodes.NODE_CLASS_MAPPINGS
     assert "H3RelayAssembleRaw" in nodes.NODE_CLASS_MAPPINGS
     fast_bundle = nodes.H3RelayModelBundlePack().pack(
         "h3",
@@ -248,6 +280,129 @@ def main():
     assert accepted_sequence["h3_sampler"] == "euler"
     assert accepted_sequence["h3_scheduler"] == "simple"
     assert accepted_sequence["h3_spectrum_enabled"] is False
+    ultimate_sequence, _ = nodes.H3RelaySequenceStart().start(
+        "fast_h3_ultimate_contract",
+        "Global Akatz continuity contract.",
+        832,
+        480,
+        18,
+        "euler",
+        "simple",
+        False,
+    )
+    ultimate_bundle = {
+        "format": nodes.MODEL_BUNDLE_FORMAT,
+        "kind": "h3",
+        "model": object(),
+        "cache_tag": "test-fast-h3-ultimate-model",
+        "h3_profile": nodes.FAST_H3_VSA_PROFILE,
+    }
+    ultimate_sequence, _ = nodes._sequence_with_h3_model(
+        ultimate_sequence, ultimate_bundle
+    )
+    ultimate_sequence = dict(ultimate_sequence)
+    ultimate_sequence["h3_sampling_profile"] = nodes.FAST_H3_VSA_PROFILE
+    ultimate_sequence["h3_sampler"] = "euler"
+    ultimate_sequence["h3_scheduler"] = "simple"
+    ultimate_sequence["h3_spectrum_enabled"] = False
+    ultimate_state, ultimate_shot = nodes.context._steer_state(
+        ultimate_sequence,
+        "shot_0001",
+        "Akatz runs through a neon alley.",
+        424246,
+        243,
+        4,
+    )
+    revision = "f" * 32
+    h3_segment = {
+        "index": 1,
+        "id": "shot_0001",
+        "revision": revision,
+        "segment": "cache://contract/raw.mp4",
+        "segment_sha256": "1" * 64,
+        "checkpoint": "cache://contract/raw.safetensors",
+        "checkpoint_sha256": "2" * 64,
+        "checkpoint_frames": 243,
+        "generated_audio": "cache://contract/raw.wav",
+        "raw_frames": 243,
+        "delivered_frames": 243,
+    }
+    ultimate_sequence["shots"] = nodes.context._effective_editor_plan(
+        ultimate_state["plan"]
+    )["shots"]
+    ultimate_sequence["segments"] = [{
+        "index": 1,
+        "id": "shot_0001",
+        "revision": revision,
+        "h3_segment": h3_segment,
+    }]
+    original_ultimate_preflight = nodes._require_ultimate_engine
+    nodes._require_ultimate_engine = lambda: original_ultimate_preflight({
+        name: object() for name in nodes.ULTIMATE_ENGINE_NODE_TYPES
+    })
+    try:
+        ultimate_graph = nodes.H3RelayUltimateEnhanceShot.enhance(
+            ultimate_bundle,
+            ultimate_sequence,
+            "Preserve accepted motion and restore fine detail.",
+            424264,
+            18,
+            "match",
+            136,
+            17,
+            0.999,
+            1024,
+            1024,
+            128,
+        )
+    finally:
+        nodes._require_ultimate_engine = original_ultimate_preflight
+    ultimate_nodes = list(ultimate_graph["expand"].values())
+    ultimate_classes = {item["class_type"] for item in ultimate_nodes}
+    assert "SolAttnMiniMax" not in ultimate_classes
+    ultimate_vsa = next(
+        item for item in ultimate_nodes
+        if item["class_type"] == "H3RelayInternalFastH3VSA"
+    )
+    assert set(ultimate_vsa["inputs"]) == {"model"}
+    assert {
+        "MiniMaxH3SigmaShift",
+        "H3RelayInternalFastH3VSA",
+        "H3RelayAcceptedRawLatent",
+        "MMH3LatentUpscaleWithModelParams",
+        "MMH3TemporalSplitParams",
+        "MMH3SpatialSplitParams",
+        "MMH3UltimateUpscale",
+        "H3RelayInternalAcceptUltimate",
+    } <= ultimate_classes
+    ultimate_conditioning = next(
+        item for item in ultimate_nodes
+        if item["class_type"] == "MiniMaxH3ReferenceToVideo"
+    )
+    assert ultimate_conditioning["inputs"]["width"] == 1664
+    assert ultimate_conditioning["inputs"]["height"] == 960
+    assert ultimate_conditioning["inputs"]["length"] == 243
+    assert "Global Akatz continuity contract." in ultimate_conditioning["inputs"]["prompt"]
+    assert "Akatz runs through a neon alley." in ultimate_conditioning["inputs"]["prompt"]
+    assert "Preserve accepted motion" in ultimate_conditioning["inputs"]["prompt"]
+    ultimate_accept = next(
+        item for item in ultimate_nodes
+        if item["class_type"] == "H3RelayInternalAcceptUltimate"
+    )
+    assert ultimate_accept["inputs"]["temporal_chunk_frames"] == 136
+    assert ultimate_accept["inputs"]["temporal_overlap_frames"] == 17
+    assert ultimate_accept["inputs"]["checkpoint_frames"] == 243
+    ultimate_spatial = next(
+        item for item in ultimate_nodes
+        if item["class_type"] == "MMH3SpatialSplitParams"
+    )
+    assert ultimate_spatial["inputs"]["tile_width"] == 1024
+    assert ultimate_spatial["inputs"]["tile_height"] == 960
+    assert ultimate_spatial["inputs"]["spatial_w_overlap"] == 128
+    assert ultimate_spatial["inputs"]["spatial_h_overlap"] == 128
+    assert ultimate_accept["inputs"]["tile_width"] == 1024
+    assert ultimate_accept["inputs"]["tile_height"] == 960
+    assert ultimate_accept["inputs"]["spatial_overlap"] == 128
     sequence, _ = nodes.H3RelaySequenceStart().start(
         "h3_relay_contract",
         "Continuity contract.",
