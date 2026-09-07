@@ -83,6 +83,17 @@ A manually pinned PyTorch trio conflicted with ComfyGit's resolved backend
 versions, so the final recipe delegates the trio to ComfyGit. No ComfyGit
 source or existing user environment was modified to make this test pass.
 
+### CPU CI coverage
+
+The bare-Python CI command originally failed to import the VSA and Ultimate
+audio tests because it installed neither PyTorch nor ComfyUI. CI now prepares
+the same pinned VSA ComfyUI source with official kitchen 0.2.33 and CPU-only
+PyTorch, then runs `tests/run_cpu_tests.py`. This keeps all 45 tests enabled
+and also runs the expanded runtime contract; no GPU or model weights are used.
+A fresh isolated Python 3.11 environment with PyTorch 2.14.0+cpu passed both
+checks before the main-branch push. JavaScript syntax checks also include the
+FastH3 example builder. CPU CI is not GPU inference validation.
+
 Validation was performed on 2026-08-16 with ComfyUI
 `v0.33.0-6-g1c6d8d45`, an RTX 4090, and the model filenames documented in the
 example workflow.

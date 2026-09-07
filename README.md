@@ -5,6 +5,19 @@ It separates native H3 generation from optional H3 Ultimate or LTX 2.5
 enhancement and built-in frame interpolation so creators can approve a shot
 before paying for finishing work.
 
+> **Experimental FastH3 / H3 Ultimate support:** validated on an RTX 4090
+> running Linux with the official `comfy-kitchen==0.2.33` wheel and the
+> VSA-capable ComfyUI commit pinned in the
+> [FastH3 ComfyGit recipe](comfygit_fast_h3_environment/README.md).
+> Stock ComfyUI alone is not sufficient. Windows GPU inference remains
+> unvalidated, and upstream Sol-Attention edge-case tests still have known
+> failures. These limits apply to the experimental FastH3 path, not a new
+> support claim for every H3 workflow. See [the validation record](VALIDATION.md).
+
+CI runs unit tests and expanded ComfyUI contracts using CPU-only PyTorch,
+without model weights. It does not replace the separate GPU generation and
+audio/video-output validation in the linked record.
+
 The initial node set is:
 
 - **H3 Relay · H3 Hybrid Model Loader**

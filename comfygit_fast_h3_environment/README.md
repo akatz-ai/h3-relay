@@ -6,11 +6,11 @@ and five content-identified model files with immutable public download URLs.
 It installs all three FastH3 example workflows. It does not install the
 temporary `SolAttnMiniMax` node or a private kernel wheel.
 
-Release candidate: Relay commit `33ca879b8697605bedf6ed6875465239dfc46312`
-must be published before this recipe can resolve from public GitHub. Local
-prepublication testing substitutes that repository's local Git transport only;
-the published recipe must retain its HTTPS source. See `../VALIDATION.md` for
-the tested Linux scope, upstream kernel caveats, and unvalidated Windows status.
+The recipe pins Relay commit `33ca879b8697605bedf6ed6875465239dfc46312`.
+Prepublication validation used local Git transport for that commit; normal
+installation uses the HTTPS repository declared in the manifest. See
+[`../VALIDATION.md`](../VALIDATION.md) for the tested Linux scope, upstream
+kernel caveats, and unvalidated Windows status.
 
 ## Requirements
 

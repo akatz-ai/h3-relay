@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  static-tests:
+  cpu-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,13 +20,25 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Python workflow tests
-        run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Prepare pinned ComfyUI for CPU contracts
+        run: |
+          git init "$RUNNER_TEMP/h3-relay-comfyui"
+          git -C "$RUNNER_TEMP/h3-relay-comfyui" remote add origin https://github.com/kijai/ComfyUI.git
+          git -C "$RUNNER_TEMP/h3-relay-comfyui" fetch --depth 1 origin 10febb01d7be73d1491cf5e5347b5ab8b6c2c09e
+          git -C "$RUNNER_TEMP/h3-relay-comfyui" checkout --detach FETCH_HEAD
+          test "$(git -C "$RUNNER_TEMP/h3-relay-comfyui" rev-parse HEAD)" = 10febb01d7be73d1491cf5e5347b5ab8b6c2c09e
+          python -m pip install uv==0.12.10
+          uv pip install --system --torch-backend cpu \
+            -r "$RUNNER_TEMP/h3-relay-comfyui/requirements.txt" \
+            --override tests/ci-overrides.txt
+      - name: Python unit and CPU runtime contracts
+        run: python tests/run_cpu_tests.py --comfyui-root "$RUNNER_TEMP/h3-relay-comfyui"
       - name: JavaScript syntax
         run: |
           node --check web/staged_assemble.js
           node --check scripts/build_example_workflow.mjs
           node --check scripts/upgrade_interpolation_chunks.mjs
+          node --check scripts/build_fast_h3_akatz_workflow.mjs
       - name: Registry security policy
         run: |
           if grep -R -n -E '(^|[^A-Za-z0-9_])(eval|exec)[[:space:]]*\(' \

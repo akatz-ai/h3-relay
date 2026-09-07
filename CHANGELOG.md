@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Provision pinned ComfyUI and CPU-only PyTorch in CI so VSA/audio unit tests
+  and expanded runtime contracts run without a GPU or model downloads.
 - Add a separate, materialization-tested ComfyGit FastH3/Ultimate recipe with
   immutable public model sources and official kitchen 0.2.33. Keep the older
   standard-H3/LTX/RIFE recipe as a clearly identified historical baseline.
