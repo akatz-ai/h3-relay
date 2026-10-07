@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add Person Remover V1 source-aligned editing: automatic 22-frame windows,
+  generated boundary references, 18-frame AV history and exact overlap trimming.
+- Add strict green-mask preparation and a native SAM3 workflow with grouped
+  inputs, original node names, model links and nearby Markdown instructions.
+
 - Add the experimental **FastH3 VSA Profile** loader with a cache-owned,
   four-forward Euler/simple contract, shifts 12/3, Spectrum disabled, and
   VSA-H3 at 10 percent keep.

@@ -1,0 +1,194 @@
+"""Source-aligned 22-frame editing with decoded video/audio relay history."""
+from __future__ import annotations
+
+
+def window_starts(count: int) -> list[int]:
+    if count < 1:
+        raise ValueError("Source video has no frames")
+    starts = [0]
+    while starts[-1] + 22 < count:
+        candidate = min(starts[-1] + 21, count - 22)
+        # An 18-frame history needs a boundary at frame 17 or later.
+        starts.append(max(21, candidate))
+    return starts
+
+
+class H3RelayGreenMask:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {"required": {"images": ("IMAGE",), "mask": ("MASK",),
+                "expand_pixels": ("INT", {"default": 5, "min": 0, "max": 64})}}
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "apply"
+    CATEGORY = "H3 Relay/person remover"
+
+    def apply(self, images, mask, expand_pixels):
+        import torch
+        import torch.nn.functional as F
+        if tuple(mask.shape) != tuple(images.shape[:3]):
+            raise ValueError("Provide one aligned mask per source frame at the same resolution")
+        mask = mask.to(device=images.device) > 0.5
+        if expand_pixels:
+            mask = F.max_pool2d(mask.float().unsqueeze(1), 2 * expand_pixels + 1,
+                                stride=1, padding=expand_pixels).squeeze(1) > 0
+        result = images.clone()
+        result[mask] = torch.tensor([0., 1., 0.], device=images.device, dtype=images.dtype)
+        return (result,)
+
+
+class H3RelaySourceHistory:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {"required": {"conditioning": ("CONDITIONING",), "vae": ("VAE",),
+                "latent": ("LATENT",), "previous_frames": ("IMAGE",),
+                "previous_audio": ("AUDIO",), "audio_vae": ("VAE",)}}
+    RETURN_TYPES = ("CONDITIONING", "LATENT")
+    FUNCTION = "apply"
+    CATEGORY = "H3 Relay/internal"
+
+    def apply(self, conditioning, vae, latent, previous_frames, previous_audio, audio_vae):
+        import nodes
+        state = {"index": 1, "external_context": True, "previous_frames": previous_frames,
+                 "previous_latent": None, "previous_audio": previous_audio,
+                 "plan": {"compatibility": {"continuation_mode": "sliding_history",
+                          "context_length": 18, "crop": "disabled", "audio_mode": "generated_audio"},
+                          "shots": [{"continuation_mode": "sliding_history"}]}}
+        result = nodes.NODE_CLASS_MAPPINGS["H3RelayInternalChainContext"]().apply(
+            state=state, conditioning=conditioning, vae=vae, latent=latent, audio_vae=audio_vae)
+        if result[1] != 1 or result[2] is not True:
+            raise RuntimeError("H3 Relay history contract changed; refusing to sample")
+        return result[0], result[3]
+
+
+class H3RelayRemovalWindow:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {"required": {"source": ("IMAGE",), "anchor": ("IMAGE",),
+                "start": ("INT", {"default": 0})},
+                "optional": {"previous": ("H3_REMOVAL_STATE",)}}
+    RETURN_TYPES = ("IMAGE", "IMAGE", "IMAGE", "AUDIO")
+    RETURN_NAMES = ("source_window", "anchor", "history_frames", "history_audio")
+    FUNCTION = "prepare"
+    CATEGORY = "H3 Relay/internal"
+
+    def prepare(self, source, anchor, start, previous=None):
+        import torch
+        window = source[start:start + 22]
+        if len(window) < 22:
+            window = torch.cat((window, window[-1:].repeat(22 - len(window), 1, 1, 1)))
+        if previous is None:
+            return window, anchor[:1], anchor[:1], {"waveform": torch.zeros(1, 2, 1), "sample_rate": 48000}
+        frames, audio = previous["frames"], previous["audio"]
+        if start < 17 or start >= len(frames):
+            raise ValueError("Missing generated boundary/history for source window")
+        rate = audio["sample_rate"]
+        history_audio = {"sample_rate": rate,
+            "waveform": audio["waveform"][..., round((start - 17) * rate / 24):round((start + 1) * rate / 24)]}
+        return window, frames[start:start + 1], frames[start - 17:start + 1], history_audio
+
+
+class H3RelayRemovalAppend:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {"required": {"frames": ("IMAGE",), "audio": ("AUDIO",),
+                "start": ("INT", {"default": 0}), "source_count": ("INT", {"default": 22})},
+                "optional": {"previous": ("H3_REMOVAL_STATE",)}}
+    RETURN_TYPES = ("H3_REMOVAL_STATE", "IMAGE", "AUDIO")
+    FUNCTION = "append"
+    CATEGORY = "H3 Relay/internal"
+
+    def append(self, frames, audio, start, source_count, previous=None):
+        import torch
+        import torch.nn.functional as F
+        if len(frames) != 22:
+            raise ValueError(f"Expected 22 decoded frames, received {len(frames)}")
+        rate = int(audio["sample_rate"])
+        end = min(source_count, start + 22)
+        retained = 0 if previous is None else len(previous["frames"]) - start
+        if not 0 <= retained < 22:
+            raise ValueError("Invalid source-aligned overlap")
+        origin_sample = round(start * rate / 24)
+        samples = round((start + 22) * rate / 24) - origin_sample
+        waveform = audio["waveform"][..., :samples]
+        waveform = F.pad(waveform, (0, max(0, samples - waveform.shape[-1])))
+        first_sample = round((start + retained) * rate / 24) - origin_sample
+        last_sample = round(end * rate / 24) - origin_sample
+        waveform = waveform[..., first_sample:last_sample]
+        frames = frames[retained:end - start]
+        if previous is not None:
+            if previous["audio"]["sample_rate"] != rate:
+                raise ValueError("Generated audio sample rate changed between windows")
+            frames = torch.cat((previous["frames"], frames))
+            waveform = torch.cat((previous["audio"]["waveform"], waveform), dim=-1)
+        if waveform.shape[-1] != round(end * rate / 24):
+            raise ValueError("Generated audio no longer matches the source clock")
+        if len(frames) != end:
+            raise ValueError("Assembly no longer matches source frame positions")
+        audio = {"waveform": waveform, "sample_rate": rate}
+        state = {"frames": frames, "audio": audio}
+        return state, frames, audio
+
+
+class H3RelayPersonRemover:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {"required": {
+            "model": ("MODEL",), "clip": ("CLIP",), "video_vae": ("VAE",), "audio_vae": ("VAE",),
+            "masked_source": ("IMAGE",), "clean_first_frame": ("IMAGE",),
+            "fps": ("FLOAT", {"default": 24.}),
+            "prompt": ("STRING", {"multiline": True, "default": "Remove the green-masked person and reconstruct the background. Preserve the rest of the video, including its camera motion and frame timing."}),
+            "seed": ("INT", {"default": 904234, "min": 0, "max": 0xffffffffffffffff}),
+            "steps": ("INT", {"default": 20, "min": 1, "max": 100}),
+        }}
+    RETURN_TYPES = ("IMAGE", "AUDIO")
+    RETURN_NAMES = ("clean_frames", "generated_audio")
+    FUNCTION = "generate"
+    CATEGORY = "H3 Relay/person remover"
+
+    def generate(self, model, clip, video_vae, audio_vae, masked_source, clean_first_frame,
+                 fps, prompt, seed, steps):
+        from comfy_execution.graph_utils import GraphBuilder
+        count, height, width, channels = masked_source.shape
+        if abs(fps - 24) > 0.001:
+            raise ValueError("Person Remover V1 requires a 24 fps source; resample before masking")
+        if width % 32 or height % 32 or channels != 3:
+            raise ValueError("Use RGB source dimensions divisible by 32")
+        if tuple(clean_first_frame.shape[1:]) != (height, width, channels):
+            raise ValueError("Clean anchor must match the source resolution and framing")
+        graph = GraphBuilder()
+        noise = graph.node("RandomNoise", noise_seed=seed)
+        sampler = graph.node("KSamplerSelect", sampler_name="er_sde")
+        sigmas = graph.node("BasicScheduler", model=model, scheduler="simple", steps=steps, denoise=1.)
+        previous = None
+        for start in window_starts(count):
+            args = {} if previous is None else {"previous": previous.out(0)}
+            window = graph.node("H3RelayRemovalWindow", source=masked_source,
+                                anchor=clean_first_frame, start=start, **args)
+            ref = graph.node("MiniMaxH3ReferenceToVideo", prompt=prompt, width=width, height=height,
+                             length=22 if previous is None else 39, ref_image_size="match", clip=clip,
+                             **{"ref_images.ref_image_0": window.out(1), "ref_videos.ref_video_0": window.out(0)})
+            conditioning, latent = ref.out(0), ref.out(1)
+            if previous is not None:
+                history = graph.node("H3RelaySourceHistory", conditioning=conditioning, latent=latent,
+                                     vae=video_vae, audio_vae=audio_vae, previous_frames=window.out(2),
+                                     previous_audio=window.out(3))
+                conditioning, latent = history.out(0), history.out(1)
+            guide = graph.node("MiniMaxH3AddGuide", positive=conditioning, latent=latent,
+                               vae=video_vae, image=window.out(0), frame_idx=0)
+            guider = graph.node("CFGGuider", model=model, positive=guide.out(0), negative=guide.out(0), cfg=1.)
+            sample = graph.node("SamplerCustomAdvanced", noise=noise.out(0), guider=guider.out(0),
+                                sampler=sampler.out(0), sigmas=sigmas.out(0), latent_image=latent)
+            separate = graph.node("LTXVSeparateAVLatent", av_latent=sample.out(0))
+            video = graph.node("VAEDecode", samples=separate.out(0), vae=video_vae)
+            audio = graph.node("VAEDecodeAudio", samples=separate.out(1), vae=audio_vae)
+            previous = graph.node("H3RelayRemovalAppend", frames=video.out(0), audio=audio.out(0),
+                                  start=start, source_count=count, **args)
+        return {"result": (previous.out(1), previous.out(2)), "expand": graph.finalize()}
+
+
+NODE_CLASS_MAPPINGS = {c.__name__: c for c in (H3RelayGreenMask, H3RelaySourceHistory,
+    H3RelayRemovalWindow, H3RelayRemovalAppend, H3RelayPersonRemover)}
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "H3RelayGreenMask": "H3 Relay Green Mask",
+    "H3RelayPersonRemover": "H3 Relay Person Remover",
+}

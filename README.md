@@ -5,6 +5,9 @@ It separates low-resolution H3 generation from optional LTX 2.5 enhancement
 and built-in frame interpolation so creators can approve a shot before paying
 for finishing work.
 
+The [Person Remover V1 workflow](docs/person-remover-v1.md) automates short,
+source-aligned removal clips using the separate LoRA and a clean first frame.
+
 The initial node set is:
 
 - **H3 Relay · H3 Hybrid Model Loader**
