@@ -58,22 +58,56 @@ Hover over a card to play its muted loop; move away to pause. On a touch screen,
 tap to toggle playback. Use ComfyUI's normal execution controls to stop a run;
 completed cards remain available. Reduce the window size or change the seed,
 then run again. The next run gets a fresh grid; previous preview files remain in
-ComfyUI's temporary directory. The grid shows the rendered seed/window size so
+the window cache. The grid shows the rendered seed/window size so
 previous previews are distinguishable from newly edited settings.
 
 Reopening the same workflow on the same server restores its latest cards.
-Previews are temporary H.264 videos capped at 512 pixels; they are for inspection,
+Previews are H.264 videos capped at 512 pixels; they are for inspection,
 not full-quality exports. Save Video still writes the final assembled output.
 Existing workflows without `window_frames` continue to use 22 frames.
+
+### Lock and reroll
+
+Each card has **Lock**, a seed field, and **Reroll**. Lock keeps every window
+through that card, because each continuation depends on the preceding history.
+Unlocking a card also unlocks the windows after it. **Unlock all** keeps the
+per-window seed choices while removing the locks.
+
+Reroll automatically keeps all completed earlier windows, then rebuilds the
+selected window and every later window. Enter a different seed before clicking
+Reroll to use that exact seed; otherwise Reroll chooses a fresh random seed.
+Use ComfyUI's normal stop controls if a run is active, then reroll when the queue
+is idle. A locked card can also be rerolled: the selected window is unlocked and
+the earlier prefix is preserved.
+
+The cache stores exact decoded frames and generated audio in
+`ComfyUI/output/__h3_removal_cache/`, alongside small previews and manifests.
+Locked checkpoints survive ComfyUI restarts and workflow reloads on that server.
+Cache files are local artifacts and are not embedded in the workflow JSON.
+Deleting or moving them requires unlocking affected windows and rendering again.
+Old candidates are retained, so disk use grows with rerolls.
+
+Locks are checked against the actual masked source pixels, clean anchor, prompt,
+steps, window size, model/encoder/VAE graph and model file versions. Changed inputs
+or settings require **Unlock all**; incompatible results are rejected before
+sampling. A different global seed can still preserve explicitly locked windows;
+unlocked windows use their card seed override or the global seed.
 
 The first clean image is a visual reference; generated frame zero is not
 pixel-locked to that image. Only generated raw frames/audio feed continuation.
 This workflow does not apply the optional seam color grade used in some
 comparison exports. Color shifts and geometry changes still need review.
 
-Defaults: LoRA strength 1, 20 steps, er_sde, simple, CFG 1, fixed seed 904234,
+Defaults: B2000 LoRA strength 1, 12 steps, 22-frame windows, er_sde, simple, CFG 1, fixed seed 904234,
 video/audio sigma shifts 12/3. No Turbo or VFX LoRA. Keep the default removal
 prompt for an initial test.
+
+The workflow routes Load CLIP through native **Select CLIP Device**, set to
+**gpu:0**, to run Qwen reference encoding on the GPU. Load CLIP's `default` can
+choose CPU under low-VRAM settings; leaving it alone does not guarantee GPU
+encoding. This uses built-in ComfyUI nodes. The current encoder can emit a memory
+warning even when the tested short clips complete; large-batch stability remains
+unverified.
 
 The output video is silent. Generated audio still carries internal history.
 Connect the source AUDIO socket to the final Create Video node if you want the

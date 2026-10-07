@@ -24,9 +24,14 @@ class TimelineTests(unittest.TestCase):
             def finalize(self):
                 return self.nodes
 
+        cache = SimpleNamespace(
+            scope_key=lambda *a: "scope", configuration_key=lambda *a: "config",
+            plan=lambda controls, scope, config, starts, size, count, seed:
+                [{"seed": seed, "record_id": ""} for _ in starts])
         modules = {
             "comfy_execution.graph_utils": SimpleNamespace(GraphBuilder=Graph),
             "preview_contract.removal_previews": SimpleNamespace(begin_run=lambda *args: "preview-run-id"),
+            "preview_contract": SimpleNamespace(removal_cache=cache),
         }
         with patch.dict("sys.modules", modules), patch.object(m, "__package__", "preview_contract"):
             result = m.H3RelayPersonRemover().generate(
@@ -39,6 +44,18 @@ class TimelineTests(unittest.TestCase):
         self.assertEqual([n["inputs"]["start"] for n in nodes
                           if n["class_type"] == "H3RelayRemovalAppend"], [0, 38])
         self.assertEqual(result["ui"], {"h3_removal_run": ["preview-run-id"]})
+        self.assertEqual([n["inputs"]["noise_seed"] for n in nodes if n["class_type"] == "RandomNoise"], [123, 123])
+        cache.plan = lambda *a: [{"seed": 123, "record_id": "saved-first"}, {"seed": 456, "record_id": ""}]
+        with patch.dict("sys.modules", modules), patch.object(m, "__package__", "preview_contract"):
+            result = m.H3RelayPersonRemover().generate(
+                None, None, None, None, torch.zeros(77, 32, 32, 3), torch.zeros(1, 32, 32, 3),
+                24., "remove", 123, 12, window_frames="39")
+        nodes = list(result["expand"].values())
+        self.assertEqual(sum(n["class_type"] == "H3RelayRemovalRestore" for n in nodes), 1)
+        self.assertEqual(sum(n["class_type"] == "SamplerCustomAdvanced" for n in nodes), 1)
+        self.assertEqual([n["inputs"]["length"] for n in nodes
+                          if n["class_type"] == "MiniMaxH3ReferenceToVideo"], [56])
+        self.assertEqual([n["inputs"]["noise_seed"] for n in nodes if n["class_type"] == "RandomNoise"], [456])
 
     def test_source_alignment_and_history(self):
         for rate in (32000, 48000):

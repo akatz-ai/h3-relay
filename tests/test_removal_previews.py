@@ -20,13 +20,13 @@ class PreviewTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             events = []
             modules = {
-                "folder_paths": SimpleNamespace(get_temp_directory=lambda: temp),
+                "preview_contract.removal_cache": SimpleNamespace(root=lambda: Path(temp)),
                 "server": SimpleNamespace(PromptServer=SimpleNamespace(instance=SimpleNamespace(
                     send_sync=lambda event, data: events.append((event, data))))),
                 "comfy_execution.utils": SimpleNamespace(
                     get_executing_context=lambda: SimpleNamespace(prompt_id="job-a")),
             }
-            with patch.dict("sys.modules", modules):
+            with patch.dict("sys.modules", modules), patch.object(m, "__package__", "preview_contract"):
                 run = m.begin_run("70", {"workflow": {"id": "workflow-a"}}, [0, 21], 22, 43, 904234)
                 frames = torch.zeros(22, 40, 80, 3)
                 frames[..., 1] = .8
@@ -39,7 +39,7 @@ class PreviewTests(unittest.TestCase):
                 self.assertIsNone(m.latest_run("workflow-b", "70", run))
                 self.assertIsNone(m.latest_run("workflow-a", "70", "../../outside"))
                 item = first["segments"][0]["video"]
-                video = Path(temp) / item["subfolder"] / item["filename"]
+                video = Path(temp) / "previews" / run / item["filename"]
                 with av.open(str(video)) as container:
                     stream = container.streams.video[0]
                     self.assertEqual(float(stream.average_rate), 24.)

@@ -1,8 +1,8 @@
 {
   "id": "6eacff7a-17e7-444f-8557-19d124c465f7",
   "revision": 0,
-  "last_node_id": 26,
-  "last_link_id": 29,
+  "last_node_id": 27,
+  "last_link_id": 31,
   "nodes": [
     {
       "id": 1,
@@ -133,7 +133,7 @@
         120
       ],
       "flags": {},
-      "order": 14,
+      "order": 15,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -212,7 +212,7 @@
           "pos": null,
           "slot_index": null,
           "links": [
-            18
+            30
           ]
         }
       ],
@@ -353,7 +353,7 @@
       ],
       "size": [
         350,
-        120
+        249
       ],
       "flags": {},
       "order": 4,
@@ -405,7 +405,7 @@
         120
       ],
       "flags": {},
-      "order": 12,
+      "order": 13,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -525,7 +525,7 @@
         120
       ],
       "flags": {},
-      "order": 16,
+      "order": 17,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -584,7 +584,7 @@
       ],
       "size": [
         350,
-        120
+        314
       ],
       "flags": {},
       "order": 5,
@@ -736,7 +736,7 @@
         120
       ],
       "flags": {},
-      "order": 15,
+      "order": 16,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -798,7 +798,7 @@
         206
       ],
       "flags": {},
-      "order": 17,
+      "order": 18,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -947,7 +947,7 @@
         166
       ],
       "flags": {},
-      "order": 18,
+      "order": 19,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1053,7 +1053,7 @@
         120
       ],
       "flags": {},
-      "order": 19,
+      "order": 20,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1113,7 +1113,7 @@
         120
       ],
       "flags": {},
-      "order": 20,
+      "order": 21,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1189,7 +1189,7 @@
         200
       ],
       "flags": {},
-      "order": 13,
+      "order": 14,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1252,7 +1252,7 @@
         800
       ],
       "flags": {},
-      "order": 21,
+      "order": 22,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1282,7 +1282,7 @@
           "shape": null,
           "type": "CLIP",
           "pos": null,
-          "link": 18
+          "link": 31
         },
         {
           "color_off": null,
@@ -1400,16 +1400,18 @@
         "Remove the green-masked person and reconstruct the background. Preserve the rest of the video, including its camera motion and frame timing.",
         904234,
         "fixed",
-        20,
-        "22"
+        12,
+        "22",
+        "{}"
       ],
       "widgets_values_named": {
         "fps": 24,
         "prompt": "Remove the green-masked person and reconstruct the background. Preserve the rest of the video, including its camera motion and frame timing.",
         "seed": 904234,
         "control_after_generate": "fixed",
-        "steps": 20,
-        "window_frames": "22"
+        "steps": 12,
+        "window_frames": "22",
+        "window_controls": "{}"
       }
     },
     {
@@ -1424,7 +1426,7 @@
         150
       ],
       "flags": {},
-      "order": 23,
+      "order": 24,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1520,7 +1522,7 @@
         154
       ],
       "flags": {},
-      "order": 25,
+      "order": 26,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1588,7 +1590,7 @@
         150
       ],
       "flags": {},
-      "order": 22,
+      "order": 23,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1684,7 +1686,7 @@
         154
       ],
       "flags": {},
-      "order": 24,
+      "order": 25,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1840,13 +1842,73 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## Automatic relay\n\nChoose **window_frames** on the Person Remover node. H3 uses **17n + 5** frames: **22, 39, 56, 73, 90, 107, 124\u2026362**. At 24 fps, 22 = 0.92s, 39 = 1.63s and 124 = 5.17s. **22 is the proven default.** Larger windows need more memory and may drift. Each continuation uses the generated boundary frame as its image reference and the preceding **18 generated video/audio frames** as history. Repeated overlap frames are discarded. The final window shifts or pads as needed, then trims to the source frame count.\n\nDefaults: **20 steps, er_sde, simple, CFG 1, seed 904234**, video/audio sigma shift **12 / 3**, LoRA strength **1.0**. No Turbo or VFX adapter. Change strength on Load LoRA; keep the default prompt for a first test.\n\nGenerated audio is used internally for continuity. The clean output is **silent** by default. Connect source audio from Get Video Components to Create Video if you want the original soundtrack. Removing someone visually does not remove their voice.\n\nEach finished window appears as a preview card on the Person Remover node before the next window proceeds. Hover to play (tap on touch screens). Use ComfyUI's normal execution controls to stop a run; completed previews remain available. Change the window size or seed, then run again. Preview files are temporary. This graph regenerates the full scene; inspect motion, mask remnants and seams."
+        "## Automatic relay\n\nChoose **window_frames** on the Person Remover node. H3 uses **17n + 5** frames: **22, 39, 56, 73, 90, 107, 124\u2026362**. At 24 fps, 22 = 0.92s, 39 = 1.63s and 124 = 5.17s. **22 is the proven default.** Larger windows need more memory and may drift. Each continuation uses the generated boundary frame as its image reference and the preceding **18 generated video/audio frames** as history. Repeated overlap frames are discarded. The final window shifts or pads as needed, then trims to the source frame count.\n\nDefaults: **12 steps, er_sde, simple, CFG 1, seed 904234**, video/audio sigma shift **12 / 3**, LoRA strength **1.0**. No Turbo or VFX adapter. Select CLIP Device pins Qwen encoding to **gpu:0**. Change strength on Load LoRA; keep the default prompt for a first test.\n\nGenerated audio is used internally for continuity. The clean output is **silent** by default. Connect source audio from Get Video Components to Create Video if you want the original soundtrack. Removing someone visually does not remove their voice.\n\nEach finished window appears as a preview card on the Person Remover node before the next window proceeds. Hover to play (tap on touch screens). Use ComfyUI's normal execution controls to stop a run; completed previews remain available. Change the window size or seed, then run again. Lock keeps the prefix through a card. Reroll keeps earlier windows and rebuilds the selected window onward. Full-quality checkpoints survive server restarts. This graph regenerates the full scene; inspect motion, mask remnants and seams."
       ],
       "widgets_values_named": {
-        "text": "## Automatic relay\n\nChoose **window_frames** on the Person Remover node. H3 uses **17n + 5** frames: **22, 39, 56, 73, 90, 107, 124\u2026362**. At 24 fps, 22 = 0.92s, 39 = 1.63s and 124 = 5.17s. **22 is the proven default.** Larger windows need more memory and may drift. Each continuation uses the generated boundary frame as its image reference and the preceding **18 generated video/audio frames** as history. Repeated overlap frames are discarded. The final window shifts or pads as needed, then trims to the source frame count.\n\nDefaults: **20 steps, er_sde, simple, CFG 1, seed 904234**, video/audio sigma shift **12 / 3**, LoRA strength **1.0**. No Turbo or VFX adapter. Change strength on Load LoRA; keep the default prompt for a first test.\n\nGenerated audio is used internally for continuity. The clean output is **silent** by default. Connect source audio from Get Video Components to Create Video if you want the original soundtrack. Removing someone visually does not remove their voice.\n\nEach finished window appears as a preview card on the Person Remover node before the next window proceeds. Hover to play (tap on touch screens). Use ComfyUI's normal execution controls to stop a run; completed previews remain available. Change the window size or seed, then run again. Preview files are temporary. This graph regenerates the full scene; inspect motion, mask remnants and seams."
+        "text": "## Automatic relay\n\nChoose **window_frames** on the Person Remover node. H3 uses **17n + 5** frames: **22, 39, 56, 73, 90, 107, 124\u2026362**. At 24 fps, 22 = 0.92s, 39 = 1.63s and 124 = 5.17s. **22 is the proven default.** Larger windows need more memory and may drift. Each continuation uses the generated boundary frame as its image reference and the preceding **18 generated video/audio frames** as history. Repeated overlap frames are discarded. The final window shifts or pads as needed, then trims to the source frame count.\n\nDefaults: **12 steps, er_sde, simple, CFG 1, seed 904234**, video/audio sigma shift **12 / 3**, LoRA strength **1.0**. No Turbo or VFX adapter. Select CLIP Device pins Qwen encoding to **gpu:0**. Change strength on Load LoRA; keep the default prompt for a first test.\n\nGenerated audio is used internally for continuity. The clean output is **silent** by default. Connect source audio from Get Video Components to Create Video if you want the original soundtrack. Removing someone visually does not remove their voice.\n\nEach finished window appears as a preview card on the Person Remover node before the next window proceeds. Hover to play (tap on touch screens). Use ComfyUI's normal execution controls to stop a run; completed previews remain available. Change the window size or seed, then run again. Lock keeps the prefix through a card. Reroll keeps earlier windows and rebuilds the selected window onward. Full-quality checkpoints survive server restarts. This graph regenerates the full scene; inspect motion, mask remnants and seams."
       },
       "color": "#432",
       "bgcolor": "#653"
+    },
+    {
+      "id": 27,
+      "type": "SelectCLIPDevice",
+      "pos": [
+        1420,
+        400
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "showAdvanced": null,
+      "inputs": [
+        {
+          "color_off": null,
+          "color_on": null,
+          "dir": null,
+          "label": null,
+          "locked": null,
+          "name": "clip",
+          "nameLocked": null,
+          "removable": null,
+          "shape": null,
+          "type": "CLIP",
+          "pos": null,
+          "link": 30
+        }
+      ],
+      "outputs": [
+        {
+          "color_off": null,
+          "color_on": null,
+          "dir": null,
+          "label": null,
+          "locked": null,
+          "name": "CLIP",
+          "nameLocked": null,
+          "removable": null,
+          "shape": null,
+          "type": "CLIP",
+          "pos": null,
+          "slot_index": null,
+          "links": [
+            31
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SelectCLIPDevice"
+      },
+      "widgets_values": [
+        "gpu:0"
+      ],
+      "widgets_values_named": {
+        "device": "gpu:0"
+      }
     }
   ],
   "links": [
@@ -1987,14 +2049,6 @@
       "MODEL"
     ],
     [
-      18,
-      4,
-      0,
-      18,
-      1,
-      "CLIP"
-    ],
-    [
       19,
       5,
       0,
@@ -2051,14 +2105,6 @@
       "FLOAT"
     ],
     [
-      26,
-      19,
-      0,
-      20,
-      0,
-      "VIDEO"
-    ],
-    [
       27,
       16,
       0,
@@ -2073,6 +2119,30 @@
       21,
       2,
       "FLOAT"
+    ],
+    [
+      30,
+      4,
+      0,
+      27,
+      0,
+      "CLIP"
+    ],
+    [
+      31,
+      27,
+      0,
+      18,
+      1,
+      "CLIP"
+    ],
+    [
+      26,
+      19,
+      0,
+      20,
+      0,
+      "VIDEO"
     ],
     [
       29,
@@ -2138,10 +2208,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.65,
+      "scale": 0.85,
       "offset": [
-        230,
-        590
+        -2178.823529411765,
+        41.176470588235304
       ]
     },
     "reroutes": null,

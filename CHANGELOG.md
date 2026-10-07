@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Default Person Remover to B2000, 12 steps, 22-frame windows and explicit
+  GPU Qwen encoding in the example workflow.
+- Add per-window seed, prefix locking and reroll controls, with exact disk
+  checkpoints, restart recovery and stale-input rejection.
 - Use native SAM3 text conditioning for Person Remover target selection.
 - Add 17n + 5 window sizes (22–362 frames; default 22), sizing tooltips, and
   incremental hover-to-play preview cards with reconnect recovery.

@@ -17,8 +17,8 @@ EVENT = "h3_relay.removal.preview"
 
 
 def _root():
-    import folder_paths
-    root = Path(folder_paths.get_temp_directory()) / "h3-removal-previews"
+    from .removal_cache import root as cache_root
+    root = cache_root() / "previews"
     root.mkdir(parents=True, exist_ok=True)
     return root
 
@@ -97,16 +97,19 @@ def encode_preview(frames, directory, index):
     return video.name, poster.name
 
 
-def publish_window(run_id, index, frames, start, discarded_overlap):
+def publish_window(run_id, index, frames, start, discarded_overlap, record=None, reused=False):
     if not re.fullmatch(r"[0-9a-f]{32}", run_id) or not (_root() / run_id / "manifest.json").is_file():
         raise ValueError("Unknown removal preview run")
     segment = {"index": index, "start": start, "frames": len(frames),
                "discarded_overlap": discarded_overlap, "fps": 24}
+    if record:
+        segment.update(record_id=record["record_id"], seed=record["seed"],
+                       frames_sha256=record["frames_sha256"], reused=reused)
     try:
         video, poster = encode_preview(frames, _root() / run_id, index)
-        subfolder = "h3-removal-previews/" + run_id
-        segment.update(video={"filename": video, "subfolder": subfolder, "type": "temp"},
-                       poster={"filename": poster, "subfolder": subfolder, "type": "temp"})
+        subfolder = "__h3_removal_cache/previews/" + run_id
+        segment.update(video={"filename": video, "subfolder": subfolder, "type": "output"},
+                       poster={"filename": poster, "subfolder": subfolder, "type": "output"})
     except Exception as error:
         # A display/encoder failure must not discard expensive generated frames.
         _LOG.warning("Window preview failed", exc_info=True)
