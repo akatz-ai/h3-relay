@@ -23,11 +23,7 @@ function mount(node) {
         border:1px solid #40554b;border-radius:8px;padding:10px;box-sizing:border-box;
         width:100%;height:100%;overflow:auto;pointer-events:auto}
       .h3-removal-preview *{box-sizing:border-box}
-      .h3-removal-guide{color:#b5d5c3;margin-bottom:8px}
       .h3-removal-status{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0}
-      .h3-removal-status button{border:1px solid #89605d;background:#422d2b;color:#ffe0d8;
-        border-radius:5px;padding:5px 9px;cursor:pointer;font:inherit;white-space:nowrap}
-      .h3-removal-status button:disabled{opacity:.4;cursor:default}
       .h3-removal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
       .h3-removal-card{border:1px solid #41564c;border-radius:6px;overflow:hidden;background:#101613}
       .h3-removal-card button{display:block;border:0;padding:0;width:100%;background:#101613;cursor:pointer}
@@ -38,18 +34,14 @@ function mount(node) {
         border:1px dashed #40554b;border-radius:6px}
       .h3-removal-hint{color:#9caea4;margin-top:8px;font-size:11px}
     `;
-    const guide = element("div", "h3-removal-guide");
     const status = element("div", "h3-removal-status");
     const progress = element("span", "", "Window previews");
-    const stop = element("button", "", "Stop run");
-    stop.type = "button";
-    stop.disabled = true;
-    status.append(progress, stop);
+    status.append(progress);
     const grid = element("div", "h3-removal-grid");
     grid.append(element("div", "h3-removal-empty", "Each completed window appears here before the next one starts."));
-    root.append(style, guide, status, grid, element("div", "h3-removal-hint",
-        "Hover to play · tap on touch screens. Stop keeps completed previews. Preview clips are temporary; final output is saved separately."));
-    const state = { node, root, guide, progress, stop, grid, run: null, revision: 0, cards: new Map() };
+    root.append(style, status, grid, element("div", "h3-removal-hint",
+        "Hover to play · tap on touch screens. Preview clips are temporary; final output is saved separately."));
+    const state = { node, root, progress, grid, run: null, revision: 0, cards: new Map() };
     node._h3RemovalPreview = state;
     mounts.add(state);
     const widget = node.addDOMWidget("window_previews", "div", root, {
@@ -58,35 +50,6 @@ function mount(node) {
     });
     widget.serialize = false;
     node.setSize([Math.max(node.size[0], 550), Math.max(node.size[1], 800)]);
-    const size = node.widgets?.find(w => w.name === "window_frames");
-    const updateGuide = () => {
-        const frames = Number(size?.value ?? 22);
-        guide.textContent = `${frames} frames = ${(frames / 24).toFixed(2)}s at 24 fps. ` +
-            "H3 grid: 17n + 5 → 22, 39, 56, 73, 90, 107, 124…362. " +
-            "22 is the proven default; larger windows need more memory and may drift. History stays at 18 frames.";
-    };
-    if (size) {
-        const callback = size.callback;
-        size.callback = function () { const result = callback?.apply(this, arguments); updateGuide(); return result; };
-    }
-    updateGuide();
-    stop.addEventListener("click", async () => {
-        const run = state.run;
-        if (!run?.prompt_id) return;
-        stop.disabled = true;
-        try {
-            const response = await api.fetchApi("/interrupt", {
-                method: "POST", headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({prompt_id: run.prompt_id}),
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            progress.textContent = "Stopping this run… Completed windows are kept.";
-            window.setTimeout(() => refresh(state), 750);
-        } catch (error) {
-            progress.textContent = `Could not stop: ${error.message}`;
-            stop.disabled = false;
-        }
-    });
     const removed = node.onRemoved;
     node.onRemoved = function () {
         mounts.delete(state);
@@ -97,7 +60,6 @@ function mount(node) {
     node.onConfigure = function () {
         const result = configured?.apply(this, arguments);
         node.setSize([Math.max(node.size[0], 550), Math.max(node.size[1], 800)]);
-        updateGuide();
         window.setTimeout(() => refresh(state), 100);
         return result;
     };
@@ -128,7 +90,6 @@ function render(state, run) {
     state.node.properties.h3_removal_preview_run = run.run_id;
     state.progress.textContent = `${run.segments.length}/${run.total} windows · ${run.window_frames}f · seed ${run.seed}` +
         (run.status === "complete" ? " · complete" : run.status === "stopped" ? " · stopped" : "");
-    state.stop.disabled = run.status !== "rendering" || !run.prompt_id;
     for (const segment of run.segments) {
         if (state.cards.has(segment.index)) continue;
         const card = element("div", "h3-removal-card");

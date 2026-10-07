@@ -25,7 +25,7 @@ setting the clean-output Save Video node to **Never**, then restore **Always**.
 ## Relay behavior
 
 `H3RelayPersonRemover` expands into native ComfyUI conditioning, sampling and
-VAE nodes. Select **window_frames** directly on the node. The built-in guide
+VAE nodes. Select **window_frames** directly on the node. Its tooltip
 shows the valid `17n + 5` choices and duration at 24 fps: 22, 39, 56, 73, 90, 107,
 124, and so on up to 362. The default remains **22 frames (0.92 seconds)**.
 39 frames is 1.63 seconds; 124 is 5.17 seconds. The relay starts at 22 because
@@ -55,8 +55,8 @@ the source-frame span and discarded overlap count. They include the overlapping
 boundary for inspection and omit padded tail frames.
 
 Hover over a card to play its muted loop; move away to pause. On a touch screen,
-tap to toggle playback. **Stop run** interrupts only the run shown by that node
-and leaves completed cards available. Reduce the window size or change the seed,
+tap to toggle playback. Use ComfyUI's normal execution controls to stop a run;
+completed cards remain available. Reduce the window size or change the seed,
 then run again. The next run gets a fresh grid; previous preview files remain in
 ComfyUI's temporary directory. The grid shows the rendered seed/window size so
 previous previews are distinguishable from newly edited settings.
