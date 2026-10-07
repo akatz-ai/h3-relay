@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Persist the exact prepared green-masked source and lazily skip SAM detection
+  and tracking on unchanged rerolls, with restart recovery and input checks.
 - Default Person Remover to B2000, 12 steps, 22-frame windows and explicit
   GPU Qwen encoding in the example workflow.
 - Add per-window seed, prefix locking and reroll controls, with exact disk

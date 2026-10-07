@@ -80,12 +80,22 @@ Use ComfyUI's normal stop controls if a run is active, then reroll when the queu
 is idle. A locked card can also be rerolled: the selected window is unlocked and
 the earlier prefix is preserved.
 
+The Green Mask node saves the exact prepared green-masked source on disk.
+Unchanged runs and rerolls reuse it without requesting SAM detection or tracking,
+including after a ComfyUI restart. Changing the source video, target text,
+tracking/selection settings, mask expansion or SAM model version prepares a new
+mask. H3 seeds, steps and window locks do not change this prepared source.
+The first run after installing this update prepares and saves the mask once.
+Unsupported upstream custom nodes fall back to ordinary evaluation.
+
 The cache stores exact decoded frames and generated audio in
 `ComfyUI/output/__h3_removal_cache/`, alongside small previews and manifests.
 Locked checkpoints survive ComfyUI restarts and workflow reloads on that server.
 Cache files are local artifacts and are not embedded in the workflow JSON.
 Deleting or moving them requires unlocking affected windows and rendering again.
 Old candidates are retained, so disk use grows with rerolls.
+Prepared masks live in the `prepared/` subdirectory as lossless tensors; these
+can be large. Removing them causes the next run to prepare its mask again.
 
 Locks are checked against the actual masked source pixels, clean anchor, prompt,
 steps, window size, model/encoder/VAE graph and model file versions. Changed inputs

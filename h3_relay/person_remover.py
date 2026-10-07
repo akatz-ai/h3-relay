@@ -28,15 +28,43 @@ def window_starts(count: int, window_frames: int = 22) -> list[int]:
 class H3RelayGreenMask:
     @classmethod
     def INPUT_TYPES(cls):
-        return {"required": {"images": ("IMAGE",), "mask": ("MASK",),
-                "expand_pixels": ("INT", {"default": 5, "min": 0, "max": 64})}}
+        return {"required": {"images": ("IMAGE", {"lazy": True}), "mask": ("MASK", {"lazy": True}),
+                "expand_pixels": ("INT", {"default": 5, "min": 0, "max": 64})},
+                "hidden": {"unique_id": "UNIQUE_ID", "extra_pnginfo": "EXTRA_PNGINFO",
+                           "execution_prompt": "PROMPT"}}
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "apply"
     CATEGORY = "H3 Relay/person remover"
 
-    def apply(self, images, mask, expand_pixels):
+    @classmethod
+    def IS_CHANGED(cls, expand_pixels=5, execution_prompt=None, unique_id=None, **kwargs):
+        from .removal_inputs import signature
+        # Prepared-mask identity also participates in ComfyUI's cache key.
+        # Unknown mutable upstream graphs must be evaluated normally.
+        return signature(execution_prompt, unique_id, expand_pixels) or float("nan")
+
+    def check_lazy_status(self, images=None, mask=None, expand_pixels=5,
+                          unique_id=None, extra_pnginfo=None, execution_prompt=None):
+        if execution_prompt:
+            from . import removal_cache, removal_inputs
+            scope = removal_cache.scope_key(unique_id, extra_pnginfo)
+            key = removal_inputs.signature(execution_prompt, unique_id, expand_pixels)
+            if removal_inputs.available(scope, key):
+                return []
+        return [k for k, v in (("images", images), ("mask", mask)) if v is None]
+
+    def apply(self, images, mask, expand_pixels, unique_id=None, extra_pnginfo=None, execution_prompt=None):
         import torch
         import torch.nn.functional as F
+        key = None
+        if execution_prompt:
+            from . import removal_cache, removal_inputs
+            scope = removal_cache.scope_key(unique_id, extra_pnginfo)
+            key = removal_inputs.signature(execution_prompt, unique_id, expand_pixels)
+            if removal_inputs.available(scope, key):
+                import logging
+                logging.info("H3 Person Remover: restored prepared mask %s; SAM inputs skipped", key)
+                return (removal_inputs.load(scope, key),)
         if tuple(mask.shape) != tuple(images.shape[:3]):
             raise ValueError("Provide one aligned mask per source frame at the same resolution")
         mask = mask.to(device=images.device) > 0.5
@@ -45,6 +73,8 @@ class H3RelayGreenMask:
                                 stride=1, padding=expand_pixels).squeeze(1) > 0
         result = images.clone()
         result[mask] = torch.tensor([0., 1., 0.], device=images.device, dtype=images.dtype)
+        if key:
+            removal_inputs.save(scope, key, result)
         return (result,)
 
 
