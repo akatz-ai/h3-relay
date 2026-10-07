@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Use native SAM3 text conditioning for Person Remover target selection.
+- Add guided 17n + 5 window sizes (22–362 frames; default 22) and incremental
+  hover-to-play preview cards with scoped cancellation and reconnect recovery.
+
 - Add Person Remover V1 source-aligned editing: automatic 22-frame windows,
   generated boundary references, 18-frame AV history and exact overlap trimming.
 - Add strict green-mask preparation and a native SAM3 workflow with grouped

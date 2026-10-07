@@ -11,9 +11,10 @@ background while following the input video's timing and camera movement.
 - A clean version of **source frame zero**, with the person removed. Keep its
   exact resolution and framing. Create this externally with an image editor,
   ChatGPT ImageGen, Qwen Image Edit, or another method.
-- Positive and negative pixel coordinates selecting the person in frame zero.
-  The two Text (Multiline) nodes feed native SAM3 Detect. Each list uses
-  `[{"x": 400, "y": 200}]`; replace the example points for your source.
+- A short text description in **CLIP Text Encode**, for example `man in gray shirt`
+  or `woman wearing a red coat`. Native SAM3 detects and tracks that target.
+  The SAM checkpoint includes its text encoder; no point selector or KJ Nodes is needed.
+  If multiple people match, use a more specific description and inspect the mask.
 
 SAM3 Video Track propagates the selection. H3 Relay Green Mask expands each
 binary mask by 5 pixels by default and fills selected pixels with RGB 0/255/0.
@@ -24,16 +25,46 @@ setting the clean-output Save Video node to **Never**, then restore **Always**.
 ## Relay behavior
 
 `H3RelayPersonRemover` expands into native ComfyUI conditioning, sampling and
-VAE nodes. The first window has 22 frames. Each later window selects the clean
+VAE nodes. Select **window_frames** directly on the node. The built-in guide
+shows the valid `17n + 5` choices and duration at 24 fps: 22, 39, 56, 73, 90, 107,
+124, and so on up to 362. The default remains **22 frames (0.92 seconds)**.
+39 frames is 1.63 seconds; 124 is 5.17 seconds. The relay starts at 22 because
+its continuation needs 18 history frames. Five-frame H3 clips cannot supply that history.
+Larger windows use more memory and may remove people less reliably. In the
+77-frame test with 39-frame windows, the opening output still contained the
+person even though timing, continuation and assembly passed. Keep 22 as the
+default; treat larger sizes as experiments and inspect their preview cards.
+
+The first window has the selected length. Each later window selects the clean
 boundary frame from the generated sequence, imports 18 decoded video/audio
 history frames, and edits the next aligned source window. Continuations ask
-native H3 for 39 frames before its history logic shortens the target to 22.
+native H3 for `window_frames + 17` frames; its history logic shortens the
+sampled target to exactly `window_frames`. The history remains 18 frames for all choices.
 
-Usually windows start 21 frames apart. The final full window shifts backward
+Usually windows start `window_frames - 1` frames apart (21 with the default). The final full window shifts backward
 when necessary; all repeated overlap frames are removed. Very short tails are
 padded by repeating their final source frame, then trimmed. Output contains
 exactly the source frame count at 24 fps. For 124 input frames the starts are
 `0, 21, 42, 63, 84, 102`.
+
+## Per-window previews
+
+A small preview video appears on the Person Remover node after each decoded
+window, before the next window proceeds. Cards form a two-column grid and show
+the source-frame span and discarded overlap count. They include the overlapping
+boundary for inspection and omit padded tail frames.
+
+Hover over a card to play its muted loop; move away to pause. On a touch screen,
+tap to toggle playback. **Stop run** interrupts only the run shown by that node
+and leaves completed cards available. Reduce the window size or change the seed,
+then run again. The next run gets a fresh grid; previous preview files remain in
+ComfyUI's temporary directory. The grid shows the rendered seed/window size so
+previous previews are distinguishable from newly edited settings.
+
+Reopening the same workflow on the same server restores its latest cards.
+Previews are temporary H.264 videos capped at 512 pixels; they are for inspection,
+not full-quality exports. Save Video still writes the final assembled output.
+Existing workflows without `window_frames` continue to use 22 frames.
 
 The first clean image is a visual reference; generated frame zero is not
 pixel-locked to that image. Only generated raw frames/audio feed continuation.

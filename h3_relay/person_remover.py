@@ -1,15 +1,27 @@
-"""Source-aligned 22-frame editing with decoded video/audio relay history."""
+"""Source-aligned editing on H3's frame grid, with incremental window previews."""
 from __future__ import annotations
 
+WINDOW_SIZES = tuple(range(22, 363, 17))
 
-def window_starts(count: int) -> list[int]:
+
+def validate_window_size(value) -> int:
+    frames = int(value)
+    if frames not in WINDOW_SIZES:
+        raise ValueError("Window size must be 22, 39, 56, ... 362 frames (17n + 5)")
+    return frames
+
+
+def window_starts(count: int, window_frames: int = 22) -> list[int]:
+    window_frames = validate_window_size(window_frames)
     if count < 1:
         raise ValueError("Source video has no frames")
     starts = [0]
-    while starts[-1] + 22 < count:
-        candidate = min(starts[-1] + 21, count - 22)
+    stride = window_frames - 1
+    while starts[-1] + window_frames < count:
+        candidate = min(starts[-1] + stride, count - window_frames)
         # An 18-frame history needs a boundary at frame 17 or later.
-        starts.append(max(21, candidate))
+        # Retain the original 22-frame scheduling behavior for short tails.
+        starts.append(max(stride, candidate))
     return starts
 
 
@@ -65,17 +77,19 @@ class H3RelayRemovalWindow:
     def INPUT_TYPES(cls):
         return {"required": {"source": ("IMAGE",), "anchor": ("IMAGE",),
                 "start": ("INT", {"default": 0})},
-                "optional": {"previous": ("H3_REMOVAL_STATE",)}}
+                "optional": {"previous": ("H3_REMOVAL_STATE",),
+                             "window_frames": ("INT", {"default": 22})}}
     RETURN_TYPES = ("IMAGE", "IMAGE", "IMAGE", "AUDIO")
     RETURN_NAMES = ("source_window", "anchor", "history_frames", "history_audio")
     FUNCTION = "prepare"
     CATEGORY = "H3 Relay/internal"
 
-    def prepare(self, source, anchor, start, previous=None):
+    def prepare(self, source, anchor, start, previous=None, window_frames=22):
         import torch
-        window = source[start:start + 22]
-        if len(window) < 22:
-            window = torch.cat((window, window[-1:].repeat(22 - len(window), 1, 1, 1)))
+        window_frames = validate_window_size(window_frames)
+        window = source[start:start + window_frames]
+        if len(window) < window_frames:
+            window = torch.cat((window, window[-1:].repeat(window_frames - len(window), 1, 1, 1)))
         if previous is None:
             return window, anchor[:1], anchor[:1], {"waveform": torch.zeros(1, 2, 1), "sample_rate": 48000}
         frames, audio = previous["frames"], previous["audio"]
@@ -92,23 +106,32 @@ class H3RelayRemovalAppend:
     def INPUT_TYPES(cls):
         return {"required": {"frames": ("IMAGE",), "audio": ("AUDIO",),
                 "start": ("INT", {"default": 0}), "source_count": ("INT", {"default": 22})},
-                "optional": {"previous": ("H3_REMOVAL_STATE",)}}
+                "optional": {"previous": ("H3_REMOVAL_STATE",),
+                             "window_frames": ("INT", {"default": 22}),
+                             "preview_run": ("STRING", {"default": ""}),
+                             "window_index": ("INT", {"default": 0})}}
     RETURN_TYPES = ("H3_REMOVAL_STATE", "IMAGE", "AUDIO")
     FUNCTION = "append"
     CATEGORY = "H3 Relay/internal"
 
-    def append(self, frames, audio, start, source_count, previous=None):
+    def append(self, frames, audio, start, source_count, previous=None,
+               window_frames=22, preview_run="", window_index=0):
         import torch
         import torch.nn.functional as F
-        if len(frames) != 22:
-            raise ValueError(f"Expected 22 decoded frames, received {len(frames)}")
+        window_frames = validate_window_size(window_frames)
+        if len(frames) != window_frames:
+            raise ValueError(f"Expected {window_frames} decoded frames, received {len(frames)}")
         rate = int(audio["sample_rate"])
-        end = min(source_count, start + 22)
+        end = min(source_count, start + window_frames)
         retained = 0 if previous is None else len(previous["frames"]) - start
-        if not 0 <= retained < 22:
+        if not 0 <= retained < window_frames:
             raise ValueError("Invalid source-aligned overlap")
+        if preview_run:
+            # This completes before the dependent continuation can start.
+            from .removal_previews import publish_window
+            publish_window(preview_run, window_index, frames[:end - start], start, retained)
         origin_sample = round(start * rate / 24)
-        samples = round((start + 22) * rate / 24) - origin_sample
+        samples = round((start + window_frames) * rate / 24) - origin_sample
         waveform = audio["waveform"][..., :samples]
         waveform = F.pad(waveform, (0, max(0, samples - waveform.shape[-1])))
         first_sample = round((start + retained) * rate / 24) - origin_sample
@@ -139,15 +162,24 @@ class H3RelayPersonRemover:
             "prompt": ("STRING", {"multiline": True, "default": "Remove the green-masked person and reconstruct the background. Preserve the rest of the video, including its camera motion and frame timing."}),
             "seed": ("INT", {"default": 904234, "min": 0, "max": 0xffffffffffffffff}),
             "steps": ("INT", {"default": 20, "min": 1, "max": 100}),
-        }}
+        }, "optional": {
+            "window_frames": ([str(n) for n in WINDOW_SIZES], {
+                "default": "22",
+                "tooltip": "H3 uses 17n + 5 frames at 24 fps: 22 (0.92s), 39 (1.63s), "
+                           "56 (2.33s), 73 (3.04s), 90 (3.75s), 107 (4.46s), 124 (5.17s), "
+                           "up to 362 (15.08s). 22 is the proven removal default. "
+                           "Larger windows need more memory and may remove people less reliably. "
+                           "The relay always carries 18 generated history frames."}),
+        }, "hidden": {"unique_id": "UNIQUE_ID", "extra_pnginfo": "EXTRA_PNGINFO"}}
     RETURN_TYPES = ("IMAGE", "AUDIO")
     RETURN_NAMES = ("clean_frames", "generated_audio")
     FUNCTION = "generate"
     CATEGORY = "H3 Relay/person remover"
 
     def generate(self, model, clip, video_vae, audio_vae, masked_source, clean_first_frame,
-                 fps, prompt, seed, steps):
+                 fps, prompt, seed, steps, window_frames="22", unique_id=None, extra_pnginfo=None):
         from comfy_execution.graph_utils import GraphBuilder
+        window_frames = validate_window_size(window_frames)
         count, height, width, channels = masked_source.shape
         if abs(fps - 24) > 0.001:
             raise ValueError("Person Remover V1 requires a 24 fps source; resample before masking")
@@ -155,17 +187,21 @@ class H3RelayPersonRemover:
             raise ValueError("Use RGB source dimensions divisible by 32")
         if tuple(clean_first_frame.shape[1:]) != (height, width, channels):
             raise ValueError("Clean anchor must match the source resolution and framing")
+        starts = window_starts(count, window_frames)
+        from .removal_previews import begin_run
+        preview_run = begin_run(unique_id, extra_pnginfo, starts, window_frames, count, seed)
         graph = GraphBuilder()
         noise = graph.node("RandomNoise", noise_seed=seed)
         sampler = graph.node("KSamplerSelect", sampler_name="er_sde")
         sigmas = graph.node("BasicScheduler", model=model, scheduler="simple", steps=steps, denoise=1.)
         previous = None
-        for start in window_starts(count):
+        for index, start in enumerate(starts):
             args = {} if previous is None else {"previous": previous.out(0)}
             window = graph.node("H3RelayRemovalWindow", source=masked_source,
-                                anchor=clean_first_frame, start=start, **args)
+                                anchor=clean_first_frame, start=start, window_frames=window_frames, **args)
             ref = graph.node("MiniMaxH3ReferenceToVideo", prompt=prompt, width=width, height=height,
-                             length=22 if previous is None else 39, ref_image_size="match", clip=clip,
+                             length=window_frames if previous is None else window_frames + 17,
+                             ref_image_size="match", clip=clip,
                              **{"ref_images.ref_image_0": window.out(1), "ref_videos.ref_video_0": window.out(0)})
             conditioning, latent = ref.out(0), ref.out(1)
             if previous is not None:
@@ -182,8 +218,10 @@ class H3RelayPersonRemover:
             video = graph.node("VAEDecode", samples=separate.out(0), vae=video_vae)
             audio = graph.node("VAEDecodeAudio", samples=separate.out(1), vae=audio_vae)
             previous = graph.node("H3RelayRemovalAppend", frames=video.out(0), audio=audio.out(0),
-                                  start=start, source_count=count, **args)
-        return {"result": (previous.out(1), previous.out(2)), "expand": graph.finalize()}
+                                  start=start, source_count=count, window_frames=window_frames,
+                                  preview_run=preview_run, window_index=index, **args)
+        return {"result": (previous.out(1), previous.out(2)), "expand": graph.finalize(),
+                "ui": {"h3_removal_run": [preview_run]}}
 
 
 NODE_CLASS_MAPPINGS = {c.__name__: c for c in (H3RelayGreenMask, H3RelaySourceHistory,

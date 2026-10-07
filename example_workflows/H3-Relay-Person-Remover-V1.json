@@ -1,8 +1,8 @@
 {
-  "id": "81d5e9c2-7b0a-4993-b10b-2c0bff7571d6",
+  "id": "6eacff7a-17e7-444f-8557-19d124c465f7",
   "revision": 0,
-  "last_node_id": 27,
-  "last_link_id": 28,
+  "last_node_id": 26,
+  "last_link_id": 29,
   "nodes": [
     {
       "id": 1,
@@ -71,7 +71,7 @@
         120
       ],
       "flags": {},
-      "order": 13,
+      "order": 11,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -133,7 +133,7 @@
         120
       ],
       "flags": {},
-      "order": 15,
+      "order": 14,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -212,7 +212,7 @@
           "pos": null,
           "slot_index": null,
           "links": [
-            17
+            18
           ]
         }
       ],
@@ -269,7 +269,7 @@
           "pos": null,
           "slot_index": null,
           "links": [
-            18
+            19
           ]
         }
       ],
@@ -322,7 +322,7 @@
           "pos": null,
           "slot_index": null,
           "links": [
-            19
+            20
           ]
         }
       ],
@@ -405,7 +405,7 @@
         120
       ],
       "flags": {},
-      "order": 14,
+      "order": 12,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -440,7 +440,7 @@
           "slot_index": null,
           "links": [
             5,
-            10,
+            9,
             14
           ]
         },
@@ -473,9 +473,9 @@
           "pos": null,
           "slot_index": null,
           "links": [
-            22,
-            24,
-            27
+            23,
+            25,
+            28
           ]
         },
         {
@@ -525,7 +525,7 @@
         120
       ],
       "flags": {},
-      "order": 17,
+      "order": 16,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -559,7 +559,7 @@
           "pos": null,
           "slot_index": null,
           "links": [
-            16
+            17
           ]
         }
       ],
@@ -606,7 +606,7 @@
           "pos": null,
           "slot_index": null,
           "links": [
-            21
+            22
           ]
         },
         {
@@ -641,7 +641,7 @@
     },
     {
       "id": 11,
-      "type": "UNETLoader",
+      "type": "CheckpointLoaderSimple",
       "pos": [
         900,
         0
@@ -671,28 +671,57 @@
           "slot_index": null,
           "links": [
             6,
-            11
+            10
           ]
+        },
+        {
+          "color_off": null,
+          "color_on": null,
+          "dir": null,
+          "label": null,
+          "locked": null,
+          "name": "CLIP",
+          "nameLocked": null,
+          "removable": null,
+          "shape": null,
+          "type": "CLIP",
+          "pos": null,
+          "slot_index": null,
+          "links": [
+            16
+          ]
+        },
+        {
+          "color_off": null,
+          "color_on": null,
+          "dir": null,
+          "label": null,
+          "locked": null,
+          "name": "VAE",
+          "nameLocked": null,
+          "removable": null,
+          "shape": null,
+          "type": "VAE",
+          "pos": null,
+          "slot_index": null,
+          "links": null
         }
       ],
       "properties": {
-        "Node name for S&R": "UNETLoader",
+        "Node name for S&R": "CheckpointLoaderSimple",
         "models": [
           {
-            "name": "sam3.1_multiplex.pt",
-            "url": "https://huggingface.co/facebook/sam3.1/resolve/main/sam3.1_multiplex.pt",
-            "directory": "diffusion_models"
+            "name": "sam3.1_multiplex_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/sam3.1/resolve/main/checkpoints/sam3.1_multiplex_fp16.safetensors",
+            "directory": "checkpoints"
           }
-        ],
-        "cnr_id": "comfy-core"
+        ]
       },
       "widgets_values": [
-        "sam3.1_multiplex.pt",
-        "default"
+        "sam3.1_multiplex_fp16.safetensors"
       ],
       "widgets_values_named": {
-        "unet_name": "sam3.1_multiplex.pt",
-        "weight_dtype": "default"
+        "ckpt_name": "sam3.1_multiplex_fp16.safetensors"
       }
     },
     {
@@ -707,7 +736,7 @@
         120
       ],
       "flags": {},
-      "order": 16,
+      "order": 15,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -769,7 +798,7 @@
         206
       ],
       "flags": {},
-      "order": 18,
+      "order": 17,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -813,7 +842,7 @@
           "shape": 7,
           "type": "CONDITIONING",
           "pos": null,
-          "link": null
+          "link": 8
         },
         {
           "color_off": null,
@@ -841,7 +870,7 @@
           "shape": 7,
           "type": "STRING",
           "pos": null,
-          "link": 8
+          "link": null
         },
         {
           "color_off": null,
@@ -855,7 +884,7 @@
           "shape": 7,
           "type": "STRING",
           "pos": null,
-          "link": 9
+          "link": null
         }
       ],
       "outputs": [
@@ -873,7 +902,7 @@
           "pos": null,
           "slot_index": null,
           "links": [
-            12
+            11
           ]
         },
         {
@@ -918,7 +947,7 @@
         166
       ],
       "flags": {},
-      "order": 19,
+      "order": 18,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -934,7 +963,7 @@
           "shape": null,
           "type": "IMAGE",
           "pos": null,
-          "link": 10
+          "link": 9
         },
         {
           "color_off": null,
@@ -948,7 +977,7 @@
           "shape": null,
           "type": "MODEL",
           "pos": null,
-          "link": 11
+          "link": 10
         },
         {
           "color_off": null,
@@ -962,7 +991,7 @@
           "shape": 7,
           "type": "MASK",
           "pos": null,
-          "link": 12
+          "link": 11
         },
         {
           "color_off": null,
@@ -976,7 +1005,7 @@
           "shape": 7,
           "type": "CONDITIONING",
           "pos": null,
-          "link": null
+          "link": 12
         }
       ],
       "outputs": [
@@ -1024,7 +1053,7 @@
         120
       ],
       "flags": {},
-      "order": 20,
+      "order": 19,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1084,7 +1113,7 @@
         120
       ],
       "flags": {},
-      "order": 21,
+      "order": 20,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1132,8 +1161,8 @@
           "pos": null,
           "slot_index": null,
           "links": [
-            20,
-            26
+            21,
+            27
           ]
         }
       ],
@@ -1150,7 +1179,7 @@
     },
     {
       "id": 17,
-      "type": "PrimitiveStringMultiline",
+      "type": "CLIPTextEncode",
       "pos": [
         420,
         0
@@ -1160,10 +1189,25 @@
         200
       ],
       "flags": {},
-      "order": 7,
+      "order": 13,
       "mode": 0,
       "showAdvanced": null,
-      "inputs": [],
+      "inputs": [
+        {
+          "color_off": null,
+          "color_on": null,
+          "dir": null,
+          "label": null,
+          "locked": null,
+          "name": "clip",
+          "nameLocked": null,
+          "removable": null,
+          "shape": null,
+          "type": "CLIP",
+          "pos": null,
+          "link": 16
+        }
+      ],
       "outputs": [
         {
           "color_off": null,
@@ -1171,90 +1215,44 @@
           "dir": null,
           "label": null,
           "locked": null,
-          "name": "STRING",
+          "name": "CONDITIONING",
           "nameLocked": null,
           "removable": null,
           "shape": null,
-          "type": "STRING",
+          "type": "CONDITIONING",
           "pos": null,
           "slot_index": null,
           "links": [
-            8
+            8,
+            12
           ]
         }
       ],
       "properties": {
-        "Node name for S&R": "PrimitiveStringMultiline"
+        "Node name for S&R": "CLIPTextEncode"
       },
       "widgets_values": [
-        "[{\"x\": 400, \"y\": 200}]"
+        "man in gray shirt"
       ],
       "widgets_values_named": {
-        "value": "[{\"x\": 400, \"y\": 200}]"
+        "text": "man in gray shirt"
       },
       "color": "#254c38",
       "bgcolor": "#172e24"
     },
     {
       "id": 18,
-      "type": "PrimitiveStringMultiline",
-      "pos": [
-        420,
-        200
-      ],
-      "size": [
-        400,
-        200
-      ],
-      "flags": {},
-      "order": 8,
-      "mode": 0,
-      "showAdvanced": null,
-      "inputs": [],
-      "outputs": [
-        {
-          "color_off": null,
-          "color_on": null,
-          "dir": null,
-          "label": null,
-          "locked": null,
-          "name": "STRING",
-          "nameLocked": null,
-          "removable": null,
-          "shape": null,
-          "type": "STRING",
-          "pos": null,
-          "slot_index": null,
-          "links": [
-            9
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "PrimitiveStringMultiline"
-      },
-      "widgets_values": [
-        "[]"
-      ],
-      "widgets_values_named": {
-        "value": "[]"
-      },
-      "color": "#254c38",
-      "bgcolor": "#172e24"
-    },
-    {
-      "id": 19,
       "type": "H3RelayPersonRemover",
       "pos": [
         2320,
         100
       ],
       "size": [
-        400,
-        440
+        550,
+        800
       ],
       "flags": {},
-      "order": 22,
+      "order": 21,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1270,7 +1268,7 @@
           "shape": null,
           "type": "MODEL",
           "pos": null,
-          "link": 16
+          "link": 17
         },
         {
           "color_off": null,
@@ -1284,7 +1282,7 @@
           "shape": null,
           "type": "CLIP",
           "pos": null,
-          "link": 17
+          "link": 18
         },
         {
           "color_off": null,
@@ -1298,7 +1296,7 @@
           "shape": null,
           "type": "VAE",
           "pos": null,
-          "link": 18
+          "link": 19
         },
         {
           "color_off": null,
@@ -1312,7 +1310,7 @@
           "shape": null,
           "type": "VAE",
           "pos": null,
-          "link": 19
+          "link": 20
         },
         {
           "color_off": null,
@@ -1326,7 +1324,7 @@
           "shape": null,
           "type": "IMAGE",
           "pos": null,
-          "link": 20
+          "link": 21
         },
         {
           "color_off": null,
@@ -1340,7 +1338,7 @@
           "shape": null,
           "type": "IMAGE",
           "pos": null,
-          "link": 21
+          "link": 22
         },
         {
           "color_off": null,
@@ -1356,7 +1354,7 @@
           "widget": {
             "name": "fps"
           },
-          "link": 22
+          "link": 23
         }
       ],
       "outputs": [
@@ -1374,7 +1372,7 @@
           "pos": null,
           "slot_index": null,
           "links": [
-            23
+            24
           ]
         },
         {
@@ -1402,21 +1400,23 @@
         "Remove the green-masked person and reconstruct the background. Preserve the rest of the video, including its camera motion and frame timing.",
         904234,
         "fixed",
-        20
+        20,
+        "22"
       ],
       "widgets_values_named": {
         "fps": 24,
         "prompt": "Remove the green-masked person and reconstruct the background. Preserve the rest of the video, including its camera motion and frame timing.",
         "seed": 904234,
         "control_after_generate": "fixed",
-        "steps": 20
+        "steps": 20,
+        "window_frames": "22"
       }
     },
     {
-      "id": 20,
+      "id": 19,
       "type": "CreateVideo",
       "pos": [
-        2850,
+        3000,
         100
       ],
       "size": [
@@ -1424,7 +1424,7 @@
         150
       ],
       "flags": {},
-      "order": 24,
+      "order": 23,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1440,7 +1440,7 @@
           "shape": null,
           "type": "IMAGE",
           "pos": null,
-          "link": 23
+          "link": 24
         },
         {
           "color_off": null,
@@ -1470,7 +1470,7 @@
           "widget": {
             "name": "fps"
           },
-          "link": 24
+          "link": 25
         }
       ],
       "outputs": [
@@ -1488,7 +1488,7 @@
           "pos": null,
           "slot_index": null,
           "links": [
-            25
+            26
           ]
         }
       ],
@@ -1509,10 +1509,10 @@
       }
     },
     {
-      "id": 21,
+      "id": 20,
       "type": "SaveVideo",
       "pos": [
-        3250,
+        3450,
         100
       ],
       "size": [
@@ -1520,7 +1520,7 @@
         154
       ],
       "flags": {},
-      "order": 26,
+      "order": 25,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1536,7 +1536,7 @@
           "shape": null,
           "type": "VIDEO",
           "pos": null,
-          "link": 25
+          "link": 26
         }
       ],
       "outputs": [
@@ -1577,18 +1577,18 @@
       "bgcolor": "#361d24"
     },
     {
-      "id": 22,
+      "id": 21,
       "type": "CreateVideo",
       "pos": [
-        2320,
-        800
+        3000,
+        780
       ],
       "size": [
         350,
         150
       ],
       "flags": {},
-      "order": 23,
+      "order": 22,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1604,7 +1604,7 @@
           "shape": null,
           "type": "IMAGE",
           "pos": null,
-          "link": 26
+          "link": 27
         },
         {
           "color_off": null,
@@ -1634,7 +1634,7 @@
           "widget": {
             "name": "fps"
           },
-          "link": 27
+          "link": 28
         }
       ],
       "outputs": [
@@ -1652,7 +1652,7 @@
           "pos": null,
           "slot_index": null,
           "links": [
-            28
+            29
           ]
         }
       ],
@@ -1673,18 +1673,18 @@
       }
     },
     {
-      "id": 23,
+      "id": 22,
       "type": "SaveVideo",
       "pos": [
-        2850,
-        800
+        3450,
+        780
       ],
       "size": [
         350,
         154
       ],
       "flags": {},
-      "order": 25,
+      "order": 24,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [
@@ -1700,7 +1700,7 @@
           "shape": null,
           "type": "VIDEO",
           "pos": null,
-          "link": 28
+          "link": 29
         }
       ],
       "outputs": [
@@ -1741,7 +1741,7 @@
       "bgcolor": "#361d24"
     },
     {
-      "id": 24,
+      "id": 23,
       "type": "MarkdownNote",
       "pos": [
         0,
@@ -1752,23 +1752,23 @@
         340
       ],
       "flags": {},
-      "order": 9,
+      "order": 7,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [],
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "# Person Remover V1\n\nSupply a **24 fps source video** and a **clean version of its first frame**, with identical size and framing. Make that clean frame externally with an image editor, ChatGPT ImageGen, or Qwen Image Edit.\n\nChoose the person using positive / negative pixel coordinates below. SAM tracks that selection, expands the mask by 5 px, and fills it green. Check the mask preview before trusting a removal.\n\n**Start with a short, single-shot clip.** Dimensions must be divisible by 32. The demonstrated runs use roughly 5-second clips. Camera cuts, hands, moving screens, shadows and disocclusions can still cause artifacts. The clean frame is a visual reference, not an exact pixel lock.\n\nGreen nodes are user inputs. Red nodes save outputs. Original node names are retained."
+        "# Person Remover V1\n\nSupply a **24 fps source video** and a **clean version of its first frame**, with identical size and framing. Make that clean frame externally with an image editor, ChatGPT ImageGen, or Qwen Image Edit.\n\nDescribe the person in CLIP Text Encode below, for example **man in gray shirt**. Native SAM3 uses that text to detect the target. SAM tracks that selection, expands the mask by 5 px, and fills it green. Check the mask preview before trusting a removal.\n\n**Start with a short, single-shot clip.** Dimensions must be divisible by 32. The demonstrated runs use roughly 5-second clips. Camera cuts, hands, moving screens, shadows and disocclusions can still cause artifacts. The clean frame is a visual reference, not an exact pixel lock.\n\nGreen nodes are user inputs. Red nodes save outputs. Original node names are retained."
       ],
       "widgets_values_named": {
-        "text": "# Person Remover V1\n\nSupply a **24 fps source video** and a **clean version of its first frame**, with identical size and framing. Make that clean frame externally with an image editor, ChatGPT ImageGen, or Qwen Image Edit.\n\nChoose the person using positive / negative pixel coordinates below. SAM tracks that selection, expands the mask by 5 px, and fills it green. Check the mask preview before trusting a removal.\n\n**Start with a short, single-shot clip.** Dimensions must be divisible by 32. The demonstrated runs use roughly 5-second clips. Camera cuts, hands, moving screens, shadows and disocclusions can still cause artifacts. The clean frame is a visual reference, not an exact pixel lock.\n\nGreen nodes are user inputs. Red nodes save outputs. Original node names are retained."
+        "text": "# Person Remover V1\n\nSupply a **24 fps source video** and a **clean version of its first frame**, with identical size and framing. Make that clean frame externally with an image editor, ChatGPT ImageGen, or Qwen Image Edit.\n\nDescribe the person in CLIP Text Encode below, for example **man in gray shirt**. Native SAM3 uses that text to detect the target. SAM tracks that selection, expands the mask by 5 px, and fills it green. Check the mask preview before trusting a removal.\n\n**Start with a short, single-shot clip.** Dimensions must be divisible by 32. The demonstrated runs use roughly 5-second clips. Camera cuts, hands, moving screens, shadows and disocclusions can still cause artifacts. The clean frame is a visual reference, not an exact pixel lock.\n\nGreen nodes are user inputs. Red nodes save outputs. Original node names are retained."
       },
       "color": "#432",
       "bgcolor": "#653"
     },
     {
-      "id": 25,
+      "id": 24,
       "type": "MarkdownNote",
       "pos": [
         0,
@@ -1779,23 +1779,23 @@
         260
       ],
       "flags": {},
-      "order": 10,
+      "order": 8,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [],
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## Select the person\n\nPositive coordinates: points **inside** the person. Negative coordinates: nearby objects to preserve. Format: `[{\"x\": 400, \"y\": 200}]`. Coordinates are source-image pixels. Replace the example points for your clip.\n\nThe first source frame feeds SAM automatically. Inspect the saved green-mask preview for missing hands, hair or a second person. Expand pixels starts at **5**; more expansion hides more edge pixels but asks H3 to reconstruct more background.\n\nTo preview only: set the clean-output Save Video node to Never; queue the mask output, then restore the clean output to Always."
+        "## Describe the person\n\nUse a short identifying phrase in the green CLIP Text Encode node: **man in gray shirt**, **woman wearing a red coat**, or **person**. The SAM checkpoint supplies its own text encoder. No point selector or KJ Nodes is required. If several people match, make the description more specific.\n\nThe first source frame feeds SAM automatically. Inspect the saved green-mask preview for missing hands, hair or a second person. Expand pixels starts at **5**; more expansion hides more edge pixels but asks H3 to reconstruct more background.\n\nTo preview only: set the clean-output Save Video node to Never; queue the mask output, then restore the clean output to Always."
       ],
       "widgets_values_named": {
-        "text": "## Select the person\n\nPositive coordinates: points **inside** the person. Negative coordinates: nearby objects to preserve. Format: `[{\"x\": 400, \"y\": 200}]`. Coordinates are source-image pixels. Replace the example points for your clip.\n\nThe first source frame feeds SAM automatically. Inspect the saved green-mask preview for missing hands, hair or a second person. Expand pixels starts at **5**; more expansion hides more edge pixels but asks H3 to reconstruct more background.\n\nTo preview only: set the clean-output Save Video node to Never; queue the mask output, then restore the clean output to Always."
+        "text": "## Describe the person\n\nUse a short identifying phrase in the green CLIP Text Encode node: **man in gray shirt**, **woman wearing a red coat**, or **person**. The SAM checkpoint supplies its own text encoder. No point selector or KJ Nodes is required. If several people match, make the description more specific.\n\nThe first source frame feeds SAM automatically. Inspect the saved green-mask preview for missing hands, hair or a second person. Expand pixels starts at **5**; more expansion hides more edge pixels but asks H3 to reconstruct more background.\n\nTo preview only: set the clean-output Save Video node to Never; queue the mask output, then restore the clean output to Always."
       },
       "color": "#432",
       "bgcolor": "#653"
     },
     {
-      "id": 26,
+      "id": 25,
       "type": "MarkdownNote",
       "pos": [
         1050,
@@ -1806,23 +1806,23 @@
         340
       ],
       "flags": {},
-      "order": 11,
+      "order": 9,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [],
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## Model downloads and folders\n\n[H3 Ref2VA INT8 ConvRot](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors) \u2192 `ComfyUI/models/diffusion_models/`\n\n[Qwen3VL NVFP4 AWQ](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors) \u2192 `ComfyUI/models/text_encoders/`\n\n[Video VAE](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/vae/minimax_h3_video_vae_fp16.safetensors) and [Audio VAE](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/vae/minimax_h3_audio_vae_fp32.safetensors) \u2192 `ComfyUI/models/vae/`\n\n[SAM 3.1](https://huggingface.co/facebook/sam3.1/blob/main/sam3.1_multiplex.pt) \u2192 `ComfyUI/models/diffusion_models/` (request repository access if prompted; select `sam3.1_multiplex.pt`).\n\nPerson Remover V1 \u2192 `ComfyUI/models/loras/H3-Person-Remover-V1.safetensors`. The release folder includes the LoRA and SHA256.\n\nInstall the accompanying **H3 Relay** build into `ComfyUI/custom_nodes/h3-relay`, then restart ComfyUI. Use a current ComfyUI with native H3 and SAM3 support. Models retain their upstream licenses."
+        "## Model downloads and folders\n\n[H3 Ref2VA INT8 ConvRot](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors) \u2192 `ComfyUI/models/diffusion_models/`\n\n[Qwen3VL NVFP4 AWQ](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors) \u2192 `ComfyUI/models/text_encoders/`\n\n[Video VAE](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/vae/minimax_h3_video_vae_fp16.safetensors) and [Audio VAE](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/vae/minimax_h3_audio_vae_fp32.safetensors) \u2192 `ComfyUI/models/vae/`\n\n[SAM 3.1 with text encoder](https://huggingface.co/Comfy-Org/sam3.1/blob/main/checkpoints/sam3.1_multiplex_fp16.safetensors) \u2192 `ComfyUI/models/checkpoints/`. Load Checkpoint supplies SAM model + CLIP from this one file.\n\nPerson Remover V1 \u2192 `ComfyUI/models/loras/H3-Person-Remover-V1.safetensors`. The release folder includes the LoRA and SHA256.\n\nInstall the accompanying **H3 Relay** build into `ComfyUI/custom_nodes/h3-relay`, then restart ComfyUI. Use a current ComfyUI with native H3 and SAM3 support. Models retain their upstream licenses."
       ],
       "widgets_values_named": {
-        "text": "## Model downloads and folders\n\n[H3 Ref2VA INT8 ConvRot](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors) \u2192 `ComfyUI/models/diffusion_models/`\n\n[Qwen3VL NVFP4 AWQ](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors) \u2192 `ComfyUI/models/text_encoders/`\n\n[Video VAE](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/vae/minimax_h3_video_vae_fp16.safetensors) and [Audio VAE](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/vae/minimax_h3_audio_vae_fp32.safetensors) \u2192 `ComfyUI/models/vae/`\n\n[SAM 3.1](https://huggingface.co/facebook/sam3.1/blob/main/sam3.1_multiplex.pt) \u2192 `ComfyUI/models/diffusion_models/` (request repository access if prompted; select `sam3.1_multiplex.pt`).\n\nPerson Remover V1 \u2192 `ComfyUI/models/loras/H3-Person-Remover-V1.safetensors`. The release folder includes the LoRA and SHA256.\n\nInstall the accompanying **H3 Relay** build into `ComfyUI/custom_nodes/h3-relay`, then restart ComfyUI. Use a current ComfyUI with native H3 and SAM3 support. Models retain their upstream licenses."
+        "text": "## Model downloads and folders\n\n[H3 Ref2VA INT8 ConvRot](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors) \u2192 `ComfyUI/models/diffusion_models/`\n\n[Qwen3VL NVFP4 AWQ](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors) \u2192 `ComfyUI/models/text_encoders/`\n\n[Video VAE](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/vae/minimax_h3_video_vae_fp16.safetensors) and [Audio VAE](https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/vae/minimax_h3_audio_vae_fp32.safetensors) \u2192 `ComfyUI/models/vae/`\n\n[SAM 3.1 with text encoder](https://huggingface.co/Comfy-Org/sam3.1/blob/main/checkpoints/sam3.1_multiplex_fp16.safetensors) \u2192 `ComfyUI/models/checkpoints/`. Load Checkpoint supplies SAM model + CLIP from this one file.\n\nPerson Remover V1 \u2192 `ComfyUI/models/loras/H3-Person-Remover-V1.safetensors`. The release folder includes the LoRA and SHA256.\n\nInstall the accompanying **H3 Relay** build into `ComfyUI/custom_nodes/h3-relay`, then restart ComfyUI. Use a current ComfyUI with native H3 and SAM3 support. Models retain their upstream licenses."
       },
       "color": "#432",
       "bgcolor": "#653"
     },
     {
-      "id": 27,
+      "id": 26,
       "type": "MarkdownNote",
       "pos": [
         2320,
@@ -1833,17 +1833,17 @@
         340
       ],
       "flags": {},
-      "order": 12,
+      "order": 10,
       "mode": 0,
       "showAdvanced": null,
       "inputs": [],
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## Automatic relay\n\nThe node edits **22 source frames at a time**. Each continuation uses the generated boundary frame as its image reference and the preceding **18 generated video/audio frames** as history. Repeated overlap frames are discarded. The final window shifts or pads as needed, then trims to the source frame count.\n\nDefaults: **20 steps, er_sde, simple, CFG 1, seed 904234**, video/audio sigma shift **12 / 3**, LoRA strength **1.0**. No Turbo or VFX adapter. Change strength on Load LoRA; keep the default prompt for a first test.\n\nGenerated audio is used internally for continuity. The clean output is **silent** by default. Connect source audio from Get Video Components to Create Video if you want the original soundtrack. Removing someone visually does not remove their voice.\n\nThis graph regenerates the full scene. Review motion, background detail, mask remnants and window seams."
+        "## Automatic relay\n\nChoose **window_frames** on the Person Remover node. H3 uses **17n + 5** frames: **22, 39, 56, 73, 90, 107, 124\u2026362**. At 24 fps, 22 = 0.92s, 39 = 1.63s and 124 = 5.17s. **22 is the proven default.** Larger windows need more memory and may drift. Each continuation uses the generated boundary frame as its image reference and the preceding **18 generated video/audio frames** as history. Repeated overlap frames are discarded. The final window shifts or pads as needed, then trims to the source frame count.\n\nDefaults: **20 steps, er_sde, simple, CFG 1, seed 904234**, video/audio sigma shift **12 / 3**, LoRA strength **1.0**. No Turbo or VFX adapter. Change strength on Load LoRA; keep the default prompt for a first test.\n\nGenerated audio is used internally for continuity. The clean output is **silent** by default. Connect source audio from Get Video Components to Create Video if you want the original soundtrack. Removing someone visually does not remove their voice.\n\nEach finished window appears as a preview card on the Person Remover node before the next window proceeds. Hover to play (tap on touch screens). **Stop run** interrupts only that render and keeps completed previews. Change the window size or seed, then run again. Preview files are temporary. This graph regenerates the full scene; inspect motion, mask remnants and seams."
       ],
       "widgets_values_named": {
-        "text": "## Automatic relay\n\nThe node edits **22 source frames at a time**. Each continuation uses the generated boundary frame as its image reference and the preceding **18 generated video/audio frames** as history. Repeated overlap frames are discarded. The final window shifts or pads as needed, then trims to the source frame count.\n\nDefaults: **20 steps, er_sde, simple, CFG 1, seed 904234**, video/audio sigma shift **12 / 3**, LoRA strength **1.0**. No Turbo or VFX adapter. Change strength on Load LoRA; keep the default prompt for a first test.\n\nGenerated audio is used internally for continuity. The clean output is **silent** by default. Connect source audio from Get Video Components to Create Video if you want the original soundtrack. Removing someone visually does not remove their voice.\n\nThis graph regenerates the full scene. Review motion, background detail, mask remnants and window seams."
+        "text": "## Automatic relay\n\nChoose **window_frames** on the Person Remover node. H3 uses **17n + 5** frames: **22, 39, 56, 73, 90, 107, 124\u2026362**. At 24 fps, 22 = 0.92s, 39 = 1.63s and 124 = 5.17s. **22 is the proven default.** Larger windows need more memory and may drift. Each continuation uses the generated boundary frame as its image reference and the preceding **18 generated video/audio frames** as history. Repeated overlap frames are discarded. The final window shifts or pads as needed, then trims to the source frame count.\n\nDefaults: **20 steps, er_sde, simple, CFG 1, seed 904234**, video/audio sigma shift **12 / 3**, LoRA strength **1.0**. No Turbo or VFX adapter. Change strength on Load LoRA; keep the default prompt for a first test.\n\nGenerated audio is used internally for continuity. The clean output is **silent** by default. Connect source audio from Get Video Components to Create Video if you want the original soundtrack. Removing someone visually does not remove their voice.\n\nEach finished window appears as a preview card on the Person Remover node before the next window proceeds. Hover to play (tap on touch screens). **Stop run** interrupts only that render and keeps completed previews. Change the window size or seed, then run again. Preview files are temporary. This graph regenerates the full scene; inspect motion, mask remnants and seams."
       },
       "color": "#432",
       "bgcolor": "#653"
@@ -1911,19 +1911,11 @@
       17,
       0,
       13,
-      4,
-      "STRING"
+      2,
+      "CONDITIONING"
     ],
     [
       9,
-      18,
-      0,
-      13,
-      5,
-      "STRING"
-    ],
-    [
-      10,
       8,
       0,
       14,
@@ -1931,7 +1923,7 @@
       "IMAGE"
     ],
     [
-      11,
+      10,
       11,
       0,
       14,
@@ -1939,12 +1931,20 @@
       "MODEL"
     ],
     [
-      12,
+      11,
       13,
       0,
       14,
       2,
       "MASK"
+    ],
+    [
+      12,
+      17,
+      0,
+      14,
+      3,
+      "CONDITIONING"
     ],
     [
       13,
@@ -1972,105 +1972,113 @@
     ],
     [
       16,
+      11,
+      1,
+      17,
+      0,
+      "CLIP"
+    ],
+    [
+      17,
       9,
       0,
-      19,
+      18,
       0,
       "MODEL"
     ],
     [
-      17,
+      18,
       4,
       0,
-      19,
+      18,
       1,
       "CLIP"
     ],
     [
-      18,
+      19,
       5,
       0,
-      19,
+      18,
       2,
       "VAE"
     ],
     [
-      19,
+      20,
       6,
       0,
-      19,
+      18,
       3,
       "VAE"
     ],
     [
-      20,
+      21,
       16,
       0,
-      19,
+      18,
       4,
       "IMAGE"
     ],
     [
-      21,
+      22,
       10,
       0,
-      19,
+      18,
       5,
       "IMAGE"
     ],
     [
-      22,
+      23,
       8,
       2,
-      19,
+      18,
       6,
       "FLOAT"
     ],
     [
-      23,
+      24,
+      18,
+      0,
+      19,
+      0,
+      "IMAGE"
+    ],
+    [
+      25,
+      8,
+      2,
+      19,
+      2,
+      "FLOAT"
+    ],
+    [
+      26,
       19,
       0,
       20,
       0,
-      "IMAGE"
-    ],
-    [
-      24,
-      8,
-      2,
-      20,
-      2,
-      "FLOAT"
-    ],
-    [
-      25,
-      20,
-      0,
-      21,
-      0,
       "VIDEO"
     ],
     [
-      26,
+      27,
       16,
       0,
-      22,
+      21,
       0,
       "IMAGE"
     ],
     [
-      27,
+      28,
       8,
       2,
-      22,
+      21,
       2,
       "FLOAT"
     ],
     [
-      28,
-      22,
+      29,
+      21,
       0,
-      23,
+      22,
       0,
       "VIDEO"
     ]
@@ -2119,7 +2127,7 @@
       "bounding": [
         2280,
         40,
-        1480,
+        1650,
         1210
       ],
       "color": "#78484e",
