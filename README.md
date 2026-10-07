@@ -18,6 +18,9 @@ CI runs unit tests and expanded ComfyUI contracts using CPU-only PyTorch,
 without model weights. It does not replace the separate GPU generation and
 audio/video-output validation in the linked record.
 
+The [Person Remover V1 workflow](#person-remover-v1) automates short,
+source-aligned removal clips using a separate LoRA and a clean first frame.
+
 The initial node set is:
 
 - **H3 Relay · H3 Hybrid Model Loader**
@@ -272,6 +275,10 @@ FFmpeg is available on `PATH`, then restart ComfyUI again.
 - A ComfyUI-compatible frame-interpolation checkpoint for interpolation
 - FFmpeg
 
+Person Remover has a separate model list and needs newer native H3/SAM3 nodes;
+see [its requirements](docs/person-remover-v1.md#requirements-and-limits).
+LTX, RIFE, MMH3 Ultimate and the FastH3 VSA runtime are not required for removal.
+
 H3 Relay never edits ComfyUI source files. For ComfyUI builds that predate
 native H3 history anchors, it installs a guarded process-local packed-layout
 compatibility layer immediately before the first sliding continuation. The
@@ -368,6 +375,45 @@ The `h3_relay_retheme_v1` spec contains `run_name`, `output_filename`,
 reference-loader definitions. Each reference definition names its target input
 (`reference_image_1`, `reference_image_2`, or `reference_image_3`) and may set
 its loader position and size.
+
+## Person Remover V1
+
+Open [`H3-Relay-Person-Remover-V1.json`](example_workflows/H3-Relay-Person-Remover-V1.json)
+in ComfyUI. It includes visible model loaders, green input nodes, red output
+nodes and Markdown setup notes. This workflow uses standard H3 Ref2VA with the
+Person Remover adapter; it does not use the FastH3 VSA profile.
+
+1. Supply a short, single-shot **24 fps** source video with dimensions divisible
+   by 32, and a clean version of its first frame at the same size and framing.
+   Make the clean frame externally with an image editor or image model.
+2. Load the models listed in [the removal guide](docs/person-remover-v1.md#requirements-and-limits)
+   and describe the target in **CLIP Text Encode**. Native SAM3 detects and
+   tracks that person. Inspect the green mask before rendering H3.
+3. Start with **B2000 LoRA strength 1, 12 steps and 22-frame windows**. The graph
+   uses er_sde / simple, CFG 1 and native **Select CLIP Device → gpu:0** for Qwen.
+   It automatically carries generated boundary anchors and 18 frames of video
+   and audio history, trims overlaps and preserves the source frame count.
+4. Review each completed window in the preview grid. Hover to play, or tap on
+   touch screens. **Lock** preserves the prefix through that card. **Reroll**
+   preserves earlier windows and rebuilds the selected window onward; enter a
+   seed first to use that exact value, or leave it unchanged for a fresh seed.
+
+Exact generated frames/audio and the prepared green-masked source persist in
+`ComfyUI/output/__h3_removal_cache/`. Unchanged rerolls skip SAM detection and
+tracking, including after a server restart. Source or mask-setting changes
+prepare a new mask; incompatible locked windows must be unlocked. Cache files
+stay on the serving machine and are not included in saved workflow JSON.
+
+The adapter is separate from this code repository; its public model release is
+pending. The workflow expects `models/loras/H3-Person-Remover-V1.safetensors`.
+See the guide for the B2000 checkpoint identity and all other model links.
+
+The clean output is silent by default. Original audio can be connected to the
+final Create Video node. This regenerates the whole frame, so background detail,
+motion and window joins still need review. Larger windows are experimental;
+22 frames is the validated default. This uses ordinary ComfyUI graph execution,
+so RAM use grows with clip length. See [the complete removal guide](docs/person-remover-v1.md)
+and [validation evidence](VALIDATION.md#person-remover-v1-2026-10-07-utc).
 
 ## Tests
 

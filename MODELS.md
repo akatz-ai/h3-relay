@@ -3,6 +3,11 @@
 H3 Relay does not redistribute model weights. The reference workflow uses the
 following official model repositories and ComfyUI folders.
 
+The Person Remover workflow uses a different Ref2VA/Qwen/SAM3 combination and a
+separate B2000 adapter. Its [model table](docs/person-remover-v1.md#requirements-and-limits)
+lists the exact filenames and folders. Those removal weights are not bundled
+here, and the adapter's public release is pending.
+
 Installing H3 Relay does not grant permission to use these separately licensed
 models. Review each upstream license and obtain any required authorization
 before downloading, inference, redistribution, or commercial use.

@@ -1,5 +1,38 @@
 # Validation record
 
+## Person Remover V1 (2026-10-07 UTC)
+
+Native H3/SAM3 removal tests used ComfyUI 0.37.0, frontend 1.53.6,
+PyTorch 2.14.0+cu130, an RTX 4090, and the unchanged B2000 adapter identified in
+[the removal guide](docs/person-remover-v1.md). These checks are separate from
+the experimental FastH3/Ultimate validation below.
+
+- Full source-aligned removal completed at 1088x544, 24 fps, 124 frames, using
+  six overlapping 22-frame windows at 20 steps. Full video decode, frame count,
+  lossless export and boundary-frame checks passed.
+- The optimized default completed 43 frames in two windows at 12 steps, with
+  explicit GPU Qwen reference encoding. That single run took about 111 seconds;
+  it is a functional result, not a controlled performance benchmark.
+- Real browser controls rerolled window two of a three-window, 64-frame clip,
+  preserving the first window's exact decoded-frame checkpoint. After a server
+  restart, rerolling window three preserved the first two checkpoints. Changed
+  locked settings were rejected before sampling.
+- A further cold-start reroll skipped SAM detection and tracking, restored the
+  exact prepared green-masked source, preserved both locked windows, and sampled
+  only the third. Decoded mask-preview frames were identical before/after the
+  reroll; the complete output decoded to 64 frames at 24 fps.
+- Tailnet browser checks covered workflow import, API and WebSocket events,
+  incremental cards, hover playback, phone tap controls and Range downloads.
+- A 39-frame-window run completed its timing/assembly checks but left the person
+  visible at the beginning. Larger windows remain experimental; keep 22 as the
+  removal default.
+
+Original prompts, histories, cache/frame hashes, browser checks and outputs are
+retained in the local `person-remover-v1-release-20261006/validation/` artifact
+set. Outputs remain candidates for human review. The graph regenerates the full
+image; successful execution does not guarantee clean background geometry or
+acceptance for training. GPU behavior on other platforms remains unverified.
+
 ## Official comfy-kitchen 0.2.33 release candidate (2026-09-06 UTC)
 
 Linux RTX 4090 functional validation used a fresh Python 3.11 environment,

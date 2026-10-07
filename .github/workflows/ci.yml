@@ -36,6 +36,7 @@ jobs:
       - name: JavaScript syntax
         run: |
           node --check web/staged_assemble.js
+          node --check web/person_remover.js
           node --check scripts/build_example_workflow.mjs
           node --check scripts/upgrade_interpolation_chunks.mjs
           node --check scripts/build_fast_h3_akatz_workflow.mjs

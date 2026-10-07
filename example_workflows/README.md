@@ -1,5 +1,14 @@
 # H3 Relay example workflows
 
+`H3-Relay-Person-Remover-V1.json` is a separate source-video editing workflow.
+It uses standard H3 Ref2VA, a clean first-frame anchor, native SAM3 text targeting,
+and the separate Person Remover B2000 adapter. Start at 12 steps and 22-frame
+windows; its cards provide prefix locks and seeded rerolls, and unchanged
+rerolls reuse a persistent prepared mask. Use a current ComfyUI with native SAM3;
+the older FastH3 runtime pins below apply to the FastH3 examples.
+See [the removal guide](../docs/person-remover-v1.md) for setup, model locations,
+adapter availability and limitations.
+
 The FastH3 examples are arranged from the smallest useful graph to the full
 reference-driven sequence:
 

@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Persist the exact prepared green-masked source and lazily skip SAM detection
+  and tracking on unchanged rerolls, with restart recovery and input checks.
+- Default Person Remover to B2000, 12 steps, 22-frame windows and explicit
+  GPU Qwen encoding in the example workflow.
+- Add per-window seed, prefix locking and reroll controls, with exact disk
+  checkpoints, restart recovery and stale-input rejection.
+- Use native SAM3 text conditioning for Person Remover target selection.
+- Add 17n + 5 window sizes (22–362 frames; default 22), sizing tooltips, and
+  incremental hover-to-play preview cards with reconnect recovery.
+
+- Add Person Remover V1 source-aligned editing: automatic 22-frame windows,
+  generated boundary references, 18-frame AV history and exact overlap trimming.
+- Add strict green-mask preparation and a native SAM3 workflow with grouped
+  inputs, original node names, model links and nearby Markdown instructions.
+
 - Provision pinned ComfyUI and CPU-only PyTorch in CI so VSA/audio unit tests
   and expanded runtime contracts run without a GPU or model downloads.
 - Add a separate, materialization-tested ComfyGit FastH3/Ultimate recipe with
