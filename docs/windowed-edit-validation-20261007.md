@@ -158,3 +158,33 @@ Validation used an isolated workflow UUID, 43 source frames at 800×608,
 
 This proves the master-change and prefix-reuse behavior with real sampling;
 it is not a new visual-quality evaluation of the character-swap model.
+
+## Native Sol toggle (2026-10-08 UTC)
+
+Created `labs-character-swap-turbo8-native-sol` as a separate saved workflow,
+preserving the original. The built-in `BlockSparseAttention` node selects
+`sol-attn`; bypass returns to the original Comfy Kitchen dense model path.
+No runtime restart, package installation or model download was necessary.
+
+The browser serialized both enabled and bypassed graphs correctly. Real GPU
+validation used the same 43-frame source, reference, prompt, master seed 904234,
+eight steps, 800×608 resolution, 22-frame windows and 18-frame history:
+
+- Dense: `08766ebd-2ff3-4616-9398-ad92d1917e12`, success.
+- Sol: `5d869ce1-88cf-417d-b161-57c2f7d108d5`, success.
+- Both runs used the same two derived seeds; switching attention generated new
+  checkpoints for both windows instead of reusing dense pixels.
+- For this short smoke fixture only, min_tokens was 0 to force eligibility.
+  The user-facing saved workflow retains 12288 and 124-frame windows.
+- Verbose runtime logs show dense early steps followed by `sparse producer path`
+  at 8747 tokens in window 1 and 11655 in window 2. The KJ memory patches,
+  source/reference conditioning and generated AV history remained connected.
+- Browser-observed whole-job times were 47.745s dense and 46.953s Sol. This is
+  one short, sequential, unbalanced-loading sample, not a speedup measurement.
+  Neither visual quality parity nor normal 124-frame-window speed is established.
+- Both MP4 outputs and preview manifests were produced. Browser reported no
+  uncaught errors; queue empty after testing.
+- Reopened the saved workflow through the Tailnet userdata route and verified
+  its contents match the source artifact. Sol output played in the browser;
+  both final MP4s support HTTP 206 ranged downloads over Tailnet HTTPS.
+- Evidence: `/home/akatz/dev/artifacts/labs-relay-native-sol-20261008/`.

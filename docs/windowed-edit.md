@@ -108,3 +108,34 @@ Longer windows and different history lengths are experiments. Correct frame
 assembly and successful rendering do not establish character consistency or
 seam quality; review the previews and final video before choosing production
 defaults.
+
+## Native Sol comparison
+
+The separate [native Sol workflow](../development_workflows/labs-character-swap-turbo8-native-sol.json)
+adds ComfyUI's built-in `BlockSparseAttention` (display name **Model Sparse
+Attention**) after the existing model/memory patches. It selects `sol-attn`,
+not SLA or FastH3 VSA; the original Ref2VA weights and both LoRAs are unchanged.
+No additional custom-node pack is required in the tested review environment.
+
+Select the sparse node and toggle **Bypass** (Ctrl+B) for the existing dense
+baseline. Restore **Always** for Sol. The existing **Model Attention Backend**
+continues to supply Comfy Kitchen INT8 attention for dense steps/fallbacks.
+Keep the master seed fixed and the inputs, resolution, duration, window/history,
+sampler and LoRAs identical. Toggling the node or changing its settings invalidates
+window checkpoints; the derived seeds stay the same unless the master changes.
+Use untouched derived seeds for matched tests: changing model settings clears
+manual per-window overrides as part of the normal configuration reset.
+
+The saved defaults are tau 1.3, start 0.2, end 1.0, min_tokens 12288,
+extra_tokens 256, sink_conditioning `exact_kv_and_rows`, and verbose enabled.
+Higher tau makes the approximation sparser. Conditioning keys/values remain
+exact, and target-audio query rows remain dense; this does not guarantee equal
+identity, coherence or audio quality. Short sequences below min_tokens run
+dense. Inspect logs for `BlockSparseAttention: sparse producer path` to verify
+actual use. Compare warm sampler times independently of loading and encoding.
+
+Validated runtime: ComfyUI `2255709aa0be2deade91c7c80cda49d31b73906f`,
+comfy-kitchen 0.2.35 with CUDA Sol support, and the existing pinned KJ MiniMax
+memory patch snapshot. This workflow requires a ComfyUI build exposing the
+native sparse node; older builds may not load it. Successful local execution
+does not establish a cloud speedup or quality parity.
