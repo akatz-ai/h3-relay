@@ -128,3 +128,33 @@ Validation used a separate workflow UUID and a 43-frame sample at 800×608 with
   or uncaught browser errors. Six focused Person Remover tests passed.
 - Queue empty after testing. Graphs, histories, manifests and screenshot are in
   `/home/akatz/dev/artifacts/labs-relay-controls-20261007/`.
+
+## Master seed and deterministic window seeds
+
+The master seed and derivation scheme now participate in the configuration
+identity. Changing the master clears checkpoint selections and per-window seed
+overrides. Each default window seed is derived from the master and window index;
+fixed-master rerolls retain the preceding checkpoint prefix.
+
+Validation used an isolated workflow UUID, 43 source frames at 800×608,
+22-frame windows and 18-frame history in the same Arch review container:
+
+- Initial real GPU run `e64e374f-6f68-4804-ae16-a1eabfa19f06`: both window
+  seeds matched independent SHA256 derivation from master 904234.
+- Unchanged Run `29d6a85c-41f1-4129-aaf5-f694afa58869`: both exact records reused.
+- Last-window reroll `97718dbe-40c2-45a4-83c2-6e0ba7638f58`: first record
+  retained; second regenerated with the requested seed 123456789.
+- Master changed to 904235, Run `f693b869-4861-49c3-8547-b0c2b25f041b`:
+  controls reset, neither record reused, both seeds derived from the new master.
+  The previous per-window override did not survive the master change.
+- Unchanged new-master Run `3bcda330-91fa-4a81-b1a3-a7a054291583`: both new
+  records reused. Browser reload restored both preview cards and reuse controls.
+- All five ComfyUI histories report success. No uncaught browser errors.
+  The screenshot confirms the master-seed widget label and preview status.
+- 25 focused cache, preview, windowed-edit and Person Remover tests passed in
+  the runtime Python environment. Queue empty after testing.
+- Graph, manifests, browser script, histories and screenshot are retained at
+  `/home/akatz/dev/artifacts/labs-relay-master-seed-20261007/`.
+
+This proves the master-change and prefix-reuse behavior with real sampling;
+it is not a new visual-quality evaluation of the character-swap model.

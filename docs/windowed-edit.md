@@ -41,6 +41,33 @@ frame. Larger shortages fail rather than silently shortening output.
 Generated audio is kept internally for AV continuation. To retain the original
 sound, connect prepared source audio directly to the final Create Video node.
 
+## Master seed and window seeds
+
+The node's `seed` input is the **master seed** (the API/socket name stays `seed`
+for saved-workflow compatibility). Each window derives a distinct unsigned
+64-bit default from SHA-256 of `h3-window-seed-v1:<master>:<zero-based index>`.
+The first eight digest bytes are interpreted as a big-endian integer. This
+mapping is stable across runs and server restarts; it does not use Python's
+process-randomized hash or run IDs.
+
+- Same master + inputs/settings: reuse the current window results.
+- Changed master: invalidate the entire window set and all per-window overrides;
+  derive new defaults and regenerate every window on Run.
+- Fixed master + a card's Reroll: keep earlier checkpoints, override that window's
+  seed, and regenerate it and all following windows. Later windows retain their
+  own seeds but receive the updated generated history.
+- Regenerate all: explicitly choose fresh per-window overrides under the current
+  master. A subsequent master change clears those overrides too.
+
+Keep **control after generate = fixed** when refining individual windows. Normal
+ComfyUI increment/randomize controls intentionally change the master for the next
+Run. The preview header identifies the master used for the displayed results,
+and each card reports its actual sampled window seed.
+
+The seed-scheme version is part of checkpoint compatibility. Checkpoints from
+before this master/sub-seed implementation are retained on disk, but the first
+new Run generates a set using the new semantics.
+
 ## Previews and rerolls
 
 This node uses the **same implementation** as Person Remover: `person_remover.js`,

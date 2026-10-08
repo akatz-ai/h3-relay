@@ -151,7 +151,8 @@ class H3RelayWindowedEdit:
             "prompt": ("STRING", {"multiline": True, "default": "Replace the person in <Video 1> with the character in <Picture 1>. Preserve motion, framing and scene."}),
             "window_frames": ([str(v) for v in WINDOWS], {"default": "124", "tooltip": "Generated frames per window, excluding past history: 107 = 4.46s, 124 = 5.17s. Valid H3 sizes are 17n+5."}),
             "history_frames": ([str(v) for v in HISTORY], {"default": "18", "tooltip": "0 = independent windows; 1 = generated boundary only; 18/35/52... = H3 sliding history. Includes one boundary frame. Must be smaller than window_frames."}),
-            "seed": ("INT", {"default": 904234, "min": 0, "max": 0xffffffffffffffff}),
+            "seed": ("INT", {"default": 904234, "min": 0, "max": 0xffffffffffffffff,
+                "tooltip": "Master seed. Each window derives its own seed from this value. Changing it starts fresh windows and clears per-window overrides. Keep fixed to reroll individual windows."}),
             "steps": ("INT", {"default": 8, "min": 1, "max": 100}),
             "cfg": ("FLOAT", {"default": 1., "min": 0., "max": 100.}),
             "sampler_name": ("STRING", {"default": "er_sde"}),
@@ -198,6 +199,7 @@ class H3RelayWindowedEdit:
         starts = [entry["source_start"] for entry in windows]
         cache_scope = removal_cache.scope_key(unique_id, extra_pnginfo)
         settings = {"kind": "windowed_ref_edit_v1", "fps": fps, "prompt": prompt,
+            "master_seed": str(seed), "seed_scheme": removal_cache.SEED_SCHEME,
             "steps": steps, "window_frames": window, "history_frames": history,
             "cfg": cfg, "sampler_name": sampler_name, "scheduler": scheduler, "denoise": denoise,
             "source_audio": None if source_audio is None else {
@@ -229,7 +231,8 @@ class H3RelayWindowedEdit:
             window_controls, cache_scope, config_key, previous_config)
         if controls_reset:
             LOG.info("H3 edit inputs/settings changed: starting fresh windows; old checkpoints retained")
-        choices = removal_cache.plan(window_controls, cache_scope, config_key, starts, window, count, seed)
+        choices = removal_cache.plan(window_controls, cache_scope, config_key, starts, window, count, seed,
+                                     derive_seeds=True)
         preview_run = begin_run(unique_id, extra_pnginfo, starts, window, count, seed,
                                 config_key=config_key, controls_reset=controls_reset)
         graph = GraphBuilder()

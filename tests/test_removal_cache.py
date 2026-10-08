@@ -15,6 +15,34 @@ spec.loader.exec_module(m)
 
 
 class CacheTests(unittest.TestCase):
+    def test_window_seed_derivation_is_stable_distinct_and_bounded(self):
+        self.assertEqual([m.window_seed(904234, i) for i in range(3)],
+                         [1384856719383077662, 2610881700782126544, 16844053075130660878])
+        seeds = [m.window_seed(904234, i) for i in range(100)]
+        self.assertEqual(len(set(seeds)), 100)
+        self.assertTrue(all(0 <= s <= m.MAX_SEED for s in seeds))
+        self.assertTrue(all(m.window_seed(904235, i) != seeds[i] for i in range(100)))
+
+    def test_master_change_resets_overrides_while_same_master_keeps_rerolls(self):
+        def key(master):
+            return m.configuration_key(self.frames, self.frames[:1],
+                {'master_seed': str(master), 'seed_scheme': m.SEED_SCHEME}, {}, '18')
+        original = key(123)
+        record = m.save(self.scope, original, 0, 0, 22, 43,
+                        m.window_seed(123, 0), [], self.frames, self.audio)
+        controls = json.dumps({'config_key': original, 'windows': {
+            '0': {'locked': True, 'record_id': record['record_id'], 'seed': record['seed']},
+            '1': {'seed': '987'}}})
+        unchanged, reset = m.controls_for_configuration(controls, self.scope, key(123))
+        self.assertFalse(reset)
+        choices = m.plan(unchanged, self.scope, original, [0, 21], 22, 43, 123, derive_seeds=True)
+        self.assertEqual(choices[0]['record_id'], record['record_id'])
+        self.assertEqual(choices[1]['seed'], 987)
+        fresh, reset = m.controls_for_configuration(controls, self.scope, key(124))
+        self.assertTrue(reset)
+        choices = m.plan(fresh, self.scope, key(124), [0, 21], 22, 43, 124, derive_seeds=True)
+        self.assertEqual(choices, [{'seed': m.window_seed(124, i), 'record_id': ''} for i in range(2)])
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.directory = Path(self.temp.name)

@@ -220,7 +220,8 @@ class H3RelayPersonRemover:
             "masked_source": ("IMAGE",), "clean_first_frame": ("IMAGE",),
             "fps": ("FLOAT", {"default": 24.}),
             "prompt": ("STRING", {"multiline": True, "default": "Remove the green-masked person and reconstruct the background. Preserve the rest of the video, including its camera motion and frame timing."}),
-            "seed": ("INT", {"default": 904234, "min": 0, "max": 0xffffffffffffffff}),
+            "seed": ("INT", {"default": 904234, "min": 0, "max": 0xffffffffffffffff,
+                "tooltip": "Master seed. Windows derive distinct seeds from it. Changing it clears cached window selections; keep fixed for per-window rerolls."}),
             "steps": ("INT", {"default": 12, "min": 1, "max": 100}),
         }, "optional": {
             "window_frames": ([str(n) for n in WINDOW_SIZES], {
@@ -254,11 +255,13 @@ class H3RelayPersonRemover:
         from . import removal_cache
         cache_scope = removal_cache.scope_key(unique_id, extra_pnginfo)
         config_key = removal_cache.configuration_key(masked_source, clean_first_frame,
-            {"fps": fps, "prompt": prompt, "steps": steps, "window_frames": window_frames},
+            {"fps": fps, "prompt": prompt, "steps": steps, "window_frames": window_frames,
+             "master_seed": str(seed), "seed_scheme": removal_cache.SEED_SCHEME},
             execution_prompt, unique_id)
         window_controls, controls_reset = removal_cache.controls_for_configuration(
             window_controls, cache_scope, config_key)
-        choices = removal_cache.plan(window_controls, cache_scope, config_key, starts, window_frames, count, seed)
+        choices = removal_cache.plan(window_controls, cache_scope, config_key, starts, window_frames, count, seed,
+                                     derive_seeds=True)
         import logging
         logging.info("H3 Person Remover: Qwen encoder load device=%s; locked windows=%d/%d",
                      getattr(getattr(clip, "patcher", None), "load_device", "unknown"),

@@ -94,6 +94,8 @@ function validatedSeed(value) {
 
 function mount(node) {
     if (node._h3RemovalPreview) return;
+    const masterSeed = node.widgets?.find(w => w.name === "seed");
+    if (masterSeed) masterSeed.label = "master seed";
     const root = element("div", "h3-removal-preview");
     const style = document.createElement("style");
     style.textContent = `
@@ -127,7 +129,7 @@ function mount(node) {
     const grid = element("div", "h3-removal-grid");
     grid.append(element("div", "h3-removal-empty", "Each completed window appears here before the next one starts."));
     root.append(style, status, grid, element("div", "h3-removal-hint",
-        "Hover to play · tap on touch screens. Reroll rebuilds this window onward. Run reuses current results; Regenerate all starts with fresh seeds."));
+        "Window seeds derive from the master seed. Change the master to rebuild all windows; keep it fixed to reroll this window onward. Regenerate all creates fresh per-window overrides."));
     const controlWidget = node.widgets?.find(w => w.name === "window_controls");
     if (controlWidget) {
         controlWidget.type = "h3_hidden_controls";
@@ -195,6 +197,7 @@ function render(state, run) {
     state.revision++;
     state.node.properties.h3_removal_preview_run = run.run_id;
     state.progress.textContent = `${run.segments.length}/${run.total} windows · ${run.window_frames}f` +
+        ` · master seed ${run.seed}` +
         (run.status === "complete" ? " · complete" : run.status === "stopped" ? " · stopped" : "") +
         (run.controls_reset ? " · inputs/settings changed — fresh windows" : "");
     for (const segment of run.segments) {

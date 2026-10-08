@@ -9,6 +9,16 @@ import uuid
 
 CACHE_VERSION = 1
 MAX_SEED = 0xffffffffffffffff
+SEED_SCHEME = "h3-window-seed-v1"
+
+
+def window_seed(master_seed, index):
+    """Stable unsigned 64-bit sub-seed; independent of run IDs and Python hash()."""
+    master_seed, index = int(master_seed), int(index)
+    if not 0 <= master_seed <= MAX_SEED or index < 0:
+        raise ValueError("Master seed must be unsigned 64-bit and window index nonnegative")
+    value = f"{SEED_SCHEME}:{master_seed}:{index}".encode("ascii")
+    return int.from_bytes(hashlib.sha256(value).digest()[:8], "big")
 
 
 def root():
@@ -155,7 +165,8 @@ def controls_for_configuration(controls, scope, config_key, previous_config_key=
     return json.dumps(data), changed
 
 
-def plan(controls, scope, config_key, starts, window_frames, source_count, base_seed):
+def plan(controls, scope, config_key, starts, window_frames, source_count, base_seed,
+         derive_seeds=False):
     """Only a contiguous prefix can be locked: later windows depend on earlier ones."""
     if len(controls) > 131072:
         raise ValueError("Too many window controls")
@@ -168,7 +179,8 @@ def plan(controls, scope, config_key, starts, window_frames, source_count, base_
         item = windows.get(str(index), {})
         if not isinstance(item, dict):
             raise ValueError("Invalid window control entry")
-        seed = int(item.get("seed", base_seed))
+        default_seed = window_seed(base_seed, index) if derive_seeds else base_seed
+        seed = int(item.get("seed", default_seed))
         if not 0 <= seed <= MAX_SEED:
             raise ValueError("Window seed must be an unsigned 64-bit integer")
         record_id = item.get("record_id", "") if item.get("locked") else ""

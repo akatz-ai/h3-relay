@@ -72,7 +72,10 @@ Each card has a seed field and **Reroll**. Completed windows are retained
 implicitly; normal Run reuses them when inputs/settings match. Reroll keeps
 all earlier results and rebuilds the selected window and every later window.
 **Regenerate all** generates fresh seeds for all windows and rebuilds everything.
-There are no manual locks to manage.
+There are no manual locks to manage. The node seed is the master: each window
+derives a distinct seed from it. Changing the master clears per-window overrides
+and starts fresh; keep it fixed while rerolling individual windows. See the
+[master seed contract](windowed-edit.md#master-seed-and-window-seeds).
 
 A seed edit is a draft until Reroll is clicked. Enter a different seed to use
 that value; otherwise Reroll chooses a fresh random seed. Use ComfyUI's normal
