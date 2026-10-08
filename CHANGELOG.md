@@ -2,12 +2,20 @@
 
 ## Unreleased
 
+- Add adjustable character-swap windows with reference conditioning, generated
+  AV history, exact source-frame accounting, and per-window previews.
+- Replace manual window locks with automatic checkpoint reuse. Changed inputs
+  start fresh windows; rerolling a window regenerates it and all later windows.
+- Use the master seed for the first window and increment it for later windows;
+  changing the master seed invalidates prior window checkpoints.
+- Add a Native Sol comparison workflow with an explicit bypass control.
+
 - Persist the exact prepared green-masked source and lazily skip SAM detection
   and tracking on unchanged rerolls, with restart recovery and input checks.
 - Default Person Remover to B2000, 12 steps, 22-frame windows and explicit
   GPU Qwen encoding in the example workflow.
-- Add per-window seed, prefix locking and reroll controls, with exact disk
-  checkpoints, restart recovery and stale-input rejection.
+- Add per-window seed and reroll controls, with exact disk checkpoints,
+  restart recovery and automatic stale-input reset.
 - Use native SAM3 text conditioning for Person Remover target selection.
 - Add 17n + 5 window sizes (22–362 frames; default 22), sizing tooltips, and
   incremental hover-to-play preview cards with reconnect recovery.

@@ -223,3 +223,21 @@ and Sol bypassed. All shared API inputs were checked for equality.
 
 This verifies the first-window comparison under matched conditions, not general
 bitwise determinism across devices, software versions or continuation windows.
+
+
+## Main integration without latent experiment (2026-10-08 UTC)
+
+The non-experimental integration uses commit `394f9e7` and retains decoded
+window previews, automatic checkpoint reuse, dependent rerolls, incrementing
+master/window seeds, and the optional Native Sol comparison workflow.
+The latent-history implementation from `cfd2be4` is preserved separately on
+`experiment/character-swap-latent-20261008`; its toggle, graph helpers and UI
+changes are excluded from this integration.
+
+The 71 unit tests passed across the existing worker Python environment (70)
+and hub Node-enabled environment (the workflow-cloning test). The complete
+worker invocation initially reported that test as an error because the GPU
+container has no Node executable; the unchanged test passed on the hub.
+The expanded ComfyUI runtime contract, JavaScript syntax and Git whitespace
+checks passed. Prior matched GPU evidence
+for these exact non-experimental code changes is recorded above.
