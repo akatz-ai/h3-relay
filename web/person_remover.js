@@ -28,17 +28,12 @@ function setControls(state, data) {
 function updateButtons(state) {
     const windows = controls(state).windows || {};
     const busy = state.pending || state.run?.status === "rendering";
-    state.unlock.disabled = !Object.values(windows).some(w => w.locked);
+    state.regenerate.disabled = busy || !state.run?.segments.length || !state.controlWidget;
     for (const card of state.cards.values()) {
-        const {segment, lock, seed, reroll} = card._h3Controls;
-        const locked = !!windows[segment.index]?.locked;
-        lock.textContent = locked ? "Locked" : "Lock";
-        lock.setAttribute("aria-label", `${locked ? "Unlock" : "Lock"} window ${segment.index + 1}`);
-        lock.disabled = !segment.record_id;
-        seed.disabled = locked || busy;
-        if (document.activeElement !== seed) seed.value = windows[segment.index]?.seed ?? segment.seed ?? state.run.seed;
+        const {segment, seed, reroll, draftSeed} = card._h3Controls;
+        seed.disabled = busy;
+        if (document.activeElement !== seed) seed.value = draftSeed ?? windows[segment.index]?.seed ?? segment.seed ?? state.run.seed;
         reroll.disabled = busy || !segment.record_id || !state.controlWidget;
-        card.classList.toggle("h3-removal-locked", locked);
     }
 }
 
@@ -50,6 +45,41 @@ function keepPrefix(state, data, end) {
         data.windows[segment.index] = {seed: segment.seed, locked: true, record_id: segment.record_id};
     }
     if (state.run.segments.filter(s => s.index < end).length !== end) throw new Error("Earlier windows are incomplete.");
+}
+
+async function queueReroll(state, index, all) {
+    if (state.pending || state.run?.status === "rendering") return;
+    const original = state.controlWidget.value;
+    const originalRun = state.run.run_id;
+    let queued = false;
+    try {
+        state.pending = true; updateButtons(state);
+        const queue = await (await api.fetchApi("/queue")).json();
+        if (queue.queue_running.length || queue.queue_pending.length) throw new Error("Finish the current queue before rerolling.");
+        const data = controls(state);
+        keepPrefix(state, data, index);
+        data.requested_from_run = state.run.run_id;
+        if (all) {
+            data.windows = {};
+            for (let i = 0; i < state.run.total; i++) data.windows[i] = {seed: randomSeed(), locked: false};
+        } else {
+            const card = state.cards.get(index)._h3Controls;
+            const chosen = validatedSeed(card.seed.value);
+            data.windows[index] = {seed: chosen === (card.segment.seed ?? state.run.seed) ? randomSeed() : chosen, locked: false};
+        }
+        setControls(state, data);
+        state.progress.textContent = all ? "Queued fresh windows…" : `Queued reroll from window ${index + 1}…`;
+        const accepted = await app.queuePrompt(0, 1);
+        if (accepted === false) throw new Error("Could not queue the render. Check the workflow errors and try again.");
+        queued = true;
+    } catch (error) {
+        state.controlWidget.value = original;
+        state.progress.textContent = error.message;
+    } finally {
+        state.pending = false;
+        if (queued && state.run.run_id !== originalRun) render(state, state.run);
+        updateButtons(state);
+    }
 }
 
 function randomSeed() {
@@ -78,7 +108,6 @@ function mount(node) {
       .h3-removal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
       .h3-removal-card{border:1px solid #41564c;border-radius:6px;overflow:hidden;background:#101613}
       .h3-removal-play{display:block;border:0;padding:0;width:100%;background:#101613;cursor:pointer}
-      .h3-removal-locked{border-color:#83bd9a}
       .h3-removal-actions{display:flex;gap:5px;align-items:center;padding:0 7px 8px}
       .h3-removal-actions input{width:100%;min-width:0;border:1px solid #40554b;border-radius:4px;
         background:#18201e;color:#e3ebe7;padding:5px;font:11px system-ui}
@@ -92,26 +121,22 @@ function mount(node) {
     `;
     const status = element("div", "h3-removal-status");
     const progress = element("span", "", "Window previews");
-    const unlock = element("button", "", "Unlock all");
-    unlock.type = "button"; unlock.disabled = true;
-    status.append(progress, unlock);
+    const regenerate = element("button", "", "Regenerate all");
+    regenerate.type = "button"; regenerate.disabled = true;
+    status.append(progress, regenerate);
     const grid = element("div", "h3-removal-grid");
     grid.append(element("div", "h3-removal-empty", "Each completed window appears here before the next one starts."));
     root.append(style, status, grid, element("div", "h3-removal-hint",
-        "Hover to play · tap on touch screens. Lock keeps windows through this card. Reroll keeps earlier windows and rebuilds this window onward."));
+        "Hover to play · tap on touch screens. Reroll rebuilds this window onward. Run reuses current results; Regenerate all starts with fresh seeds."));
     const controlWidget = node.widgets?.find(w => w.name === "window_controls");
     if (controlWidget) {
         controlWidget.type = "h3_hidden_controls";
         controlWidget.computeSize = () => [0, -4];
         controlWidget.draw = () => {};
     }
-    const state = { node, root, progress, grid, unlock, controlWidget, pending: false,
+    const state = { node, root, progress, grid, regenerate, controlWidget, pending: false,
                     run: null, revision: 0, cards: new Map() };
-    unlock.addEventListener("click", () => {
-        const data = controls(state);
-        for (const item of Object.values(data.windows || {})) { item.locked = false; delete item.record_id; }
-        setControls(state, data);
-    });
+    regenerate.addEventListener("click", () => queueReroll(state, 0, true));
     node._h3RemovalPreview = state;
     mounts.add(state);
     const widget = node.addDOMWidget("window_previews", "div", root, {
@@ -202,42 +227,19 @@ function render(state, run) {
         caption.append(element("div", "", `Rendered seed ${segment.seed ?? run.seed}`));
         card.append(caption);
         const actions = element("div", "h3-removal-actions");
-        const lock = element("button", "", "Lock"); lock.type = "button";
         const seed = document.createElement("input"); seed.type = "text"; seed.inputMode = "numeric";
         seed.setAttribute("aria-label", `Seed for window ${segment.index + 1}`);
         seed.title = `Seed for window ${segment.index + 1}`;
         const reroll = element("button", "", "Reroll"); reroll.type = "button";
         reroll.setAttribute("aria-label", `Reroll window ${segment.index + 1}`);
-        card._h3Controls = {segment, lock, seed, reroll};
-        lock.addEventListener("click", () => {
-            try {
-                const data = controls(state), wasLocked = data.windows?.[segment.index]?.locked;
-                keepPrefix(state, data, wasLocked ? segment.index : segment.index + 1);
-                setControls(state, data);
-            } catch (error) { state.progress.textContent = error.message; }
-        });
+        reroll.title = "Regenerate this window and all later windows; keep earlier results.";
+        card._h3Controls = {segment, seed, reroll};
         seed.addEventListener("change", () => {
-            try {
-                const data = controls(state); data.windows ??= {};
-                data.windows[segment.index] = {...data.windows[segment.index], seed: validatedSeed(seed.value)};
-                setControls(state, data);
-            } catch (error) { state.progress.textContent = error.message; }
+            // Editing a seed is a draft until Reroll; ordinary Run keeps results.
+            card._h3Controls.draftSeed = seed.value;
         });
-        reroll.addEventListener("click", async () => {
-            try {
-                state.pending = true; updateButtons(state);
-                const queue = await (await api.fetchApi("/queue")).json();
-                if (queue.queue_running.length || queue.queue_pending.length) throw new Error("Stop or finish the current queue before rerolling.");
-                const data = controls(state); keepPrefix(state, data, segment.index);
-                const chosen = validatedSeed(seed.value);
-                data.windows[segment.index] = {seed: chosen === (segment.seed ?? state.run.seed) ? randomSeed() : chosen, locked: false};
-                setControls(state, data);
-                state.progress.textContent = `Queued reroll from window ${segment.index + 1}…`;
-                await app.queuePrompt(0, 1);
-            } catch (error) { state.progress.textContent = error.message; }
-            finally { state.pending = false; updateButtons(state); }
-        });
-        actions.append(lock, seed, reroll); card.append(actions);
+        reroll.addEventListener("click", () => queueReroll(state, segment.index, false));
+        actions.append(seed, reroll); card.append(actions);
         state.grid.append(card);
         state.cards.set(segment.index, card);
     }
@@ -245,6 +247,18 @@ function render(state, run) {
         state.grid.append(element("div", "h3-removal-empty", run.status === "stopped"
             ? "Stopped before the first window finished." : "Rendering the first window…"));
     } else if (run.segments.length) state.grid.querySelector(".h3-removal-empty")?.remove();
+    // Preserve completed windows automatically, including after reload. An old
+    // progress/refresh response must not overwrite an explicit queued reroll.
+    if (state.controlWidget && !state.pending) {
+        const data = controls(state);
+        if (data.requested_from_run !== run.run_id) {
+            delete data.requested_from_run;
+            let end = 0;
+            while (run.segments.some(s => s.index === end && s.record_id)) end++;
+            keepPrefix(state, data, end);
+            setControls(state, data);
+        }
+    }
     updateButtons(state);
     state.node.setDirtyCanvas?.(true, true);
 }
@@ -254,7 +268,9 @@ async function refresh(state) {
     const revision = state.revision;
     const requestedRun = state.node.properties.h3_removal_preview_run;
     const query = new URLSearchParams({workflow_id: workflowId(), node_id: String(state.node.id)});
-    if (requestedRun) query.set("run_id", requestedRun);
+    // A saved pending reroll may finish while the browser is closed. Follow
+    // this node's latest run until that request has adopted its new results.
+    if (requestedRun && controls(state).requested_from_run !== requestedRun) query.set("run_id", requestedRun);
     try {
         const response = await api.fetchApi(`/h3_relay/removal/previews?${query}`);
         if (response.ok) {

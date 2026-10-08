@@ -66,42 +66,40 @@ Previews are H.264 videos capped at 512 pixels; they are for inspection,
 not full-quality exports. Save Video still writes the final assembled output.
 Existing workflows without `window_frames` continue to use 22 frames.
 
-### Lock and reroll
+### Reroll and automatic reuse
 
-Each card has **Lock**, a seed field, and **Reroll**. Lock keeps every window
-through that card, because each continuation depends on the preceding history.
-Unlocking a card also unlocks the windows after it. **Unlock all** keeps the
-per-window seed choices while removing the locks.
+Each card has a seed field and **Reroll**. Completed windows are retained
+implicitly; normal Run reuses them when inputs/settings match. Reroll keeps
+all earlier results and rebuilds the selected window and every later window.
+**Regenerate all** generates fresh seeds for all windows and rebuilds everything.
+There are no manual locks to manage.
 
-Reroll automatically keeps all completed earlier windows, then rebuilds the
-selected window and every later window. Enter a different seed before clicking
-Reroll to use that exact seed; otherwise Reroll chooses a fresh random seed.
-Use ComfyUI's normal stop controls if a run is active, then reroll when the queue
-is idle. A locked card can also be rerolled: the selected window is unlocked and
-the earlier prefix is preserved.
+A seed edit is a draft until Reroll is clicked. Enter a different seed to use
+that value; otherwise Reroll chooses a fresh random seed. Use ComfyUI's normal
+stop controls if a run is active, then reroll when the queue is idle.
 
 The Green Mask node saves the exact prepared green-masked source on disk.
 Unchanged runs and rerolls reuse it without requesting SAM detection or tracking,
 including after a ComfyUI restart. Changing the source video, target text,
 tracking/selection settings, mask expansion or SAM model version prepares a new
-mask. H3 seeds, steps and window locks do not change this prepared source.
+mask. H3 seeds, steps and reroll selections do not change this prepared source.
 The first run after installing this update prepares and saves the mask once.
 Unsupported upstream custom nodes fall back to ordinary evaluation.
 
 The cache stores exact decoded frames and generated audio in
 `ComfyUI/output/__h3_removal_cache/`, alongside small previews and manifests.
-Locked checkpoints survive ComfyUI restarts and workflow reloads on that server.
+Checkpoints survive ComfyUI restarts and workflow reloads on that server.
 Cache files are local artifacts and are not embedded in the workflow JSON.
-Deleting or moving them requires unlocking affected windows and rendering again.
+If checkpoints were deleted or moved, use Regenerate all to rebuild them.
 Old candidates are retained, so disk use grows with rerolls.
 Prepared masks live in the `prepared/` subdirectory as lossless tensors; these
 can be large. Removing them causes the next run to prepare its mask again.
 
-Locks are checked against the actual masked source pixels, clean anchor, prompt,
-steps, window size, model/encoder/VAE graph and model file versions. Changed inputs
-or settings require **Unlock all**; incompatible results are rejected before
-sampling. A different global seed can still preserve explicitly locked windows;
-unlocked windows use their card seed override or the global seed.
+Reuse checks the actual masked source pixels, clean anchor, prompt, steps,
+window size, model/encoder/VAE graph and model file versions. Changed inputs or
+settings start a fresh window set automatically. The hidden checkpoint format
+still accepts legacy lock fields for saved-workflow compatibility, but the UI
+manages them automatically. Use Reroll or Regenerate all for fresh candidates.
 
 The first clean image is a visual reference; generated frame zero is not
 pixel-locked to that image. Only generated raw frames/audio feed continuation.

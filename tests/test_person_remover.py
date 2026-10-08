@@ -25,12 +25,13 @@ class TimelineTests(unittest.TestCase):
                 return self.nodes
 
         cache = SimpleNamespace(
+            controls_for_configuration=lambda controls, *a: (controls, False),
             scope_key=lambda *a: "scope", configuration_key=lambda *a: "config",
             plan=lambda controls, scope, config, starts, size, count, seed:
                 [{"seed": seed, "record_id": ""} for _ in starts])
         modules = {
             "comfy_execution.graph_utils": SimpleNamespace(GraphBuilder=Graph),
-            "preview_contract.removal_previews": SimpleNamespace(begin_run=lambda *args: "preview-run-id"),
+            "preview_contract.removal_previews": SimpleNamespace(begin_run=lambda *args, **kwargs: "preview-run-id"),
             "preview_contract": SimpleNamespace(removal_cache=cache),
         }
         with patch.dict("sys.modules", modules), patch.object(m, "__package__", "preview_contract"):

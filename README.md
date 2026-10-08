@@ -394,14 +394,16 @@ Person Remover adapter; it does not use the FastH3 VSA profile.
    It automatically carries generated boundary anchors and 18 frames of video
    and audio history, trims overlaps and preserves the source frame count.
 4. Review each completed window in the preview grid. Hover to play, or tap on
-   touch screens. **Lock** preserves the prefix through that card. **Reroll**
+   touch screens. Completed windows are reused automatically. **Reroll**
    preserves earlier windows and rebuilds the selected window onward; enter a
    seed first to use that exact value, or leave it unchanged for a fresh seed.
+   **Regenerate all** rebuilds every window with new seeds; normal **Run** keeps
+   the current results when inputs/settings match.
 
 Exact generated frames/audio and the prepared green-masked source persist in
 `ComfyUI/output/__h3_removal_cache/`. Unchanged rerolls skip SAM detection and
 tracking, including after a server restart. Source or mask-setting changes
-prepare a new mask; incompatible locked windows must be unlocked. Cache files
+prepare a new mask; changed inputs/settings automatically start fresh windows. Cache files
 stay on the serving machine and are not included in saved workflow JSON.
 
 The adapter is separate from this code repository; its public model release is
@@ -418,7 +420,7 @@ and [validation evidence](VALIDATION.md#person-remover-v1-2026-10-07-utc).
 ## Windowed character/reference editing
 
 **H3 Relay Windowed Edit · Character Swap** reuses Person Remover's source-aligned
-history, exact window checkpoints, preview grid, prefix locks and reroll controls.
+history, exact window checkpoints, preview grid, automatic prefix reuse and reroll controls.
 It keeps the character image and original-video Ref2VA conditioning in every
 window; it does not pin the source person's pixels as a removal-style guide.
 Window size and history are independently adjustable. See the

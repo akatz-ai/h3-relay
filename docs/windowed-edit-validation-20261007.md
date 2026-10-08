@@ -102,3 +102,29 @@ Validation on the same Arch review environment:
   and restored that exact locked record with `controls_reset=false` and no sampler.
 - No uncaught browser errors. Evidence is in
   `/home/akatz/dev/artifacts/labs-relay-auto-reset-20261007/`.
+
+## Automatic reuse without manual lock controls
+
+The shared preview panel now provides a seed draft and Reroll per window, plus
+Regenerate all. Completed prefixes are retained internally; no Lock/Unlock UI
+is shown. Explicit reroll intent is protected from stale preview refreshes, and
+pending rerolls follow the latest run on reconnect. Seed drafts only take effect
+on Reroll. Person Remover uses the same panel and now reconciles changed config
+before checkpoint planning, so it no longer needs an Unlock all escape hatch.
+
+Validation used a separate workflow UUID and a 43-frame sample at 800×608 with
+22-frame windows / 18-frame history on Arch:
+
+- Initial two-window GPU run: `39f50931-9f56-4612-85e3-cbe61ed6a150`, success.
+- Unchanged Run: `c843bee6-79b3-40f5-ac91-6e2c1342dbde`, success; both exact
+  checkpoints reused automatically.
+- Last-window reroll: `11ed8db5-617f-4b2a-a88f-30b8e1ec5c40`, success; window 1's
+  checkpoint unchanged, window 2 resampled with the entered seed 123456789.
+- First-window reroll intent tested in the actual browser with queue submission
+  intercepted: no prefix retained, and a stale progress event did not erase intent.
+- Regenerate all: `6cea4fb9-10f9-41f1-a033-96743630ec00`, success; both windows
+  resampled with fresh seeds and no checkpoint reuse.
+- Browser reload restored both cards and automatic reuse. No Lock/Unlock labels
+  or uncaught browser errors. Six focused Person Remover tests passed.
+- Queue empty after testing. Graphs, histories, manifests and screenshot are in
+  `/home/akatz/dev/artifacts/labs-relay-controls-20261007/`.

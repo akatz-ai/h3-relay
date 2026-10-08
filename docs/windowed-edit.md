@@ -41,20 +41,24 @@ frame. Larger shortages fail rather than silently shortening output.
 Generated audio is kept internally for AV continuation. To retain the original
 sound, connect prepared source audio directly to the final Create Video node.
 
-## Previews, locks and rerolls
+## Previews and rerolls
 
 This node uses the **same implementation** as Person Remover: `person_remover.js`,
 `removal_previews.py`, `removal_cache.py` and the shared append/restore nodes.
 Each completed window publishes an MP4/poster before its continuation starts.
-Hover to play (tap on touch), Lock to retain a contiguous prefix, and Reroll to
-regenerate the selected window and everything after it. Enter a seed before
-rerolling to request that seed; leaving it unchanged chooses a fresh seed.
+Hover to play (tap on touch). **Reroll** regenerates that window and everything
+after it, automatically keeping earlier results. **Regenerate all** uses fresh
+seeds for every window. Ordinary **Run** with unchanged inputs reuses completed
+windows, including after reload. There are no manual lock controls.
+
+A card seed edit is a draft until Reroll is clicked. Enter a different seed to
+request that exact value; leaving it unchanged chooses a fresh seed.
 
 Checkpoints contain exact floating-point frames and generated audio, not
 re-encoded preview pixels. Input pixels, character image, source audio, prompt,
 window/history lengths, sampler settings, model graph and model-file versions
 must match for reuse. Changing any of them automatically starts a fresh window
-set, clears old locks and per-window seed overrides, and replaces the preview
+set, clears old checkpoint selections and per-window seed overrides, and replaces the preview
 grid when Run is clicked. The panel explains that inputs/settings changed.
 Existing output files and checkpoints remain on disk; they are never reused
 for the changed configuration. Workflow

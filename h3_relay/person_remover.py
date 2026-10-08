@@ -256,13 +256,16 @@ class H3RelayPersonRemover:
         config_key = removal_cache.configuration_key(masked_source, clean_first_frame,
             {"fps": fps, "prompt": prompt, "steps": steps, "window_frames": window_frames},
             execution_prompt, unique_id)
+        window_controls, controls_reset = removal_cache.controls_for_configuration(
+            window_controls, cache_scope, config_key)
         choices = removal_cache.plan(window_controls, cache_scope, config_key, starts, window_frames, count, seed)
         import logging
         logging.info("H3 Person Remover: Qwen encoder load device=%s; locked windows=%d/%d",
                      getattr(getattr(clip, "patcher", None), "load_device", "unknown"),
                      sum(bool(c["record_id"]) for c in choices), len(starts))
         from .removal_previews import begin_run
-        preview_run = begin_run(unique_id, extra_pnginfo, starts, window_frames, count, seed)
+        preview_run = begin_run(unique_id, extra_pnginfo, starts, window_frames, count, seed,
+                                config_key=config_key, controls_reset=controls_reset)
         graph = GraphBuilder()
         sampler = graph.node("KSamplerSelect", sampler_name="er_sde")
         sigmas = graph.node("BasicScheduler", model=model, scheduler="simple", steps=steps, denoise=1.)
