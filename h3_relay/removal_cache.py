@@ -9,16 +9,15 @@ import uuid
 
 CACHE_VERSION = 1
 MAX_SEED = 0xffffffffffffffff
-SEED_SCHEME = "h3-window-seed-v1"
+SEED_SCHEME = "h3-window-seed-increment-v2"
 
 
 def window_seed(master_seed, index):
-    """Stable unsigned 64-bit sub-seed; independent of run IDs and Python hash()."""
+    """First window uses the master; later windows increment with uint64 wrap."""
     master_seed, index = int(master_seed), int(index)
     if not 0 <= master_seed <= MAX_SEED or index < 0:
         raise ValueError("Master seed must be unsigned 64-bit and window index nonnegative")
-    value = f"{SEED_SCHEME}:{master_seed}:{index}".encode("ascii")
-    return int.from_bytes(hashlib.sha256(value).digest()[:8], "big")
+    return (master_seed + index) & MAX_SEED
 
 
 def root():

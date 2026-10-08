@@ -188,3 +188,38 @@ eight steps, 800×608 resolution, 22-frame windows and 18-frame history:
   its contents match the source artifact. Sol output played in the browser;
   both final MP4s support HTTP 206 ranged downloads over Tailnet HTTPS.
 - Evidence: `/home/akatz/dev/artifacts/labs-relay-native-sol-20261008/`.
+
+## Incrementing window seeds and single-window parity (2026-10-08 UTC)
+
+Supersedes the hashed seed scheme in the earlier master-seed validation. The
+default seed is now `(master + zero_based_window_index) mod 2^64`. The scheme
+identifier is part of the cache configuration, so old hashed checkpoints and
+overrides are cleared on the next Run while their output files are retained.
+Per-window rerolls and unchanged-input reuse keep their existing behavior.
+
+The reported mismatch compared a single-window seed of 904234 with a first
+relay-window hashed seed of 1384856719383077662. The user's relay job also had
+duration 0 (full clip), whereas the single-window screenshot used duration 5.
+The relay's first window has no generated history; later windows do.
+
+Matched real GPU validation used the uploaded portrait video and character
+reference from the saved workflows, the same full prompt and model/LoRA
+ancestry, seed 904234, 480 preset, duration 5, eight er_sde/simple steps, CFG 1,
+and Sol bypassed. All shared API inputs were checked for equality.
+
+- Single-window `labs-character-swap-turbo8-auto` prompt:
+  `dadd2f70-ab34-4807-9048-e480e2af16ae`, success.
+- Relay prompt: `e9d87011-65d4-415b-9f77-0e247205ddcc`, success; one freshly
+  rendered window with seed 904234 and 124 frames.
+- Both final videos are 512×928, 124 frames / 5.166667 seconds. FFmpeg PSNR
+  comparison over all decoded frames reported infinity for Y/U/V, average,
+  minimum and maximum: decoded video pixels were identical in this test.
+- 26 focused cache/preview, windowed-edit and Person Remover tests passed,
+  including sequential seeds, uint64 wrap, migration from hashed controls,
+  master changes and preservation of same-master per-window overrides.
+- Both outputs support HTTP 206 ranged playback over Tailnet HTTPS. No uncaught
+  browser errors; queue empty after verification.
+- Evidence: `/home/akatz/dev/artifacts/labs-relay-sequential-seed-20261008/`.
+
+This verifies the first-window comparison under matched conditions, not general
+bitwise determinism across devices, software versions or continuation windows.

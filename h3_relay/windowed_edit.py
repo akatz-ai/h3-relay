@@ -152,7 +152,7 @@ class H3RelayWindowedEdit:
             "window_frames": ([str(v) for v in WINDOWS], {"default": "124", "tooltip": "Generated frames per window, excluding past history: 107 = 4.46s, 124 = 5.17s. Valid H3 sizes are 17n+5."}),
             "history_frames": ([str(v) for v in HISTORY], {"default": "18", "tooltip": "0 = independent windows; 1 = generated boundary only; 18/35/52... = H3 sliding history. Includes one boundary frame. Must be smaller than window_frames."}),
             "seed": ("INT", {"default": 904234, "min": 0, "max": 0xffffffffffffffff,
-                "tooltip": "Master seed. Each window derives its own seed from this value. Changing it starts fresh windows and clears per-window overrides. Keep fixed to reroll individual windows."}),
+                "tooltip": "Master seed. Window 1 uses this value; later windows use master + window index. Changing it starts fresh windows and clears per-window overrides. Keep fixed to reroll individual windows."}),
             "steps": ("INT", {"default": 8, "min": 1, "max": 100}),
             "cfg": ("FLOAT", {"default": 1., "min": 0., "max": 100.}),
             "sampler_name": ("STRING", {"default": "er_sde"}),

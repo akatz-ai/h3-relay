@@ -129,7 +129,7 @@ function mount(node) {
     const grid = element("div", "h3-removal-grid");
     grid.append(element("div", "h3-removal-empty", "Each completed window appears here before the next one starts."));
     root.append(style, status, grid, element("div", "h3-removal-hint",
-        "Window seeds derive from the master seed. Change the master to rebuild all windows; keep it fixed to reroll this window onward. Regenerate all creates fresh per-window overrides."));
+        "Window 1 uses the master seed; each following window adds 1. Change the master to rebuild all windows; keep it fixed to reroll this window onward. Regenerate all creates fresh per-window overrides."));
     const controlWidget = node.widgets?.find(w => w.name === "window_controls");
     if (controlWidget) {
         controlWidget.type = "h3_hidden_controls";

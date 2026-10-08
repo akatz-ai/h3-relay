@@ -24,7 +24,7 @@ class TimelineTests(unittest.TestCase):
             def finalize(self):
                 return self.nodes
 
-        cache = SimpleNamespace(SEED_SCHEME="h3-window-seed-v1",
+        cache = SimpleNamespace(SEED_SCHEME="h3-window-seed-increment-v2",
             controls_for_configuration=lambda controls, *a: (controls, False),
             scope_key=lambda *a: "scope", configuration_key=lambda *a: "config",
             plan=lambda controls, scope, config, starts, size, count, seed, **kwargs:

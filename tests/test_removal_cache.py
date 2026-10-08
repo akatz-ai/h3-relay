@@ -17,11 +17,24 @@ spec.loader.exec_module(m)
 class CacheTests(unittest.TestCase):
     def test_window_seed_derivation_is_stable_distinct_and_bounded(self):
         self.assertEqual([m.window_seed(904234, i) for i in range(3)],
-                         [1384856719383077662, 2610881700782126544, 16844053075130660878])
+                         [904234, 904235, 904236])
+        self.assertEqual([m.window_seed(1, i) for i in range(3)], [1, 2, 3])
+        self.assertEqual([m.window_seed(m.MAX_SEED, i) for i in range(3)],
+                         [m.MAX_SEED, 0, 1])
         seeds = [m.window_seed(904234, i) for i in range(100)]
         self.assertEqual(len(set(seeds)), 100)
         self.assertTrue(all(0 <= s <= m.MAX_SEED for s in seeds))
         self.assertTrue(all(m.window_seed(904235, i) != seeds[i] for i in range(100)))
+
+    def test_seed_scheme_change_clears_old_hashed_checkpoint_controls(self):
+        controls = json.dumps({'config_key': 'old-hash-scheme', 'windows': {
+            '0': {'seed': '1384856719383077662', 'locked': True, 'record_id': 'old'}}})
+        fresh, reset = m.controls_for_configuration(controls, self.scope, 'new-increment-scheme')
+        self.assertTrue(reset)
+        choices = m.plan(fresh, self.scope, 'new-increment-scheme', [0, 21], 22, 43,
+                         904234, derive_seeds=True)
+        self.assertEqual(choices, [{'seed': 904234, 'record_id': ''},
+                                  {'seed': 904235, 'record_id': ''}])
 
     def test_master_change_resets_overrides_while_same_master_keeps_rerolls(self):
         def key(master):

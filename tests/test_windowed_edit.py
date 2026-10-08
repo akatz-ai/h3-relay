@@ -56,7 +56,7 @@ class WindowedEditTests(unittest.TestCase):
             def finalize(self): return self.nodes
         captured = []
         def config(source, ref, settings, *args): captured.append(settings); return 'config'
-        cache = SimpleNamespace(SEED_SCHEME="h3-window-seed-v1", controls_for_configuration=lambda controls, *a: (controls, False), scope_key=lambda *a: 'scope', configuration_key=config,
+        cache = SimpleNamespace(SEED_SCHEME="h3-window-seed-increment-v2", controls_for_configuration=lambda controls, *a: (controls, False), scope_key=lambda *a: 'scope', configuration_key=config,
             tensor_hash=lambda t: 'audio-hash',
             plan=lambda *a, **kwargs: [{'seed': 123, 'record_id': ''}, {'seed': 456, 'record_id': ''}])
         modules = {'comfy_execution.graph_utils': SimpleNamespace(GraphBuilder=Graph),
@@ -76,7 +76,7 @@ class WindowedEditTests(unittest.TestCase):
         self.assertEqual(captured[0]['history_frames'], 18)
         self.assertEqual(captured[0]['kind'], 'windowed_ref_edit_v1')
         self.assertEqual(captured[0]['master_seed'], '904234')
-        self.assertEqual(captured[0]['seed_scheme'], 'h3-window-seed-v1')
+        self.assertEqual(captured[0]['seed_scheme'], 'h3-window-seed-increment-v2')
         cache.plan = lambda *a, **kwargs: [{'seed': 123, 'record_id': 'locked-first'}, {'seed': 789, 'record_id': ''}]
         nodes = list(run()['expand'].values())
         self.assertEqual(sum(n['class_type'] == 'H3RelayRemovalRestore' for n in nodes), 1)

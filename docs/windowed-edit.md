@@ -44,11 +44,11 @@ sound, connect prepared source audio directly to the final Create Video node.
 ## Master seed and window seeds
 
 The node's `seed` input is the **master seed** (the API/socket name stays `seed`
-for saved-workflow compatibility). Each window derives a distinct unsigned
-64-bit default from SHA-256 of `h3-window-seed-v1:<master>:<zero-based index>`.
-The first eight digest bytes are interpreted as a big-endian integer. This
-mapping is stable across runs and server restarts; it does not use Python's
-process-randomized hash or run IDs.
+for saved-workflow compatibility). Window 1 uses the master unchanged; window 2
+uses master + 1, window 3 master + 2, and so on. Addition wraps at the unsigned
+64-bit limit. This `h3-window-seed-increment-v2` scheme replaces hashed sub-seeds
+so the first window can use the same noise seed as a single-window workflow.
+Matching seed alone does not match differing inputs, conditioning or settings.
 
 - Same master + inputs/settings: reuse the current window results.
 - Changed master: invalidate the entire window set and all per-window overrides;

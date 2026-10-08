@@ -73,7 +73,8 @@ implicitly; normal Run reuses them when inputs/settings match. Reroll keeps
 all earlier results and rebuilds the selected window and every later window.
 **Regenerate all** generates fresh seeds for all windows and rebuilds everything.
 There are no manual locks to manage. The node seed is the master: each window
-derives a distinct seed from it. Changing the master clears per-window overrides
+uses master + its zero-based index (the first uses the master itself).
+Changing the master clears per-window overrides
 and starts fresh; keep it fixed while rerolling individual windows. See the
 [master seed contract](windowed-edit.md#master-seed-and-window-seeds).
 
