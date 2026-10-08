@@ -109,6 +109,54 @@ assembly and successful rendering do not establish character consistency or
 seam quality; review the previews and final video before choosing production
 defaults.
 
+## Experimental latent mode
+
+`experimental_latent_mode` is an optional boolean on the character-swap node,
+default **false**. Old workflows continue using the normal path. When enabled:
+
+1. Prepare every source window's prompt/image/video/audio conditioning and empty
+   AV latent. A graph dependency barrier prevents sampling before all are ready.
+   Prepared tensors are held on CPU and use ComfyUI's ordinary node cache.
+2. Sample windows sequentially. Store sampled AV latents on CPU; attach slices
+   of the preceding sampled video/audio as history and boundary conditioning.
+   No generated video/audio is decoded or re-encoded between windows.
+3. After all sampling completes, decode each original window separately and
+   trim overlaps/padding into the final image batch. Original source audio stays
+   connected to Create Video. There is no generated-audio decode in this mode.
+
+Window previews, preview MP4/poster writes, disk pixel checkpoints, and per-window
+rerolls are disabled. Their saved selections/seed overrides are ignored and left
+intact for returning to normal mode. Seeds use master + window index. Repeated
+unchanged runs may reuse ComfyUI's in-memory results, but this experiment does
+not provide the normal mode's durable per-window resume after a process restart.
+Change the master seed to generate a fresh experimental result.
+
+### Temporal alignment differs deliberately
+
+H3's nominal video-token spans repeat 1,4,4,4,4 frames. A window of `17n+5`
+ends with a four-frame token. With history enabled, this mode starts the next
+window at `window_frames - 5`, the preceding one-frame token on the 17-frame
+cycle. The history interval consists of complete five-token/17-frame cycles,
+followed by that one-frame boundary token. Audio endpoints are independently
+rounded onto the 40 Hz latent timeline from their 24 fps frame positions.
+
+For 124-frame windows and 18-frame history, the stride is 119. For 240 source
+frames the windows start at 0 and 119; the latter is padded by 3 frames. Final
+assembly keeps the first 124 frames and discards 5 repeated frames from the
+second window, delivering exactly 240 frames. The final window is padded rather
+than shifted off the latent grid. History 0 uses independent, adjacent windows.
+
+This preserves nominal token positioning, not equivalence to re-encoding
+decoded pixels: the VAE is contextual and lossy, and the one-token boundary is
+sampled rather than re-encoded as a standalone image. Quality, seams and character
+retention must be reviewed. This mode also changes window starts and can add a
+window near length thresholds; do not treat its outputs as a same-boundary A/B.
+
+All conditioning and sampled latents are retained until final decode; RAM usage
+can increase. Model residency is managed by ComfyUI, not guaranteed by the node.
+Phase/window logs distinguish preparation, sampling and final decode. Standard
+ComfyUI interruption checks remain active, including between final decodes.
+
 ## Native Sol comparison
 
 The separate [native Sol workflow](../development_workflows/labs-character-swap-turbo8-native-sol.json)

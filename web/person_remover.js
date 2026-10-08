@@ -6,6 +6,20 @@ const mounts = new Set();
 const rootGraph = () => app.rootGraph ?? app.graph;
 const workflowId = () => String(rootGraph()?.id ?? "");
 const viewUrl = (file) => api.apiURL(`/view?${new URLSearchParams(file)}`);
+const latentMode = (state) => Boolean(state.node.widgets?.find(w => w.name === "experimental_latent_mode")?.value);
+
+function syncLatentMode(state) {
+    const enabled = latentMode(state);
+    const wasEnabled = state.root.classList.contains("h3-latent-mode");
+    state.root.classList.toggle("h3-latent-mode", enabled);
+    if (enabled) {
+        for (const video of state.root.querySelectorAll("video")) video.pause();
+        state.progress.textContent = "Experimental latent mode · previews and per-window rerolls disabled. All conditioning is prepared first; final video appears after sampling and decoding.";
+    } else if (wasEnabled) {
+        state.progress.textContent = "Window previews · Run to render or restore the current windows.";
+    }
+    return enabled;
+}
 
 function element(tag, className, text) {
     const el = document.createElement(tag);
@@ -26,6 +40,7 @@ function setControls(state, data) {
 }
 
 function updateButtons(state) {
+    if (syncLatentMode(state)) { state.regenerate.disabled = true; return; }
     const windows = controls(state).windows || {};
     const busy = state.pending || state.run?.status === "rendering";
     state.regenerate.disabled = busy || !state.run?.segments.length || !state.controlWidget;
@@ -48,6 +63,7 @@ function keepPrefix(state, data, end) {
 }
 
 async function queueReroll(state, index, all) {
+    if (latentMode(state)) return;
     if (state.pending || state.run?.status === "rendering") return;
     const original = state.controlWidget.value;
     const originalRun = state.run.run_id;
@@ -120,6 +136,8 @@ function mount(node) {
       .h3-removal-empty{grid-column:1/-1;padding:25px 12px;text-align:center;color:#a1b5a9;
         border:1px dashed #40554b;border-radius:6px}
       .h3-removal-hint{color:#9caea4;margin-top:8px;font-size:11px}
+      .h3-latent-mode .h3-removal-grid,.h3-latent-mode .h3-removal-hint,
+      .h3-latent-mode .h3-removal-status button{display:none}
     `;
     const status = element("div", "h3-removal-status");
     const progress = element("span", "", "Window previews");
@@ -140,6 +158,15 @@ function mount(node) {
                     run: null, revision: 0, cards: new Map() };
     regenerate.addEventListener("click", () => queueReroll(state, 0, true));
     node._h3RemovalPreview = state;
+    const experimental = node.widgets?.find(w => w.name === "experimental_latent_mode");
+    if (experimental) {
+        const changed = experimental.callback;
+        experimental.callback = function () {
+            const result = changed?.apply(this, arguments);
+            if (!syncLatentMode(state)) void refresh(state);
+            return result;
+        };
+    }
     mounts.add(state);
     const widget = node.addDOMWidget("window_previews", "div", root, {
         serialize: false, hideOnZoom: false,
@@ -176,6 +203,7 @@ function mount(node) {
 }
 
 function render(state, run) {
+    if (syncLatentMode(state)) return;
     if (!run || String(run.node_id) !== String(state.node.id) || run.workflow_id !== workflowId()) return;
     // The server hashes actual media/settings, including replacements under the
     // same filename. Bind controls to that identity, once per configuration.
@@ -267,6 +295,7 @@ function render(state, run) {
 }
 
 async function refresh(state) {
+    if (syncLatentMode(state)) return;
     if (!mounts.has(state)) return;
     const revision = state.revision;
     const requestedRun = state.node.properties.h3_removal_preview_run;

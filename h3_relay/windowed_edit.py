@@ -160,7 +160,9 @@ class H3RelayWindowedEdit:
             "denoise": ("FLOAT", {"default": 1., "min": 0., "max": 1.}),
         }, "optional": {"source_audio": ("AUDIO",),
             "source_count": ("INT", {"default": 0, "min": 0, "tooltip": "0 uses all input frames. Connect preparation's source_frames to exclude its model-padding tail."}),
-            "window_controls": ("STRING", {"default": "{}"})},
+            "window_controls": ("STRING", {"default": "{}"}),
+            "experimental_latent_mode": ("BOOLEAN", {"default": False,
+                "tooltip": "Experimental: precompute all window conditioning, carry aligned sampled latents, decode only after sampling. Disables window previews/rerolls and ignores their overrides. Uses five-frame overlap and padded final windows; quality may differ."})},
             "hidden": {"unique_id": "UNIQUE_ID", "extra_pnginfo": "EXTRA_PNGINFO",
                        "execution_prompt": "PROMPT"}}
     RETURN_TYPES = ("IMAGE", "STRING")
@@ -171,7 +173,7 @@ class H3RelayWindowedEdit:
     def generate(self, model, clip, video_vae, audio_vae, source, reference_image, fps,
                  prompt, window_frames="124", history_frames="18", seed=904234, steps=8,
                  cfg=1., sampler_name="er_sde", scheduler="simple", denoise=1.,
-                 source_audio=None, source_count=0, window_controls="{}",
+                 source_audio=None, source_count=0, window_controls="{}", experimental_latent_mode=False,
                  unique_id=None, extra_pnginfo=None, execution_prompt=None):
         from comfy_execution.graph_utils import GraphBuilder
         window, history = validate_settings(window_frames, history_frames)
@@ -187,13 +189,26 @@ class H3RelayWindowedEdit:
         if len(reference_image) < 1:
             raise ValueError("Provide a character/reference image.")
         reference_image = reference_image[:1]
-        windows = plan_windows(count, window, history)
+        if experimental_latent_mode:
+            from .windowed_latent import plan_latent_windows
+            windows = plan_latent_windows(count, window, history)
+        else:
+            windows = plan_windows(count, window, history)
         if len(windows) > 1 and history >= 18:
             from .vendor.context_loop.sliding_context import require_sliding_history_support
             require_sliding_history_support()  # fail before the first GPU window
         plan = json.dumps({"fps": 24, "source_frames": count, "window_frames": window,
-            "history_frames": history, "windows": windows}, indent=2)
+            "history_frames": history, "experimental_latent_mode": experimental_latent_mode,
+            "windows": windows}, indent=2)
         LOG.info("H3 windowed edit plan: %s", plan)
+        if experimental_latent_mode:
+            from .windowed_latent import build_latent_graph
+            LOG.info("H3 experimental latent relay: precompute -> sample -> decode; previews and per-window overrides disabled")
+            output, expansion = build_latent_graph(model, clip, video_vae, audio_vae,
+                source, reference_image, prompt, windows, window, history, count, width, height,
+                seed, steps, cfg, sampler_name, scheduler, denoise, source_audio)
+            return {"result": (output, plan), "expand": expansion,
+                    "ui": {"h3_latent_mode": [True]}}
         from . import removal_cache
         from .removal_previews import begin_run
         starts = [entry["source_start"] for entry in windows]

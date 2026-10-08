@@ -223,3 +223,44 @@ and Sol bypassed. All shared API inputs were checked for equality.
 
 This verifies the first-window comparison under matched conditions, not general
 bitwise determinism across devices, software versions or continuation windows.
+
+## Experimental latent-only handoff (2026-10-08 UTC)
+
+Added default-off `experimental_latent_mode` to the character-swap node. The
+expanded graph precomputes every source conditioning pair behind a shared
+dependency barrier, samples sequentially using aligned sampled AV history, and
+decodes only after the last sampler. Preview generation and pixel checkpoints
+are absent from this path. Normal-mode controls are preserved, ignored while
+experimental mode is enabled, and restored when it is disabled.
+
+The latent schedule uses a five-frame overlap and a regular 17-frame-aligned
+stride, padding the final source window rather than shifting it backward. It
+does not claim equivalence to re-encoding generated history pixels.
+
+Validation in the existing Arch review container:
+
+- 30 focused tests passed: window/history token alignment across all supported
+  sizes, exact source coverage, audio endpoint slicing, precompute/final-decode
+  graph barriers, deferred assembly, normal relay/cache/preview behavior.
+- Three-window 43-frame fixture, W22/history18, native Sol bypassed:
+  `3bea8af9-4b63-480e-b127-3d486d16f553`, success.
+- Portrait source with duration 6, W124/history18, 480 preset, native Sol bypassed:
+  `d1004822-50b2-4495-8176-c8bcec1c877c`, success. Source windows start at 0 and
+  119; final output is 512×928, 141 frames / 5.875 seconds after overlap/pad trim.
+- Three-window fixture with native Sol enabled:
+  `1bb48239-f1fa-4162-bc68-500612fbed63`, success. min_tokens=0 was used only
+  for this short fixture; logs confirm the sparse producer in continuation windows.
+- Logs show all conditioning ready before sampling, direct latent history with
+  no generated-media VAE round trip, then all windows sampled before final decode.
+- Browser/API tests confirm the boolean is default-off, serializes correctly,
+  suppresses preview output/cards/rerolls, survives reload, and restores the
+  normal panel without modifying saved checkpoint selections. No browser errors.
+- All final videos support Tailnet HTTP 206 ranged downloads. The full-size
+  output was inspected at its final continuation frame; character appearance
+  was present. This is not a motion/seam review, quality approval, or benchmark.
+- Queue empty at verification. Evidence, graphs, histories, logs and screenshots:
+  `/home/akatz/dev/artifacts/labs-relay-latent-mode-20261008/`.
+
+Prepared conditioning and latent windows currently use CPU RAM and ComfyUI's
+ordinary runtime cache. Durable latent checkpoint recovery and a representative
+speed/quality comparison remain outside this experimental implementation.
