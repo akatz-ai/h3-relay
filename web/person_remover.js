@@ -1,7 +1,7 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const NODE = "H3RelayPersonRemover";
+const NODES = new Set(["H3RelayPersonRemover", "H3RelayWindowedEdit"]);
 const mounts = new Set();
 const rootGraph = () => app.rootGraph ?? app.graph;
 const workflowId = () => String(rootGraph()?.id ?? "");
@@ -270,6 +270,6 @@ for (const event of ["execution_interrupted", "execution_error"]) {
 }
 app.registerExtension({
     name: "h3_relay.person_remover",
-    nodeCreated(node) { if (node.comfyClass === NODE) mount(node); },
-    loadedGraphNode(node) { if (node.comfyClass === NODE) { mount(node); void refresh(node._h3RemovalPreview); } },
+    nodeCreated(node) { if (NODES.has(node.comfyClass)) mount(node); },
+    loadedGraphNode(node) { if (NODES.has(node.comfyClass)) { mount(node); void refresh(node._h3RemovalPreview); } },
 });

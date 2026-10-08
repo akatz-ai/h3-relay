@@ -415,6 +415,15 @@ motion and window joins still need review. Larger windows are experimental;
 so RAM use grows with clip length. See [the complete removal guide](docs/person-remover-v1.md)
 and [validation evidence](VALIDATION.md#person-remover-v1-2026-10-07-utc).
 
+## Windowed character/reference editing
+
+**H3 Relay Windowed Edit · Character Swap** reuses Person Remover's source-aligned
+history, exact window checkpoints, preview grid, prefix locks and reroll controls.
+It keeps the character image and original-video Ref2VA conditioning in every
+window; it does not pin the source person's pixels as a removal-style guide.
+Window size and history are independently adjustable. See the
+[windowed editing guide](docs/windowed-edit.md) for timing, setup and local workflow details.
+
 ## Tests
 
 Pure workflow tests:
