@@ -129,6 +129,32 @@ def load(scope, record_id, config_key):
     return payload["frames"], {"waveform": payload["waveform"], "sample_rate": payload["sample_rate"]}
 
 
+def controls_for_configuration(controls, scope, config_key, previous_config_key=None):
+    """Start a fresh set on changed inputs; keep strict checkpoint validation.
+
+    The config hashes actual prepared pixels/audio, references and model/settings.
+    Legacy workflows have no binding, so inspect their locked checkpoint metadata.
+    Unchanged missing/damaged/foreign checkpoints still fail rather than resample.
+    """
+    if len(controls) > 131072:
+        raise ValueError("Too many window controls")
+    data = json.loads(controls or "{}")
+    if not isinstance(data, dict) or not isinstance(data.get("windows", {}), dict):
+        raise ValueError("Invalid window controls")
+    bound_key = data.get("config_key") or previous_config_key
+    changed = bool(bound_key and bound_key != config_key)
+    for item in data.get("windows", {}).values():
+        if not isinstance(item, dict):
+            raise ValueError("Invalid window control entry")
+        if not changed and item.get("locked") and item.get("record_id"):
+            record = metadata(scope, item["record_id"])
+            changed |= record["config_key"] != config_key
+    if changed:
+        data = {"windows": {}}
+    data["config_key"] = config_key
+    return json.dumps(data), changed
+
+
 def plan(controls, scope, config_key, starts, window_frames, source_count, base_seed):
     """Only a contiguous prefix can be locked: later windows depend on earlier ones."""
     if len(controls) > 131072:

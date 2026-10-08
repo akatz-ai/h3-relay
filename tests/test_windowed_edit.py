@@ -56,12 +56,12 @@ class WindowedEditTests(unittest.TestCase):
             def finalize(self): return self.nodes
         captured = []
         def config(source, ref, settings, *args): captured.append(settings); return 'config'
-        cache = SimpleNamespace(scope_key=lambda *a: 'scope', configuration_key=config,
+        cache = SimpleNamespace(controls_for_configuration=lambda controls, *a: (controls, False), scope_key=lambda *a: 'scope', configuration_key=config,
             tensor_hash=lambda t: 'audio-hash',
             plan=lambda *a: [{'seed': 123, 'record_id': ''}, {'seed': 456, 'record_id': ''}])
         modules = {'comfy_execution.graph_utils': SimpleNamespace(GraphBuilder=Graph),
             'edit_contract': SimpleNamespace(removal_cache=cache),
-            'edit_contract.removal_previews': SimpleNamespace(begin_run=lambda *a: 'preview-id'),
+            'edit_contract.removal_previews': SimpleNamespace(begin_run=lambda *a, **kw: 'preview-id'),
             'edit_contract.vendor.context_loop.sliding_context': SimpleNamespace(require_sliding_history_support=lambda: None)}
         def run():
             with patch.dict('sys.modules', modules), patch.object(m, '__package__', 'edit_contract'):

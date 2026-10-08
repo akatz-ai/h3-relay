@@ -49,6 +49,47 @@ class CacheTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "damaged"):
             m.load(self.scope, record["record_id"], "config")
 
+    def test_changed_video_clears_legacy_locks_and_old_seed_overrides(self):
+        record = self.save()
+        old = json.dumps({'windows': {'0': {'locked': True, 'record_id': record['record_id']},
+                                      '1': {'seed': '987'}}})
+        normalized, reset = m.controls_for_configuration(old, self.scope, 'new-video')
+        self.assertTrue(reset)
+        self.assertEqual(json.loads(normalized), {'config_key': 'new-video', 'windows': {}})
+        choices = m.plan(normalized, self.scope, 'new-video', [0, 21], 22, 43, 456)
+        self.assertEqual(choices, [{'seed': 456, 'record_id': ''}] * 2)
+        # Resetting the current set never deletes prior render artifacts.
+        self.assertTrue(torch.equal(m.load(self.scope, record['record_id'], 'config')[0], self.frames))
+
+    def test_same_video_keeps_exact_prefix_and_reroll_seed(self):
+        record = self.save()
+        old = json.dumps({'config_key': 'config', 'windows': {
+            '0': {'locked': True, 'record_id': record['record_id']}, '1': {'seed': '987'}}})
+        normalized, reset = m.controls_for_configuration(old, self.scope, 'config')
+        self.assertFalse(reset)
+        choices = m.plan(normalized, self.scope, 'config', [0, 21, 42], 22, 64, 456)
+        self.assertEqual(choices[0]['record_id'], record['record_id'])
+        self.assertEqual(choices[1]['seed'], 987)
+
+    def test_bound_unlocked_controls_reset_after_settings_change(self):
+        normalized, reset = m.controls_for_configuration(
+            '{"config_key":"old-settings","windows":{"0":{"seed":"987"}}}',
+            self.scope, 'new-settings')
+        self.assertTrue(reset)
+        self.assertEqual(json.loads(normalized)['windows'], {})
+        normalized, reset = m.controls_for_configuration(
+            '{"windows":{"0":{"seed":"987"}}}', self.scope, 'new-video', 'old-video')
+        self.assertTrue(reset)
+        self.assertEqual(json.loads(normalized)['windows'], {})
+
+    def test_auto_reset_does_not_mask_missing_checkpoints_or_bad_controls(self):
+        with self.assertRaisesRegex(ValueError, 'unavailable'):
+            m.controls_for_configuration(json.dumps({'windows': {
+                '0': {'locked': True, 'record_id': 'a'*32}}}), self.scope, 'new')
+        for bad in ('[]', '{"windows":[]}', '{"windows":{"0":null}}'):
+            with self.assertRaises(ValueError):
+                m.controls_for_configuration(bad, self.scope, 'config')
+
     def test_prefix_locking_preserves_seed_and_rejects_changed_history(self):
         first = self.save()
         second = self.save(1, [first["record_id"]])

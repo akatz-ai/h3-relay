@@ -150,6 +150,17 @@ function mount(node) {
 
 function render(state, run) {
     if (!run || String(run.node_id) !== String(state.node.id) || run.workflow_id !== workflowId()) return;
+    // The server hashes actual media/settings, including replacements under the
+    // same filename. Bind controls to that identity, once per configuration.
+    // Repeated progress/reconnect events must not clear newly chosen locks.
+    if (run.config_key && state.controlWidget) {
+        let data = controls(state);
+        if (data.config_key !== run.config_key) {
+            if (data.config_key || run.controls_reset) data = {windows: {}};
+            data.config_key = run.config_key;
+            setControls(state, data);
+        }
+    }
     if (state.run?.run_id !== run.run_id) {
         for (const video of state.grid.querySelectorAll("video")) video.pause();
         state.grid.replaceChildren();
@@ -159,7 +170,8 @@ function render(state, run) {
     state.revision++;
     state.node.properties.h3_removal_preview_run = run.run_id;
     state.progress.textContent = `${run.segments.length}/${run.total} windows · ${run.window_frames}f` +
-        (run.status === "complete" ? " · complete" : run.status === "stopped" ? " · stopped" : "");
+        (run.status === "complete" ? " · complete" : run.status === "stopped" ? " · stopped" : "") +
+        (run.controls_reset ? " · inputs/settings changed — fresh windows" : "");
     for (const segment of run.segments) {
         if (state.cards.has(segment.index)) continue;
         const card = element("div", "h3-removal-card");

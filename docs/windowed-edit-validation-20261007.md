@@ -78,3 +78,27 @@ artifacts are retained on the hub at
 The 124/18 configuration has real GPU evidence. Other supported window/history
 sizes have frame-alignment coverage and use the shared H3 history engine, but
 have not all been rendered or aesthetically evaluated in this character-swap graph.
+
+
+## Automatic fresh sets after input changes
+
+The windowed-edit node now reconciles actual content/configuration identity before
+planning locks. Changes reset the whole window-control set, including seed
+customizations, and bind browser controls to the new configuration. Unchanged
+inputs retain strict checkpoint validation and exact reroll prefix reuse. Legacy
+saved workflows migrate using their own preview/checkpoint metadata. Existing
+render files are retained; stale pixels are not reused. Reset happens on Run.
+
+Validation on the same Arch review environment:
+
+- 13 cache/input/preview tests, 4 windowed-edit tests and 6 Person Remover tests passed.
+- The active user generation completed successfully before the runtime restart.
+- Browser submission `e15fcbed-7503-4bf3-b397-af2ebb853fd4` used a changed 22-frame
+  video and 22-frame window with stale locked controls. It completed a real GPU
+  render with `controls_reset=true`, fresh records, no reused segments and empty
+  per-window overrides in the UI.
+- A repeated preview event preserved a newly clicked lock rather than clearing it.
+- Submission `ee803135-98f3-4799-88e2-2e8bcc00b355` kept the same input/configuration
+  and restored that exact locked record with `controls_reset=false` and no sampler.
+- No uncaught browser errors. Evidence is in
+  `/home/akatz/dev/artifacts/labs-relay-auto-reset-20261007/`.

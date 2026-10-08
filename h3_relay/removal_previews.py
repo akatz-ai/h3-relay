@@ -43,7 +43,8 @@ def _publish(run):
         _LOG.warning("Could not send removal preview; it remains available on disk", exc_info=True)
 
 
-def begin_run(node_id, extra_pnginfo, starts, window_frames, source_frames, seed):
+def begin_run(node_id, extra_pnginfo, starts, window_frames, source_frames, seed,
+              config_key=None, controls_reset=False):
     from comfy_execution.utils import get_executing_context
     context = get_executing_context()
     workflow = (extra_pnginfo or {}).get("workflow", {})
@@ -53,6 +54,8 @@ def begin_run(node_id, extra_pnginfo, starts, window_frames, source_frames, seed
            "prompt_id": str(context.prompt_id if context else ""),
            "window_frames": window_frames, "source_frames": source_frames,
            "seed": str(seed), "total": len(starts), "segments": [], "status": "rendering"}
+    if config_key is not None:
+        run.update(config_key=config_key, controls_reset=controls_reset)
     with _LOCK:
         (_root() / run_id).mkdir()
         _RUNS[run_id] = run

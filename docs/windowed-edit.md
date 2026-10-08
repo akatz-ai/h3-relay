@@ -53,7 +53,11 @@ rerolling to request that seed; leaving it unchanged chooses a fresh seed.
 Checkpoints contain exact floating-point frames and generated audio, not
 re-encoded preview pixels. Input pixels, character image, source audio, prompt,
 window/history lengths, sampler settings, model graph and model-file versions
-must match. Changing them requires unlocking incompatible checkpoints. Workflow
+must match for reuse. Changing any of them automatically starts a fresh window
+set, clears old locks and per-window seed overrides, and replaces the preview
+grid when Run is clicked. The panel explains that inputs/settings changed.
+Existing output files and checkpoints remain on disk; they are never reused
+for the changed configuration. Workflow
 ID and node ID isolate checkpoint ownership. Preview identity is saved in the
 workflow, allowing reload and reconnect. Cache files remain on the serving
 machine under `output/__h3_removal_cache/`; saved JSON does not contain them.

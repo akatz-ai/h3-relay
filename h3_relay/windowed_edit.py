@@ -205,8 +205,33 @@ class H3RelayWindowedEdit:
                 "sha256": removal_cache.tensor_hash(source_audio["waveform"])}}
         config_key = removal_cache.configuration_key(source, reference_image, settings,
                                                       execution_prompt, unique_id)
+        # Migrate pre-binding workflows, including unlocked per-window seeds.
+        # Consult only the preview explicitly belonging to this workflow/node.
+        previous_config = None
+        workflow = (extra_pnginfo or {}).get("workflow", {})
+        node = next((n for n in workflow.get("nodes", []) if str(n.get("id")) == str(unique_id)), {})
+        previous_run_id = node.get("properties", {}).get("h3_removal_preview_run")
+        if previous_run_id:
+            from .removal_previews import latest_run
+            old = latest_run(str(workflow.get("id", "")), str(unique_id), previous_run_id)
+            if old:
+                previous_config = old.get("config_key")
+                if not previous_config and old.get("segments"):
+                    record_id = old["segments"][0].get("record_id")
+                    if record_id:
+                        try:
+                            previous_config = removal_cache.metadata(cache_scope, record_id)["config_key"]
+                        except ValueError:
+                            # Optional old preview may have been cleaned up.
+                            # Actual locked checkpoints are still checked below.
+                            pass
+        window_controls, controls_reset = removal_cache.controls_for_configuration(
+            window_controls, cache_scope, config_key, previous_config)
+        if controls_reset:
+            LOG.info("H3 edit inputs/settings changed: starting fresh windows; old checkpoints retained")
         choices = removal_cache.plan(window_controls, cache_scope, config_key, starts, window, count, seed)
-        preview_run = begin_run(unique_id, extra_pnginfo, starts, window, count, seed)
+        preview_run = begin_run(unique_id, extra_pnginfo, starts, window, count, seed,
+                                config_key=config_key, controls_reset=controls_reset)
         graph = GraphBuilder()
         sampler = graph.node("KSamplerSelect", sampler_name=sampler_name)
         sigmas = graph.node("BasicScheduler", model=model, scheduler=scheduler, steps=steps, denoise=denoise)
