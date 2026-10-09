@@ -452,3 +452,25 @@ Sampler behavior, and the generative upscaler's fidelity limitations.
 
 H3 Relay is GPL-3.0. See `NOTICE.md`, `UPSTREAMS.md`, and the retained licenses
 under `h3_relay/vendor/`.
+
+### Character-swap video preparation
+
+H3 Relay includes `LabsH3PrepareVideo` (**H3 Prepare Video · Auto Size & Length**)
+and `LabsH3TrimOutput` (**H3 Trim Output to Source Length**). Distributed character-swap
+workflows may title the first node **Resolution budget & output duration**. Its
+class identifier, widget order and output sockets are unchanged from the former
+local `labs-video-prep` package, so existing workflow files load without rewiring.
+Update H3 Relay to current `main`, restart ComfyUI, then refresh the browser.
+The separate `labs-video-prep` package is no longer required; if installed, remove
+that duplicate package so ComfyUI does not select its older implementation.
+
+The preparation node requires `ffmpeg` and `ffprobe` on PATH and ComfyUI's VIDEO
+API. It runs on CPU, normalizes to 24 fps, preserves aspect ratio with a small
+center crop to a 32-pixel grid, and uses pixel budgets of 500,000 (`480`) or
+1,000,000 (`768`). Duration `0` keeps the full clip; positive values select the
+nearest `17n+5` frame length and never extend the actual source. The summary
+reports the resulting duration. `reference_frames` may include repeated tail
+padding for H3; `source_frames` is the unpadded count. Connect `source_frames`
+to the windowed-edit node's `source_count`, or to the trim node after a
+single-window decode. The prepared preview and source audio retain the unpadded
+timeline. These CPU helpers do not load models or submit generation jobs.

@@ -20,6 +20,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Install video preparation tools
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Prepare pinned ComfyUI for CPU contracts
         run: |
           git init "$RUNNER_TEMP/h3-relay-comfyui"
