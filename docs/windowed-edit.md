@@ -10,7 +10,9 @@ The reference input uses its first image, matching the single-character contract
 
 - Source: RGB, 24 fps, both dimensions divisible by 32. `source_count=0` uses all
   frames; connect the preparation node's actual count to exclude padded frames.
-- `window_frames`: 22, 39, 56, …, 362 (`17n+5`). Default 124 = 5.167 seconds.
+- `window_frames`: maximum target size, 22, 39, 56, …, 362 (`17n+5`).
+  Default maximum 124 = 5.167 seconds. Short clips and final windows shrink
+  automatically to the smallest supported size that fits.
   Use 107 = 4.458 seconds for a window strictly below five seconds.
 - `history_frames`: 0 (independent), 1 (generated boundary only), or 18, 35, 52,
   … (`17k+1`). Default 18; history must be smaller than the window.
@@ -20,23 +22,44 @@ The reference input uses its first image, matching the single-character contract
 H3 sliding history consists of past frames **before** the sampled target plus
 one repeated boundary. Eighteen means 17 past frames and one boundary, not an
 18-frame reduction of each window's delivered duration. Ordinary continuation
-advances by `window_frames - 1`. The final window can move backward to use a full
-source segment, provided its preceding generated history exists. Short clips or
-unavoidable tails repeat the last source frame only inside the model window.
+advances by the actual target size minus one. The final window does not shift
+backward to fill the maximum size: it starts at the preceding output boundary,
+rounds the remaining source frames up to the H3 grid, and pads only the tail.
+A continuation's target stays larger than its configured history. The first
+window has effective history zero, so long configured history does not inflate
+a short single-window clip. No-history mode uses adjacent independent windows.
 
-For a 240-frame (ten-second) source and 124/18 settings:
+For a 144-frame (six-second) source and 124/18 settings:
 
-| Window | Original source frames | Generated history | Delivered frames |
-| --- | --- | --- | --- |
-| 1 | 0–123 | none | 0–123 |
-| 2 | 116–239 | 99–116 | 124–239 |
+| Window | Target size | Original source frames | Generated history | Delivered frames |
+| --- | --- | --- | --- | --- |
+| 1 | 124 | 0–123 | none | 0–123 |
+| 2 | 22 | 123–143 + one padded frame | 106–123 | 124–143 |
 
-The second window discards its first eight decoded frames, retaining the already
-accepted prefix exactly. The output has 240 frames. `window_plan` describes every
-source range, history range, padded tail and discarded overlap. No-history mode
-instead uses adjacent, independent windows. The currently installed H3 VAE can
-decode one final frame short; the adapter explicitly logs and holds that one
-frame. Larger shortages fail rather than silently shortening output.
+The continuation's Ref2VA allocation is 39 frames: a 22-frame target plus 17
+past-history frames. Sliding-history conditioning removes those past frames
+from the sampled target. Assembly discards the repeated boundary and final
+padding, retaining the accepted 124-frame prefix exactly. Output is 144 frames.
+A standalone 24-frame clip instead uses a 39-frame target and trims 15 pad frames.
+
+`window_plan` describes every actual source range, target size, effective history,
+padded tail and discarded boundary. Its `window_policy` is `adaptive-target-v1`.
+Policy and the complete plan participate in checkpoint compatibility. Changing
+policy invalidates prior selections while preserving their artifacts on disk.
+Checkpoints and preview segments record actual window sizes; the preview header
+labels the selected size as an adaptive maximum. Person Remover retains its
+existing fixed-window planner and cache behavior.
+
+The currently installed H3 VAE can decode one final frame short; the adapter
+explicitly logs and holds that frame, as before. If that frame is tail padding,
+it is discarded and all real source positions remain intact. Without padding,
+the final delivered frame is the explicitly logged hold, not a new model frame.
+Larger shortages fail rather than silently shortening output.
+
+CPU tests validate source/audio alignment, history bounds, variable graph sizes,
+exact checkpoint prefix reuse, stale-plan rejection and preview metadata. They
+do not establish seam quality, identity consistency or GPU speedup; those require
+a matched render against the previous fixed-size workflow.
 
 Generated audio is kept internally for AV continuation. To retain the original
 sound, connect prepared source audio directly to the final Create Video node.

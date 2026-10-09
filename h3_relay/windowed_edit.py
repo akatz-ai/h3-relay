@@ -11,6 +11,7 @@ import logging
 WINDOWS = tuple(range(22, 363, 17))
 HISTORY = (0, 1, *range(18, 342, 17))
 LOG = logging.getLogger(__name__)
+WINDOW_POLICY = "adaptive-target-v1"
 
 
 def validate_settings(window_frames, history_frames):
@@ -28,26 +29,22 @@ def plan_windows(count, window_frames=124, history_frames=18):
     window, history = validate_settings(window_frames, history_frames)
     if count < 1:
         raise ValueError("Source video has no frames.")
-    starts = [0]
-    while starts[-1] + window < count:
-        if history == 0:
-            start = starts[-1] + window
-        else:
-            # History is BEFORE the target, ending on the target's frame-zero
-            # boundary. Only one frame is ordinarily repeated in decoded output.
-            # Shift the final full window back where enough generated history exists.
-            start = max(starts[-1] + 1, history - 1,
-                        min(starts[-1] + window - 1, count - window))
-        starts.append(start)
-    covered = 0
-    result = []
-    for index, start in enumerate(starts):
-        end = min(count, start + window)
-        result.append({"index": index, "source_start": start, "source_end_exclusive": end,
-            "window_frames": window, "padded_tail_frames": window - (end - start),
-            "history_start": max(0, start - history + 1) if index and history else None,
-            "history_end_exclusive": start + 1 if index and history else None,
-            "discarded_overlap": max(0, covered - start), "delivered_frames": end - covered})
+    # History precedes the target; only its boundary frame is regenerated.
+    # Do not move the tail backwards and resample an already accepted prefix.
+    result, covered = [], 0
+    while covered < count:
+        effective_history = history if result else 0
+        start = covered - (1 if effective_history else 0)
+        needed = min(count - start, window)
+        # The first target has no history, even when the configured history is long.
+        size = next(v for v in WINDOWS if v >= needed and v > effective_history)
+        end = min(count, start + size)
+        result.append({"index": len(result), "source_start": start, "source_end_exclusive": end,
+            "window_frames": size, "padded_tail_frames": size - (end - start),
+            "history_frames": effective_history,
+            "history_start": start - effective_history + 1 if effective_history else None,
+            "history_end_exclusive": start + 1 if effective_history else None,
+            "discarded_overlap": covered - start, "delivered_frames": end - covered})
         covered = end
     return result
 
@@ -118,14 +115,15 @@ class H3RelayEditAppend:
                 "cache_scope": ("STRING", {"default": ""}),
                 "config_key": ("STRING", {"default": ""}),
                 "window_seed": ("STRING", {"default": "0"}),
-                "reuse_record": ("STRING", {"default": ""})}}
+                "reuse_record": ("STRING", {"default": ""}),
+                "window_metadata": ("STRING", {"default": ""})}}
     RETURN_TYPES = ("H3_REMOVAL_STATE", "IMAGE", "AUDIO")
     FUNCTION = "append"
     CATEGORY = "H3 Relay/internal"
 
     def append(self, frames, audio, start, source_count, window_frames, previous=None,
                preview_run="", window_index=0, cache_scope="", config_key="",
-               window_seed="0", reuse_record=""):
+               window_seed="0", reuse_record="", window_metadata=""):
         import torch
         from .person_remover import H3RelayRemovalAppend
         if len(frames) == window_frames - 1:
@@ -135,7 +133,8 @@ class H3RelayEditAppend:
                                               previous, window_frames=window_frames,
                                               preview_run=preview_run, window_index=window_index,
                                               cache_scope=cache_scope, config_key=config_key,
-                                              window_seed=window_seed, reuse_record=reuse_record)
+                                              window_seed=window_seed, reuse_record=reuse_record,
+                                              window_metadata=json.loads(window_metadata) if window_metadata else None)
         LOG.info("H3 edit assembled source frames [0, %d); window source start=%d size=%d",
                  len(result[1]), start, window_frames)
         return result
@@ -149,7 +148,7 @@ class H3RelayWindowedEdit:
             "source": ("IMAGE",), "reference_image": ("IMAGE",),
             "fps": ("FLOAT", {"default": 24.}),
             "prompt": ("STRING", {"multiline": True, "default": "Replace the person in <Video 1> with the character in <Picture 1>. Preserve motion, framing and scene."}),
-            "window_frames": ([str(v) for v in WINDOWS], {"default": "124", "tooltip": "Generated frames per window, excluding past history: 107 = 4.46s, 124 = 5.17s. Valid H3 sizes are 17n+5."}),
+            "window_frames": ([str(v) for v in WINDOWS], {"default": "124", "tooltip": "Maximum generated frames per window; short clips and tails shrink automatically, excluding past history: 107 = 4.46s, 124 = 5.17s. Valid H3 sizes are 17n+5."}),
             "history_frames": ([str(v) for v in HISTORY], {"default": "18", "tooltip": "0 = independent windows; 1 = generated boundary only; 18/35/52... = H3 sliding history. Includes one boundary frame. Must be smaller than window_frames."}),
             "seed": ("INT", {"default": 904234, "min": 0, "max": 0xffffffffffffffff,
                 "tooltip": "Master seed. Window 1 uses this value; later windows use master + window index. Changing it starts fresh windows and clears per-window overrides. Keep fixed to reroll individual windows."}),
@@ -192,13 +191,14 @@ class H3RelayWindowedEdit:
             from .vendor.context_loop.sliding_context import require_sliding_history_support
             require_sliding_history_support()  # fail before the first GPU window
         plan = json.dumps({"fps": 24, "source_frames": count, "window_frames": window,
-            "history_frames": history, "windows": windows}, indent=2)
+            "history_frames": history, "window_policy": WINDOW_POLICY, "windows": windows}, indent=2)
         LOG.info("H3 windowed edit plan: %s", plan)
         from . import removal_cache
         from .removal_previews import begin_run
         starts = [entry["source_start"] for entry in windows]
         cache_scope = removal_cache.scope_key(unique_id, extra_pnginfo)
-        settings = {"kind": "windowed_ref_edit_v1", "fps": fps, "prompt": prompt,
+        settings = {"kind": "windowed_ref_edit_v1", "window_policy": WINDOW_POLICY,
+            "window_plan": windows, "fps": fps, "prompt": prompt,
             "master_seed": str(seed), "seed_scheme": removal_cache.SEED_SCHEME,
             "steps": steps, "window_frames": window, "history_frames": history,
             "cfg": cfg, "sampler_name": sampler_name, "scheduler": scheduler, "denoise": denoise,
@@ -232,18 +232,21 @@ class H3RelayWindowedEdit:
         if controls_reset:
             LOG.info("H3 edit inputs/settings changed: starting fresh windows; old checkpoints retained")
         choices = removal_cache.plan(window_controls, cache_scope, config_key, starts, window, count, seed,
-                                     derive_seeds=True)
+                                     derive_seeds=True, window_plan=windows)
         preview_run = begin_run(unique_id, extra_pnginfo, starts, window, count, seed,
-                                config_key=config_key, controls_reset=controls_reset)
+                                config_key=config_key, controls_reset=controls_reset,
+                                window_plan=windows, window_policy=WINDOW_POLICY)
         graph = GraphBuilder()
         sampler = graph.node("KSamplerSelect", sampler_name=sampler_name)
         sigmas = graph.node("BasicScheduler", model=model, scheduler=scheduler, steps=steps, denoise=denoise)
         previous = None
         for entry in windows:
             start, index = entry["source_start"], entry["index"]
+            size, effective_history = entry["window_frames"], entry["history_frames"]
             prior = {} if previous is None else {"previous": previous.out(0)}
             choice = choices[index]
-            append_args = dict(start=start, source_count=count, window_frames=window,
+            append_args = dict(start=start, source_count=count, window_frames=size,
+                window_metadata=json.dumps(entry, sort_keys=True),
                 preview_run=preview_run, window_index=index, cache_scope=cache_scope,
                 config_key=config_key, window_seed=str(choice["seed"]), **prior)
             if choice["record_id"]:
@@ -254,8 +257,8 @@ class H3RelayWindowedEdit:
                 continue
             audio_args = {} if source_audio is None else {"source_audio": source_audio}
             part = graph.node("H3RelayEditWindow", source=source, start=start,
-                window_frames=window, history_frames=history, **prior, **audio_args)
-            length = window + (history-1 if previous is not None and history >= 18 else 0)
+                window_frames=size, history_frames=effective_history, **prior, **audio_args)
+            length = size + (effective_history-1 if effective_history >= 18 else 0)
             ref_args = {"ref_images.ref_image_0": reference_image, "ref_videos.ref_video_0": part.out(0)}
             if source_audio is not None:
                 ref_args["ref_video_audios.ref_video_audio_0"] = part.out(3)

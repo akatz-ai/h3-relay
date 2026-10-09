@@ -44,7 +44,7 @@ def _publish(run):
 
 
 def begin_run(node_id, extra_pnginfo, starts, window_frames, source_frames, seed,
-              config_key=None, controls_reset=False):
+              config_key=None, controls_reset=False, window_plan=None, window_policy=None):
     from comfy_execution.utils import get_executing_context
     context = get_executing_context()
     workflow = (extra_pnginfo or {}).get("workflow", {})
@@ -54,6 +54,8 @@ def begin_run(node_id, extra_pnginfo, starts, window_frames, source_frames, seed
            "prompt_id": str(context.prompt_id if context else ""),
            "window_frames": window_frames, "source_frames": source_frames,
            "seed": str(seed), "total": len(starts), "segments": [], "status": "rendering"}
+    if window_plan is not None:
+        run.update(window_plan=window_plan, window_policy=window_policy)
     if config_key is not None:
         run.update(config_key=config_key, controls_reset=controls_reset)
     with _LOCK:
@@ -121,6 +123,9 @@ def publish_window(run_id, index, frames, start, discarded_overlap, record=None,
         run = _RUNS.get(run_id)
         if run is None:
             run = json.loads((_root() / run_id / "manifest.json").read_text())
+        if run.get("window_plan") is not None:
+            segment["window_metadata"] = run["window_plan"][index]
+            segment["window_frames"] = run["window_plan"][index]["window_frames"]
         run["segments"] = sorted([s for s in run["segments"] if s["index"] != index] + [segment],
                                  key=lambda s: s["index"])
         if len(run["segments"]) == run["total"]:

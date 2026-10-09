@@ -150,7 +150,7 @@ class H3RelayRemovalAppend:
 
     def append(self, frames, audio, start, source_count, previous=None,
                window_frames=22, preview_run="", window_index=0,
-               cache_scope="", config_key="", window_seed="0", reuse_record=""):
+               cache_scope="", config_key="", window_seed="0", reuse_record="", window_metadata=None):
         import torch
         import torch.nn.functional as F
         window_frames = validate_window_size(window_frames)
@@ -167,7 +167,8 @@ class H3RelayRemovalAppend:
             from . import removal_cache
             record = (removal_cache.metadata(cache_scope, reuse_record) if reuse_record else
                       removal_cache.save(cache_scope, config_key, window_index, start, window_frames,
-                                         source_count, window_seed, records, frames, audio))
+                                         source_count, window_seed, records, frames, audio,
+                                         window_metadata=window_metadata))
             if record["config_key"] != config_key or record["previous_records"] != records:
                 raise ValueError("Saved window history does not match this render")
         if preview_run:

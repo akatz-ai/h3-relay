@@ -146,6 +146,39 @@ class CacheTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "earlier windows"):
             m.plan(json.dumps(data), self.scope, "config", [0, 21, 42], 22, 64, 999)
 
+    def test_adaptive_checkpoint_sizes_metadata_and_prefix_reroll(self):
+        spec = importlib.util.spec_from_file_location("windowed_edit", Path(__file__).parents[1] / "h3_relay/windowed_edit.py")
+        edit = importlib.util.module_from_spec(spec); spec.loader.exec_module(edit)
+        plan = edit.plan_windows(144)
+        frames = torch.arange(124).float().reshape(-1, 1, 1, 1)
+        key = m.configuration_key(frames, frames[:1], {'policy': edit.WINDOW_POLICY, 'plan': plan}, {}, '18')
+        first = m.save(self.scope, key, 0, 0, 124, 144, 123, [], frames, self.audio,
+                       window_metadata=plan[0])
+        second = m.save(self.scope, key, 1, 123, 22, 144, 124, [first['record_id']],
+                        self.frames, self.audio, window_metadata=plan[1])
+        controls = {'windows': {'0': {'locked': True, 'record_id': first['record_id']},
+                                '1': {'locked': True, 'record_id': second['record_id']}}}
+        choices = m.plan(json.dumps(controls), self.scope, key, [0, 123], 124, 144, 123, window_plan=plan)
+        self.assertEqual([c['record_id'] for c in choices], [first['record_id'], second['record_id']])
+        self.assertEqual(m.metadata(self.scope, second['record_id'])['window_frames'], 22)
+        self.assertEqual(m.metadata(self.scope, second['record_id'])['window_metadata'], plan[1])
+        controls['windows']['1'] = {'seed': '999'}
+        choices = m.plan(json.dumps(controls), self.scope, key, [0, 123], 124, 144, 123, window_plan=plan)
+        self.assertEqual(choices[1], {'seed': 999, 'record_id': ''})
+        restored, restored_audio = m.load(self.scope, choices[0]['record_id'], key)
+        self.assertTrue(torch.equal(restored, frames))
+        self.assertTrue(torch.equal(restored_audio['waveform'], self.audio['waveform']))
+        changed = [dict(e) for e in plan]; changed[0]['history_frames'] = 1
+        with self.assertRaisesRegex(ValueError, 'different inputs'):
+            m.plan(json.dumps(controls), self.scope, key, [0, 123], 124, 144, 123, window_plan=changed)
+        new_key = m.configuration_key(frames, frames[:1], {'policy': 'next-policy', 'plan': plan}, {}, '18')
+        self.assertNotEqual(key, new_key)
+        controls['config_key'] = key
+        fresh, reset = m.controls_for_configuration(json.dumps(controls), self.scope, new_key)
+        self.assertTrue(reset)
+        self.assertEqual(json.loads(fresh)['windows'], {})
+        self.assertTrue(torch.equal(m.load(self.scope, first['record_id'], key)[0], frames))
+
     def test_input_pixels_settings_and_model_versions_invalidate_locks(self):
         graph = {"18": {"inputs": {"model": ["1", 0]}},
                  "1": {"class_type": "UNETLoader", "inputs": {"unet_name": "model.safetensors"}}}

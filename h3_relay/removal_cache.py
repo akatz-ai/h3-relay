@@ -106,7 +106,7 @@ def metadata(scope, record_id):
     return data
 
 
-def save(scope, config_key, index, start, window_frames, source_count, seed, previous_records, frames, audio):
+def save(scope, config_key, index, start, window_frames, source_count, seed, previous_records, frames, audio, window_metadata=None):
     import torch
     record_id = uuid.uuid4().hex
     path = _record_path(scope, record_id, ".pt")
@@ -119,6 +119,8 @@ def save(scope, config_key, index, start, window_frames, source_count, seed, pre
             "index": index, "start": start, "window_frames": window_frames, "source_count": source_count,
             "seed": str(seed), "previous_records": list(previous_records), "sha256": file_hash(path),
             "frames_sha256": tensor_hash(frames)}
+    if window_metadata is not None:
+        data["window_metadata"] = window_metadata
     path = _record_path(scope, record_id, ".json")
     temporary = path.with_suffix(".part")
     temporary.write_text(json.dumps(data), encoding="utf-8")
@@ -165,13 +167,16 @@ def controls_for_configuration(controls, scope, config_key, previous_config_key=
 
 
 def plan(controls, scope, config_key, starts, window_frames, source_count, base_seed,
-         derive_seeds=False):
+         derive_seeds=False, window_plan=None):
     """Only a contiguous prefix can be locked: later windows depend on earlier ones."""
     if len(controls) > 131072:
         raise ValueError("Too many window controls")
     data = json.loads(controls or "{}")
     if not isinstance(data, dict) or not isinstance(data.get("windows", {}), dict):
         raise ValueError("Invalid window controls")
+    if window_plan is not None and (len(window_plan) != len(starts) or
+            any(entry["source_start"] != start for entry, start in zip(window_plan, starts))):
+        raise ValueError("Window plan does not match its source starts")
     windows = data.get("windows", {})
     result, previous_records, unlocked = [], [], False
     for index, start in enumerate(starts):
@@ -188,8 +193,10 @@ def plan(controls, scope, config_key, starts, window_frames, source_count, base_
                 raise ValueError("Lock earlier windows first. A changed window invalidates all later windows.")
             record = metadata(scope, record_id)
             expected = {"config_key": config_key, "index": index, "start": start,
-                        "window_frames": window_frames, "source_count": source_count,
-                        "previous_records": previous_records}
+                        "window_frames": window_plan[index]["window_frames"] if window_plan is not None else window_frames,
+                        "source_count": source_count, "previous_records": previous_records}
+            if window_plan is not None:
+                expected["window_metadata"] = window_plan[index]
             if any(record.get(k) != v for k, v in expected.items()):
                 raise ValueError("Locked windows use different inputs, settings or history. Unlock them before rendering.")
             if "seed" in item and str(seed) != record["seed"]:

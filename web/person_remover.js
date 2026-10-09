@@ -196,7 +196,7 @@ function render(state, run) {
     state.run = run;
     state.revision++;
     state.node.properties.h3_removal_preview_run = run.run_id;
-    state.progress.textContent = `${run.segments.length}/${run.total} windows · ${run.window_frames}f` +
+    state.progress.textContent = `${run.segments.length}/${run.total} windows · ${run.window_frames}f${run.window_plan ? " max · adaptive" : ""}` +
         ` · master seed ${run.seed}` +
         (run.status === "complete" ? " · complete" : run.status === "stopped" ? " · stopped" : "") +
         (run.controls_reset ? " · inputs/settings changed — fresh windows" : "");

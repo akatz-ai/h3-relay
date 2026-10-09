@@ -52,6 +52,17 @@ class PreviewTests(unittest.TestCase):
                 self.assertEqual(final["status"], "complete")
                 self.assertEqual([s["index"] for s in final["segments"]], [0, 1])
                 self.assertEqual(len(events[1][1]["segments"]), 1)  # Event snapshots do not mutate later.
+                window_plan = [{'source_start': 0, 'window_frames': 124},
+                               {'source_start': 123, 'window_frames': 22, 'padded_tail_frames': 1}]
+                adaptive_run = m.begin_run("71", {"workflow": {"id": "workflow-a"}}, [0, 123],
+                    124, 144, 904234, window_plan=window_plan, window_policy="adaptive-target-v1")
+                m.publish_window(adaptive_run, 1, frames[:21], 123, 1)
+                adaptive = m.latest_run("workflow-a", "71")
+                self.assertEqual(adaptive['window_frames'], 124)  # maximum, not tail size
+                self.assertEqual(adaptive['window_plan'], window_plan)
+                self.assertEqual(adaptive['segments'][0]['window_frames'], 22)
+                self.assertEqual(adaptive['segments'][0]['window_metadata'], window_plan[1])
+                self.assertEqual(adaptive['segments'][0]['frames'], 21)
                 next_run = m.begin_run("70", {"workflow": {"id": "workflow-a"}}, [0], 39, 39, 904235)
                 self.assertNotEqual(next_run, run)
                 self.assertEqual(m.latest_run("workflow-a", "70")["segments"], [])
